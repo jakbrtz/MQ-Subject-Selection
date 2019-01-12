@@ -54,25 +54,21 @@ namespace Subject_Selection
 
             if (query.Contains('-'))
             {
-                if (query.Length > 7)
-                {
-                    unit = query.Substring(0, query.Length - 7);
-                    query = query.Substring(query.Length - 7);
-                }
+                unit = query.Substring(0, query.Length - 7);
+                query = query.Substring(query.Length - 7);
 
                 lower = int.Parse(query.Split('-')[0]);
                 upper = int.Parse(query.Split('-')[1]);
             }
             else if (query.Contains('+'))
             {
-                if (query.Length > 4)
-                {
-                    unit = query.Substring(0, query.Length - 4);
-                    query = query.Substring(query.Length - 4);
-                }
-
+                unit = query.Substring(0, query.Length - 4);
+                query = query.Substring(query.Length - 4);
+                
                 lower = int.Parse(query.Split('+')[0]);
             }
+
+            if (unit == "*") unit = "";
 
             return subjects.Keys.ToList().FindAll(subject =>
                 subject.StartsWith(unit) &&
