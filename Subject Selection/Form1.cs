@@ -37,8 +37,7 @@ namespace Subject_Selection
             var selected = dataGridView1.SelectedCells[0].Value;
             if (selected == null) return;
             currentSubject = selected as Subject;
-            Prerequisit decision = currentSubject.Prerequisits.GetRemainingDecision(plan); //TODO: prune
-            currentDecision = decision;
+            currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
             UpdateDecisionList();
             LoadCurrentDecision();
             LoadPossibleTimes(currentSubject);
@@ -100,7 +99,6 @@ namespace Subject_Selection
 
         private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
         {
-            List<Subject> reasons = currentDecision.GetReasons();
             if (LBXchoose.SelectedItem is Subject)
             {
                 currentSubject = LBXchoose.SelectedItem as Subject;
@@ -109,7 +107,7 @@ namespace Subject_Selection
                 //TODO: recognise the decision is the same one, even though options have changed
                 //      this can be done by having each prerequisit remember why it is a prerequisit
                 //if (!plan.Decisions.Contains(currentDecision))
-                currentDecision = null;
+                currentDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
                 UpdateScreen();
             }
             else if (LBXchoose.SelectedItem is Prerequisit)

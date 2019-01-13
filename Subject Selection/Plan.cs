@@ -31,16 +31,15 @@ namespace Subject_Selection
         {
             SelectedSubjects.Add(subject);
             Order();
-        }
-
-        public void InsertSubject(Subject subject)
-        {
-            
+            //TODO: don't reorder entire thing every time a subject is added
         }
 
         public void ForceTime(Subject subject, int time)
         {
-            forcedTimes[subject] = time;
+            if (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == time) //TODO: have a designated button for unforcing times
+                forcedTimes.Remove(subject);
+            else
+                forcedTimes[subject] = time;
             Order();
         }
 
@@ -60,7 +59,6 @@ namespace Subject_Selection
 
         public void Order()
         {
-            Console.WriteLine("oh boi");
             int session = 0;
             SubjectsInOrder.Clear();
             while (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())

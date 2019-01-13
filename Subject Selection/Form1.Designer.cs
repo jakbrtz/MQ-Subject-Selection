@@ -31,14 +31,14 @@
             this.LBXdecisions = new System.Windows.Forms.ListBox();
             this.LBXchoose = new System.Windows.Forms.ListBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-            this.LBXtime = new System.Windows.Forms.ListBox();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+            this.LBXtime = new System.Windows.Forms.ListBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -61,7 +61,7 @@
             this.LBXdecisions.IntegralHeight = false;
             this.LBXdecisions.Location = new System.Drawing.Point(0, 0);
             this.LBXdecisions.Name = "LBXdecisions";
-            this.LBXdecisions.Size = new System.Drawing.Size(218, 473);
+            this.LBXdecisions.Size = new System.Drawing.Size(204, 303);
             this.LBXdecisions.TabIndex = 4;
             this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
             // 
@@ -72,7 +72,7 @@
             this.LBXchoose.IntegralHeight = false;
             this.LBXchoose.Location = new System.Drawing.Point(0, 0);
             this.LBXchoose.Name = "LBXchoose";
-            this.LBXchoose.Size = new System.Drawing.Size(247, 473);
+            this.LBXchoose.Size = new System.Drawing.Size(119, 303);
             this.LBXchoose.TabIndex = 7;
             this.LBXchoose.SelectedIndexChanged += new System.EventHandler(this.LBXchoose_SelectedIndexChanged);
             // 
@@ -90,75 +90,9 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(444, 326);
+            this.dataGridView1.Size = new System.Drawing.Size(342, 303);
             this.dataGridView1.TabIndex = 9;
             this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridView1_CellClick);
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(12, 12);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.LBXdecisions);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(917, 473);
-            this.splitContainer1.SplitterDistance = 218;
-            this.splitContainer1.TabIndex = 10;
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.LBXchoose);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(695, 473);
-            this.splitContainer2.SplitterDistance = 247;
-            this.splitContainer2.TabIndex = 0;
-            // 
-            // splitContainer3
-            // 
-            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer3.Name = "splitContainer3";
-            this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer3.Panel1
-            // 
-            this.splitContainer3.Panel1.Controls.Add(this.dataGridView1);
-            // 
-            // splitContainer3.Panel2
-            // 
-            this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
-            this.splitContainer3.Size = new System.Drawing.Size(444, 473);
-            this.splitContainer3.SplitterDistance = 326;
-            this.splitContainer3.TabIndex = 0;
-            // 
-            // LBXtime
-            // 
-            this.LBXtime.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LBXtime.FormattingEnabled = true;
-            this.LBXtime.IntegralHeight = false;
-            this.LBXtime.Location = new System.Drawing.Point(0, 0);
-            this.LBXtime.Name = "LBXtime";
-            this.LBXtime.Size = new System.Drawing.Size(444, 143);
-            this.LBXtime.TabIndex = 0;
-            this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
             // 
             // Column1
             // 
@@ -188,11 +122,76 @@
             this.Column4.Name = "Column4";
             this.Column4.ReadOnly = true;
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.Location = new System.Drawing.Point(12, 12);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.LBXdecisions);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
+            this.splitContainer1.Size = new System.Drawing.Size(775, 303);
+            this.splitContainer1.SplitterDistance = 204;
+            this.splitContainer1.TabIndex = 10;
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.LBXchoose);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
+            this.splitContainer2.Size = new System.Drawing.Size(567, 303);
+            this.splitContainer2.SplitterDistance = 119;
+            this.splitContainer2.TabIndex = 0;
+            // 
+            // splitContainer3
+            // 
+            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer3.Name = "splitContainer3";
+            // 
+            // splitContainer3.Panel1
+            // 
+            this.splitContainer3.Panel1.Controls.Add(this.dataGridView1);
+            // 
+            // splitContainer3.Panel2
+            // 
+            this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
+            this.splitContainer3.Size = new System.Drawing.Size(444, 303);
+            this.splitContainer3.SplitterDistance = 342;
+            this.splitContainer3.TabIndex = 0;
+            // 
+            // LBXtime
+            // 
+            this.LBXtime.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LBXtime.FormattingEnabled = true;
+            this.LBXtime.IntegralHeight = false;
+            this.LBXtime.Location = new System.Drawing.Point(0, 0);
+            this.LBXtime.Name = "LBXtime";
+            this.LBXtime.Size = new System.Drawing.Size(98, 303);
+            this.LBXtime.TabIndex = 0;
+            this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(941, 497);
+            this.ClientSize = new System.Drawing.Size(799, 327);
             this.Controls.Add(this.splitContainer1);
             this.Name = "Form1";
             this.Text = "Form1";

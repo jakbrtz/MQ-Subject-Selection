@@ -50,10 +50,10 @@ namespace Subject_Selection
 
         public override int EarliestCompletionTime()
         {
-            return GetPossibleTimes().Where(time => time >= Prerequisits.EarliestCompletionTime()).First();
+            return GetPossibleTimes().Where(time => time >= Prerequisits.EarliestCompletionTime()).Min();
         }
 
-        public List<int> GetPossibleTimes(int end = 10)
+        public List<int> GetPossibleTimes(int end = 100) //TODO: avoid magic numbers
         {
             List<int> output = new List<int>();
             for (int year = 0; year < end; year++)
@@ -79,6 +79,8 @@ namespace Subject_Selection
         {
             return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
+
+
     }
 
     public class Prerequisit : Criteria
@@ -311,6 +313,8 @@ namespace Subject_Selection
             //If there are no prerequisits, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
+            //Lock the value to avoid infinite loops
+            earliestCompletionTime = 100;
             //This makes finding the time based on credit points a lot faster
             if (GetSelectionType() == "CP" && criteria.Contains('*')) return GetPick() / 3 / 4; //TODO: remove magic numbers
             //cache the result
