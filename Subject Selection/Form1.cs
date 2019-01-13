@@ -103,7 +103,8 @@ namespace Subject_Selection
             List<Subject> reasons = currentDecision.GetReasons();
             if (LBXchoose.SelectedItem is Subject)
             {
-                Decider.AddSubject(LBXchoose.SelectedItem as Subject, plan);
+                currentSubject = LBXchoose.SelectedItem as Subject;
+                Decider.AddSubject(currentSubject, plan);
 
                 //TODO: recognise the decision is the same one, even though options have changed
                 //      this can be done by having each prerequisit remember why it is a prerequisit

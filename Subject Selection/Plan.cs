@@ -86,13 +86,14 @@ namespace Subject_Selection
             //Look at the subject's prerequisits
             if (prerequisit == null) prerequisit = subject.Prerequisits;
             //If the prerequisit is met, return true
-            if (prerequisit.HasBeenMet(this, time)) return true;
+            if (prerequisit.HasBeenMet(this, time))
+                return true;
             //Consider each option
             foreach (Criteria criteria in prerequisit.GetOptions())
                 //If the option needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
                     return false;
-                //If the option is a prerequisit that is not a leaf: the subject is not a leaf
+                //If the option is a prerequisit that is not a leaf then the subject is not a leaf
                 else if (criteria is Prerequisit && !IsLeaf(subject, time, criteria as Prerequisit))
                     return false;
             return true;

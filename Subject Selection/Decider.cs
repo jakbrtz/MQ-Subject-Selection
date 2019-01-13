@@ -10,17 +10,27 @@ namespace Subject_Selection
     {
         public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisit> toAnalyze = null)
         {
-            //This function can get called from the Form or from AnalyzeDecision. The bool variable keeps track of what called it
-            bool alreadyAnalyzing = toAnalyze != null;
-            if (!alreadyAnalyzing)
-                toAnalyze = new Queue<Prerequisit>();
-            //Add the subject to the list
-            plan.AddSubject(subject);
-            //Prepare the list of decisions that need to be analyzed
-            CompileDecisions(toAnalyze, plan, subject);
-            //if AnalyzeDecision is not already running, start it
-            if (!alreadyAnalyzing)
+            //Check whether this was called by the user or by AnalyzeDecisions
+            if (toAnalyze == null)
+            {
+                //Add the subject to the list
+                plan.AddSubject(subject);
+                //Restart the Decisions list
+                plan.Decisions.Clear();
+                toAnalyze = new Queue<Prerequisit>(plan.SelectedSubjects.ConvertAll(sub => sub.Prerequisits));
+                //Start analyzing
                 AnalyzeDecision(toAnalyze, plan);
+            }
+            else
+            {
+                //Add the subject to the list
+                plan.AddSubject(subject);
+                //Reconsider all existing decisions
+                foreach (Prerequisit decision in plan.Decisions)
+                    toAnalyze.Enqueue(decision);
+                //Consider the new subject's prerequisits
+                toAnalyze.Enqueue(subject.Prerequisits);
+            }
         }
 
         public static void MoveSubject(Subject subject, Plan plan, int time)
@@ -34,18 +44,6 @@ namespace Subject_Selection
             foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisits.GetSubjects().Contains(subject)))
                 toAnalyze.Enqueue(sub.Prerequisits);
             AnalyzeDecision(toAnalyze, plan);
-        }
-
-        static void CompileDecisions(Queue<Prerequisit> toAnalyze, Plan plan, Subject subject)
-        {
-            //Consider all existing decisions
-            foreach (Prerequisit decision in plan.Decisions)
-                toAnalyze.Enqueue(decision);
-            //Consider the new subject's prerequisits
-            toAnalyze.Enqueue(subject.Prerequisits);
-            //Reconsider each subject
-            foreach (Subject sub in plan.SelectedSubjects)
-                toAnalyze.Enqueue(sub.Prerequisits);
         }
 
         static void AnalyzeDecision(Queue<Prerequisit> toAnalyze, Plan plan)
