@@ -10,11 +10,11 @@ namespace Subject_Selection
     {
         public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisit> toAnalyze = null)
         {
+            //Add the subject to the list
+            plan.AddSubject(subject);
             //Check whether this was called by the user or by AnalyzeDecisions
             if (toAnalyze == null)
             {
-                //Add the subject to the list
-                plan.AddSubject(subject);
                 //Restart the Decisions list
                 plan.Decisions.Clear();
                 toAnalyze = new Queue<Prerequisit>(plan.SelectedSubjects.ConvertAll(sub => sub.Prerequisits));
@@ -23,13 +23,11 @@ namespace Subject_Selection
             }
             else
             {
-                //Add the subject to the list
-                plan.AddSubject(subject);
+                //Consider the new subject's prerequisits
+                toAnalyze.Enqueue(subject.Prerequisits);
                 //Reconsider all existing decisions
                 foreach (Prerequisit decision in plan.Decisions)
                     toAnalyze.Enqueue(decision);
-                //Consider the new subject's prerequisits
-                toAnalyze.Enqueue(subject.Prerequisits);
             }
         }
 
@@ -53,23 +51,24 @@ namespace Subject_Selection
             //Iterate over the queue
             while (toAnalyze.Any())
             {
+                //Consider the next decision in the queue
                 Prerequisit decision = toAnalyze.Dequeue();
 
+                //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
                 plan.Decisions.Remove(decision); //TODO: better method than removing and adding options
 
+                //Remove all reasons that have been met
+                decision.GetReasons().RemoveAll(reason => reason.HasBeenMet(plan, reason.GetChosenTime(plan)));
+                //If there are no more reasons to make a decision, don't analyze the decision
+                if (!decision.GetReasons().Any())
+                    continue;
+
+                //Replace the decision with only the part that still needs to be decided on
                 decision = decision.GetRemainingDecision(plan);
 
-                if (decision.HasBeenMet(plan, decision.RequiredCompletionTime(plan)))
+                if (decision.MustPickAllRemaining(plan))
                 {
-                    //Ignore decisions that don't need to be picked
-                }
-                else if (decision.HasBeenBanned(plan))
-                {
-                    throw new Exception("//TODO: A banned decision should not be analyzed in the first place");
-                }
-                else if (decision.MustPickAllRemaining(plan))
-                {
-                    //if the decision needs to have everything selected, select everything. Add their prerequisits to the list
+                    //If everything must be selected, select everything. Add the new prerequisits to the list
                     foreach (Criteria option in decision.GetRemainingOptions(plan))
                         if (option is Subject)
                             AddSubject(option as Subject, plan, toAnalyze);
@@ -96,7 +95,6 @@ namespace Subject_Selection
                 if (compare == 0) compare = p1.ToString().CompareTo(p2.ToString());
                 return compare;
             });
-
             
             List<Prerequisit> helpIterater = new List<Prerequisit>(plan.Decisions);
             plan.Decisions.Clear();
@@ -105,9 +103,7 @@ namespace Subject_Selection
                     plan.Decisions.Add(prerequisit);
 
             DateTime end = DateTime.Now;
-
-            Console.WriteLine("Making decisions: " + (middle-start).Milliseconds + "ms");
-
+            Console.WriteLine("Making decisions:    " + (middle-start).Milliseconds + "ms");
             Console.WriteLine("Removing repetition: " + (end-middle).Milliseconds + "ms");
         }
     }
