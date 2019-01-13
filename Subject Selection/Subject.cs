@@ -116,7 +116,7 @@ namespace Subject_Selection
             if (options != null) return options;
 
             /* Criterior are imported as text, and need to be parsed. For example:
-             * (39CP 100+) AND COMP202 AND (COMP225 OR COMP229) AND (MATH135 OR DMTH137)
+             * (39CP *100+) AND COMP202 AND (COMP225 OR COMP229) AND (MATH135 OR DMTH137)
              * Anything in brackets is another prereqisit
              * Anything with a dash/plus represents a range of subjects
              * The words CP/AND/OR explain how many criteria must be selected
@@ -301,7 +301,7 @@ namespace Subject_Selection
                 else if (option is Prerequisit)
                     remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
             string newcriteria = "";
-            if (selectionType == "CP") newcriteria = criteria;
+            if (selectionType == "CP" && criteria.Contains('*')) newcriteria = criteria;
             return new Prerequisit(this, remainingOptions, GetRemainingPick(plan), selectionType, newcriteria);
         }
 
@@ -312,7 +312,7 @@ namespace Subject_Selection
             if (GetOptions().Count == 0)
                 return 0;
             //This makes finding the time based on credit points a lot faster
-            if (GetSelectionType() == "CP" && criteria.Contains('+')) return GetPick() / 3 / 4; //TODO: remove magic numbers
+            if (GetSelectionType() == "CP" && criteria.Contains('*')) return GetPick() / 3 / 4; //TODO: remove magic numbers
             //cache the result
             return earliestCompletionTime = 
                 //Get a list of all the option's earliest completion times

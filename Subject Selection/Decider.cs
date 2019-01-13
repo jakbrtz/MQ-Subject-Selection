@@ -12,24 +12,46 @@ namespace Subject_Selection
         {
             //This function can get called from the Form or from AnalyzeDecision. The bool variable keeps track of what called it
             bool alreadyAnalyzing = toAnalyze != null;
-            //Originally, toAnalyze only contained the decisions whose outcomes may've changed by adding the new subject
-            //However, there were so many reasons the outcome could change, that it was not worthwhile testing every reason
-            //Instead, the algorithm just analyzes every decision
             if (!alreadyAnalyzing)
                 toAnalyze = new Queue<Prerequisit>();
-            foreach (Prerequisit decision in plan.Decisions)
-                toAnalyze.Enqueue(decision);
             //Add the subject to the list
             plan.AddSubject(subject);
-            //Consider the decision's prerequisits
-            toAnalyze.Enqueue(subject.Prerequisits);
+            //Prepare the list of decisions that need to be analyzed
+            CompileDecisions(toAnalyze, plan, subject);
             //if AnalyzeDecision is not already running, start it
             if (!alreadyAnalyzing)
                 AnalyzeDecision(toAnalyze, plan);
         }
 
+        public static void MoveSubject(Subject subject, Plan plan, int time)
+        {
+            //Record whether the subject is being pushed backwards or forwards
+            int originalTime = plan.SubjectsInOrder.FindIndex(semester => semester.Contains(subject)) + 1; //TODO: fix zero-based indexing
+            //Move the subject to the relevant time slot
+            plan.ForceTime(subject, time);
+            //Analyze all decisions that might've changed due to the move
+            Queue<Prerequisit> toAnalyze = new Queue<Prerequisit>(plan.Decisions);
+            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisits.GetSubjects().Contains(subject)))
+                toAnalyze.Enqueue(sub.Prerequisits);
+            AnalyzeDecision(toAnalyze, plan);
+        }
+
+        static void CompileDecisions(Queue<Prerequisit> toAnalyze, Plan plan, Subject subject)
+        {
+            //Consider all existing decisions
+            foreach (Prerequisit decision in plan.Decisions)
+                toAnalyze.Enqueue(decision);
+            //Consider the new subject's prerequisits
+            toAnalyze.Enqueue(subject.Prerequisits);
+            //Reconsider each subject
+            foreach (Subject sub in plan.SelectedSubjects)
+                toAnalyze.Enqueue(sub.Prerequisits);
+        }
+
         static void AnalyzeDecision(Queue<Prerequisit> toAnalyze, Plan plan)
         {
+            DateTime start = DateTime.Now;
+            
             //Iterate over the queue
             while (toAnalyze.Any())
             {
@@ -63,6 +85,8 @@ namespace Subject_Selection
                 }
             }
 
+            DateTime middle = DateTime.Now;
+
             //Sort decisions by the complexity of the decision (this only affects covercheck)
             plan.Decisions.Sort(delegate (Prerequisit p1, Prerequisit p2)
             {
@@ -81,7 +105,12 @@ namespace Subject_Selection
             foreach (Prerequisit prerequisit in helpIterater)
                 if (!prerequisit.IsCovered(plan))
                     plan.Decisions.Add(prerequisit);
-                    
+
+            DateTime end = DateTime.Now;
+
+            Console.WriteLine("Making decisions: " + (middle-start).Milliseconds + "ms");
+
+            Console.WriteLine("Removing repetition: " + (end-middle).Milliseconds + "ms");
         }
     }
 }

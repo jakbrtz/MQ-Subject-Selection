@@ -39,8 +39,11 @@ namespace Subject_Selection
             currentSubject = selected as Subject;
             Prerequisit decision = currentSubject.Prerequisits.GetRemainingDecision(plan); //TODO: prune
             currentDecision = decision;
+            UpdateDecisionList();
             LoadCurrentDecision();
             LoadPossibleTimes(currentSubject);
+
+            Console.WriteLine(currentSubject.Prerequisits);
         }
 
         void UpdateScreen()
@@ -88,6 +91,11 @@ namespace Subject_Selection
         {
             currentDecision = LBXdecisions.SelectedItem as Prerequisit;
             LoadCurrentDecision();
+
+            if (currentDecision == null) return;
+            foreach (Subject reason in currentDecision.GetReasons())
+                Console.Write(reason + " ");
+            Console.WriteLine();
         }
 
         private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
@@ -113,7 +121,7 @@ namespace Subject_Selection
         private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
         {
             int time = int.Parse(LBXtime.SelectedItem.ToString());
-            plan.ForceTime(currentSubject, time);
+            Decider.MoveSubject(currentSubject, plan, time);
             UpdatePlanGUI();
             DataGridView1_CellClick(null, null);
         }
