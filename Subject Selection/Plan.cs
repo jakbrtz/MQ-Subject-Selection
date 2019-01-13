@@ -33,6 +33,11 @@ namespace Subject_Selection
             Order();
         }
 
+        public void InsertSubject(Subject subject)
+        {
+            
+        }
+
         public void ForceTime(Subject subject, int time)
         {
             forcedTimes[subject] = time;
@@ -55,7 +60,8 @@ namespace Subject_Selection
 
         public void Order()
         {
-            int session = 1;
+            Console.WriteLine("oh boi");
+            int session = 0;
             SubjectsInOrder.Clear();
             while (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
             {

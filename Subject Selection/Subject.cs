@@ -50,7 +50,7 @@ namespace Subject_Selection
 
         public override int EarliestCompletionTime()
         {
-            return GetPossibleTimes().Where(time => time > Prerequisits.EarliestCompletionTime()).First();
+            return GetPossibleTimes().Where(time => time >= Prerequisits.EarliestCompletionTime()).First();
         }
 
         public List<int> GetPossibleTimes(int end = 10)
@@ -68,10 +68,10 @@ namespace Subject_Selection
             List<int> output = new List<int>();
             foreach (string time in Times)
                 if (time.StartsWith("S"))
-                    output.Add(int.Parse(time.Substring(1, 1)));
+                    output.Add(int.Parse(time.Substring(1, 1)) - 1);
                 //TODO: FY1, FY2, WV
                 else if (time.StartsWith("FY"))
-                    output.Add(int.Parse(time.Substring(2, 1)));
+                    output.Add(int.Parse(time.Substring(2, 1)) - 1); //The -1 is to account for the zero-based indexing
             return output.Distinct().ToList();
         }
 
@@ -310,14 +310,14 @@ namespace Subject_Selection
             if (earliestCompletionTime > -1) return earliestCompletionTime;
             //If there are no prerequisits, then the subject can be done straight away
             if (GetOptions().Count == 0)
-                return 0;
+                return -1;
             //This makes finding the time based on credit points a lot faster
             if (GetSelectionType() == "CP" && criteria.Contains('*')) return GetPick() / 3 / 4; //TODO: remove magic numbers
             //cache the result
-            return earliestCompletionTime = 
+            return earliestCompletionTime =
                 //Get a list of all the option's earliest completion times
                 GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime())
-                .OrderBy(x => x).ElementAt(GetPick()-1);
+                .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
         public int RequiredCompletionTime(Plan plan)

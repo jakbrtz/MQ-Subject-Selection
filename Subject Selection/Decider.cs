@@ -34,7 +34,7 @@ namespace Subject_Selection
         public static void MoveSubject(Subject subject, Plan plan, int time)
         {
             //Record whether the subject is being pushed backwards or forwards
-            int originalTime = plan.SubjectsInOrder.FindIndex(semester => semester.Contains(subject)) + 1; //TODO: fix zero-based indexing
+            int originalTime = plan.SubjectsInOrder.FindIndex(semester => semester.Contains(subject));
             //Move the subject to the relevant time slot
             plan.ForceTime(subject, time);
             //Analyze all decisions that might've changed due to the move
