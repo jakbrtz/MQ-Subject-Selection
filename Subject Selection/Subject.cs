@@ -11,7 +11,7 @@ namespace Subject_Selection
         //I have made this superclass to allow prerequisits so be made of other prerequisits
         public abstract bool HasBeenMet(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan);
-        public abstract int EarliestCompletionTime();
+        public abstract int EarliestCompletionTime(List<int> MaxSubjects);
     }
 
     public class Subject : Criteria
@@ -44,25 +44,29 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
-            //TODO: check whether the order of subjects matter when it comes to NCCWs
             return plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisits.HasBeenBanned(plan);
+            //MATH123 has an extra detail about NCCW, which would require this to be completely remade
+            //Check whether other subjects have those conditions
         }
 
-        public override int EarliestCompletionTime()
+        public override int EarliestCompletionTime(List<int> MaxSubjects)
         {
-            return GetPossibleTimes().Where(time => time >= Prerequisits.EarliestCompletionTime()).Min();
+            //Find the first time after the prerequisits has been satisfied which also allows for the semester
+            int time = Prerequisits.EarliestCompletionTime(MaxSubjects) + 1;
+            while (!Semesters().Contains(time % 3)) time++; //TODO %6 (3 new semesters)
+            return time;
         }
 
-        public List<int> GetPossibleTimes(int end = 100) //TODO: avoid magic numbers
+        public List<int> GetPossibleTimes(Plan plan)
         {
             List<int> output = new List<int>();
-            for (int year = 0; year < end; year++)
-                foreach (int semester in Semesters())
-                    if (Prerequisits.EarliestCompletionTime() < 3 * year + semester)
-                        output.Add(3 * year + semester);
+            for (int time = EarliestCompletionTime(plan.MaxSubjects); time < plan.MaxSubjects.Count; time++)
+                if (Semesters().Contains(time % 3))
+                    output.Add(time);
             return output;
         }
 
+        //TODO: cache results
         public List<int> Semesters()
         {
             List<int> output = new List<int>();
@@ -210,11 +214,12 @@ namespace Subject_Selection
         {
             if (criteria != "" && criteria != null)
                 return criteria;
-            //This is used by the GetRemainingPrerequisit method.
+            //This is used by the GetRemainingDecision method.
             if (selectionType == "CP")
             {
                 criteria = (GetPick() * 3).ToString() + "CP ";
-                criteria += "[range:] "; //TODO: describe range
+                foreach (Subject subject in GetOptions())
+                    criteria += subject + " ";
 
             }
             else
@@ -303,11 +308,11 @@ namespace Subject_Selection
                 else if (option is Prerequisit)
                     remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
             string newcriteria = "";
-            if (selectionType == "CP" && criteria.Contains('*')) newcriteria = criteria;
+            if (IsVague()) newcriteria = (GetRemainingPick(plan)*3) + "CP " + criteria.Substring(criteria.IndexOf(' ') + 1);
             return new Prerequisit(this, remainingOptions, GetRemainingPick(plan), selectionType, newcriteria);
         }
 
-        public override int EarliestCompletionTime()
+        public override int EarliestCompletionTime(List<int> MaxSubjects)
         {
             if (earliestCompletionTime > -1) return earliestCompletionTime;
             //If there are no prerequisits, then the subject can be done straight away
@@ -316,11 +321,21 @@ namespace Subject_Selection
             //Lock the value to avoid infinite loops
             earliestCompletionTime = 100;
             //This makes finding the time based on credit points a lot faster
-            if (GetSelectionType() == "CP" && criteria.Contains('*')) return GetPick() / 3 / 4; //TODO: remove magic numbers
+            if (IsVague())
+            {
+                int count = 0;
+                int time = -1;
+                while (count < GetPick())
+                {
+                    time++;
+                    count += MaxSubjects[time];
+                }
+                return earliestCompletionTime = time;
+            }
             //cache the result
             return earliestCompletionTime =
                 //Get a list of all the option's earliest completion times
-                GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime())
+                GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime(MaxSubjects))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
@@ -337,6 +352,11 @@ namespace Subject_Selection
         public List<Subject> GetReasons()
         {
             return reasons;
+        }
+
+        public bool IsVague()
+        {
+            return selectionType == "CP" && criteria.Contains('*');
         }
     }
 }

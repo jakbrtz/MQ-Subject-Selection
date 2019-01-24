@@ -12,12 +12,14 @@ namespace Subject_Selection
         public List<Prerequisit> Decisions { get; }
         public List<Subject> SelectedSubjects { get; }
         Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
+        public List<int> MaxSubjects { get; }
 
         public Plan()
         {
             SubjectsInOrder = new List<List<Subject>>();
             Decisions = new List<Prerequisit>();
             SelectedSubjects = new List<Subject>();
+            MaxSubjects = new List<int>();
         }
         
         public Plan(Plan other)
@@ -25,6 +27,7 @@ namespace Subject_Selection
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
             Decisions = new List<Prerequisit>(other.Decisions);
             SelectedSubjects = new List<Subject>(other.SelectedSubjects);
+            MaxSubjects = new List<int>(other.MaxSubjects);
         }
 
         public void AddSubject(Subject subject)
@@ -36,7 +39,7 @@ namespace Subject_Selection
 
         public void ForceTime(Subject subject, int time)
         {
-            if (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == time) //TODO: have a designated button for unforcing times
+            if (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == time)
                 forcedTimes.Remove(subject);
             else
                 forcedTimes[subject] = time;
@@ -67,7 +70,7 @@ namespace Subject_Selection
                 SubjectsInOrder.Add(new List<Subject>(SelectedSubjects
                     .Except(SelectedSubjectsSoFar()).Where(subject =>
                     //Pick from subjects that are allowed during this semester
-                    subject.GetPossibleTimes().Contains(session) &&
+                    subject.GetPossibleTimes(this).Contains(session) &&
                     //Pick subjects that are forced into this spot
                     (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == session ||
                     //Pick from subjects that have no remaining prerequisits
@@ -76,9 +79,9 @@ namespace Subject_Selection
                     .OrderBy(subject => subject.GetLevel())
                     //Favour subjects forced into this timeslot
                     .Except(SelectedSubjects.Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session))
-                    .OrderBy(subject => forcedTimes.ContainsKey(subject) ? forcedTimes[subject] : 100) //TODO: remove magic number
+                    .OrderBy(subject => forcedTimes.ContainsKey(subject) ? forcedTimes[subject] : MaxSubjects.Count)
                     //Only select 4 subjects
-                    .Take(4)));
+                    .Take(MaxSubjects[session])));
 
                 session = session + 1;
             }
@@ -98,7 +101,7 @@ namespace Subject_Selection
                 if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
-                else if (criteria is Prerequisit && !IsLeaf(subject, time, criteria as Prerequisit))
+                else if (criteria is Prerequisit && !(criteria as Prerequisit).IsVague() && !IsLeaf(subject, time, criteria as Prerequisit))
                     return false;
             return true;
         }
