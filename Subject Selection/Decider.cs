@@ -41,6 +41,7 @@ namespace Subject_Selection
             Queue<Prerequisit> toAnalyze = new Queue<Prerequisit>(plan.Decisions);
             foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisits.GetSubjects().Contains(subject)))
                 toAnalyze.Enqueue(sub.Prerequisits);
+            toAnalyze.Enqueue(subject.Prerequisits);
             AnalyzeDecision(toAnalyze, plan);
         }
 
@@ -55,7 +56,7 @@ namespace Subject_Selection
                 Prerequisit decision = toAnalyze.Dequeue();
 
                 //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
-                plan.Decisions.Remove(decision); //TODO: better method than removing and adding options
+                plan.Decisions.Remove(decision);
 
                 //Remove all reasons that have been met
                 decision.GetReasons().RemoveAll(reason => reason.HasBeenMet(plan, reason.GetChosenTime(plan)));
