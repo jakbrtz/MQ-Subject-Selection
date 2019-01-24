@@ -12,7 +12,8 @@ namespace Subject_Selection
         public static bool IsSubset(this Prerequisit prerequisit, Prerequisit other)
         {
             return prerequisit.GetOptions().All(option => other.GetOptions().Contains(option)) || 
-                other.GetOptions().Exists(criteria => criteria is Prerequisit && prerequisit.IsSubset(criteria as Prerequisit));
+                other.GetOptions().Exists(criteria => criteria is Prerequisit && prerequisit.IsSubset(criteria as Prerequisit))
+                 && prerequisit.GetPick() >= other.GetPick();
         }
 
         public static bool IsCovered(this Prerequisit prerequisit, Plan plan)
@@ -30,9 +31,9 @@ namespace Subject_Selection
                 return false;
 
             //Check if any of the prerequisists are an obvious subset of the main prequisit
-            if (decisions.Exists(decision => decision.IsSubset(prerequisit) && decision.GetPick() >= prerequisit.GetPick()))
+            if (decisions.Exists(decision => decision.IsSubset(prerequisit)))
             {
-                foreach (Prerequisit decision in decisions.Where(decision => decision.IsSubset(prerequisit) && decision.GetPick() >= prerequisit.GetPick()))
+                foreach (Prerequisit decision in decisions.Where(decision => decision.IsSubset(prerequisit)))
                     decision.AddReasons(prerequisit);
                 return true;
             }
