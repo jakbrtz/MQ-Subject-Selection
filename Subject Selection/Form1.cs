@@ -20,6 +20,8 @@ namespace Subject_Selection
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            foreach (int i in new int[]{ 4, 4, 1, 4, 4, 1, 4, 4, 1, 4, 4, 1})
+                plan.MaxSubjects.Add(i);
             Subject degree = new Subject("COURSES", "0", "S1D S2D S3D",
                 "(STAT150 OR STAT170 OR STAT171) (STAT270 OR STAT271) (STAT272 OR STAT273) (STAT278 OR STAT279) STAT399 STAT375 (6CP STAT302 STAT306 STAT328 STAT373 STAT378 STAT395) " +
                 "COMP115 COMP125 ISYS114 (STAT170 OR STAT171) COMP225 COMP257 ISYS224 (STAT270 OR STAT271) COMP336 ISYS358 STAT302 (3CP COMP332 COMP348 STAT375)"
@@ -82,7 +84,7 @@ namespace Subject_Selection
         void LoadPossibleTimes(Subject selected)
         {
             LBXtime.Items.Clear();
-            foreach (int time in selected.GetPossibleTimes(4))
+            foreach (int time in selected.GetPossibleTimes(plan))
                 LBXtime.Items.Add(time);
         }
 
@@ -103,10 +105,7 @@ namespace Subject_Selection
             {
                 currentSubject = LBXchoose.SelectedItem as Subject;
                 Decider.AddSubject(currentSubject, plan);
-
-                //TODO: recognise the decision is the same one, even though options have changed
-                //      this can be done by having each prerequisit remember why it is a prerequisit
-                //if (!plan.Decisions.Contains(currentDecision))
+                
                 currentDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
                 UpdateScreen();
             }
