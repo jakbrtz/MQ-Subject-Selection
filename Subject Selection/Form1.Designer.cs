@@ -61,7 +61,7 @@
             this.LBXdecisions.IntegralHeight = false;
             this.LBXdecisions.Location = new System.Drawing.Point(0, 0);
             this.LBXdecisions.Name = "LBXdecisions";
-            this.LBXdecisions.Size = new System.Drawing.Size(204, 303);
+            this.LBXdecisions.Size = new System.Drawing.Size(208, 303);
             this.LBXdecisions.TabIndex = 4;
             this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
             // 
@@ -72,7 +72,7 @@
             this.LBXchoose.IntegralHeight = false;
             this.LBXchoose.Location = new System.Drawing.Point(0, 0);
             this.LBXchoose.Name = "LBXchoose";
-            this.LBXchoose.Size = new System.Drawing.Size(119, 303);
+            this.LBXchoose.Size = new System.Drawing.Size(129, 303);
             this.LBXchoose.TabIndex = 7;
             this.LBXchoose.SelectedIndexChanged += new System.EventHandler(this.LBXchoose_SelectedIndexChanged);
             // 
@@ -90,7 +90,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(342, 303);
+            this.dataGridView1.Size = new System.Drawing.Size(380, 303);
             this.dataGridView1.TabIndex = 9;
             this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridView1_CellClick);
             // 
@@ -138,7 +138,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(775, 303);
-            this.splitContainer1.SplitterDistance = 204;
+            this.splitContainer1.SplitterDistance = 208;
             this.splitContainer1.TabIndex = 10;
             // 
             // splitContainer2
@@ -155,8 +155,8 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(567, 303);
-            this.splitContainer2.SplitterDistance = 119;
+            this.splitContainer2.Size = new System.Drawing.Size(563, 303);
+            this.splitContainer2.SplitterDistance = 129;
             this.splitContainer2.TabIndex = 0;
             // 
             // splitContainer3
@@ -172,8 +172,8 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
-            this.splitContainer3.Size = new System.Drawing.Size(444, 303);
-            this.splitContainer3.SplitterDistance = 342;
+            this.splitContainer3.Size = new System.Drawing.Size(430, 303);
+            this.splitContainer3.SplitterDistance = 380;
             this.splitContainer3.TabIndex = 0;
             // 
             // LBXtime
@@ -183,7 +183,7 @@
             this.LBXtime.IntegralHeight = false;
             this.LBXtime.Location = new System.Drawing.Point(0, 0);
             this.LBXtime.Name = "LBXtime";
-            this.LBXtime.Size = new System.Drawing.Size(98, 303);
+            this.LBXtime.Size = new System.Drawing.Size(46, 303);
             this.LBXtime.TabIndex = 0;
             this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
             // 
