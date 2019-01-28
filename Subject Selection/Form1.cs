@@ -65,7 +65,7 @@ namespace Subject_Selection
         {
             LBXchoose.Items.Clear();
             if (currentDecision != null)
-                foreach (Criteria criteria in currentDecision.GetRemainingOptions(plan))
+                foreach (Criteria criteria in currentDecision.GetOptions())
                     LBXchoose.Items.Add(criteria);
         }
 
