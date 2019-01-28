@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Subject_Selection
 {
@@ -47,7 +48,9 @@ namespace Subject_Selection
 
         static void AnalyzeDecision(Queue<Prerequisit> toAnalyze, Plan plan)
         {
-            DateTime start = DateTime.Now;
+            Stopwatch timer1 = new Stopwatch();
+            Stopwatch timer2 = new Stopwatch();
+            timer1.Start();
             
             //Iterate over the queue
             while (toAnalyze.Any())
@@ -83,12 +86,14 @@ namespace Subject_Selection
                 }
             }
 
-            DateTime middle = DateTime.Now;
+            timer1.Stop();
+            timer2.Start();
 
             //Sort decisions by the complexity of the decision (this only affects covercheck)
             plan.Decisions.Sort(delegate (Prerequisit p1, Prerequisit p2)
             {
                 int compare = 0;
+                if (compare == 0) compare = p1.RequiredCompletionTime(plan)             - p2.RequiredCompletionTime(plan);
                 if (compare == 0) compare = p1.GetRemainingOptions(plan).Count          - p2.GetRemainingOptions(plan).Count;
                 if (compare == 0) compare = p1.GetRemainingSubjects(plan).Count         - p2.GetRemainingSubjects(plan).Count;
                 if (compare == 0) compare = p1.GetRemainingPick(plan)                   - p2.GetRemainingPick(plan);
@@ -103,9 +108,9 @@ namespace Subject_Selection
                 if (!prerequisit.IsCovered(plan))
                     plan.Decisions.Add(prerequisit);
 
-            DateTime end = DateTime.Now;
-            Console.WriteLine("Making decisions:    " + (middle-start).Milliseconds + "ms");
-            Console.WriteLine("Removing repetition: " + (end-middle).Milliseconds + "ms");
+            timer2.Stop();
+            Console.WriteLine("Making decisions:    " + timer1.ElapsedMilliseconds + "ms");
+            Console.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
         }
     }
 }
