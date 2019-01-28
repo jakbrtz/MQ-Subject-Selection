@@ -83,8 +83,7 @@ namespace Subject_Selection
         {
             return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
-
-
+        
     }
 
     public class Prerequisit : Criteria
@@ -177,7 +176,7 @@ namespace Subject_Selection
                     else if (currentWord.Contains('-') || currentWord.Contains('+'))
                     {
                         //This refers to a range of subjects to pick from
-                        foreach (string subject in SubjectReader.GetSubjectsFromRange(currentWord, reasons))
+                        foreach (string subject in SubjectReader.GetSubjectsFromRange(currentWord))
                             options.Add(SubjectReader.GetSubject(subject));
                     }
                     else
@@ -206,8 +205,9 @@ namespace Subject_Selection
 
         public string GetSelectionType()
         {
+            //TODO: use an enum instead of string variable
             if (options == null) GetOptions();
-            return selectionType;
+            return selectionType.ToUpper();
         }
 
         public override string ToString()
@@ -232,7 +232,8 @@ namespace Subject_Selection
 
         public List<Criteria> GetRemainingOptions(Plan plan)
         {
-            return GetOptions().Where(criteria => !criteria.HasBeenMet(plan, RequiredCompletionTime(plan)) && !criteria.HasBeenBanned(plan)).ToList();
+            return GetOptions().Where(criteria => !criteria.HasBeenMet(plan, RequiredCompletionTime(plan)) && 
+                !criteria.HasBeenBanned(plan)).ToList();
         }
 
         public int GetRemainingPick(Plan plan)
@@ -250,9 +251,8 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
-            //This is not accurate at all, however it is my best solution to avoiding stack overflows.
-            if (GetPick() != GetOptions().Count)
-                return false;
+            //Severly speed up calculation time
+            if (IsVague()) return false;
             //This is a simple catch to check for bans without checking recursively
             if (GetRemainingPick(plan) > GetOptions().Count)
                 return true;
@@ -339,6 +339,7 @@ namespace Subject_Selection
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
+        //TODO: cache result
         public int RequiredCompletionTime(Plan plan)
         {
             return reasons.Min(reason => reason.GetChosenTime(plan));
@@ -356,7 +357,7 @@ namespace Subject_Selection
 
         public bool IsVague()
         {
-            return selectionType == "CP" && criteria.Contains('*');
+            return selectionType == "CP" && (criteria.Contains('*') || GetSubjects().Intersect(GetReasons()).Any());
         }
     }
 }

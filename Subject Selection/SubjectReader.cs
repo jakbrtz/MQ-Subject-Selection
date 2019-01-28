@@ -38,7 +38,7 @@ namespace Subject_Selection
              */
         }
 
-        public static List<string> GetSubjectsFromRange(string query, List<Subject> reasons)
+        public static List<string> GetSubjectsFromRange(string query)
         {
             /*
              * Queries are made by using a dash to represent a range
@@ -74,7 +74,7 @@ namespace Subject_Selection
                 subject.StartsWith(unit) &&
                 lower <= int.Parse(subject.Substring(subject.Length - 3)) &&
                 int.Parse(subject.Substring(subject.Length - 3)) <= upper)
-                .Except(reasons.ConvertAll(reason => reason.ID)).ToList();
+                .ToList();
         }
 
         public static int GetNumber(this Subject subject)
