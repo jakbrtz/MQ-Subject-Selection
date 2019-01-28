@@ -22,9 +22,9 @@ namespace Subject_Selection
             List<Prerequisit> decisions = plan.Decisions.Where(decision => decision != prerequisit).ToList();
 
             //Remove all prerequisits that don't have any overlap with the main prerequisit 
-            decisions = decisions.Where(decision => decision.GetRemainingSubjects(plan).Any(subject => prerequisit.GetRemainingSubjects(plan).Contains(subject))).ToList();
-            if (decisions.Count == 0)
-                return false;
+            //decisions = decisions.Where(decision => decision.GetRemainingSubjects(plan).Any(subject => prerequisit.GetRemainingSubjects(plan).Contains(subject))).ToList();
+            //if (decisions.Count == 0)
+            //    return false;
 
             //Check if the sum of the prerequisits' pick is more than the main prerequisit's pick
             if (decisions.Sum(decision => decision.GetRemainingPick(plan)) < prerequisit.GetRemainingPick(plan))
