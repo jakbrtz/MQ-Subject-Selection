@@ -73,7 +73,7 @@ namespace Subject_Selection
                 if (decision.MustPickAllRemaining(plan))
                 {
                     //If everything must be selected, select everything. Add the new prerequisits to the list
-                    foreach (Criteria option in decision.GetRemainingOptions(plan))
+                    foreach (Criteria option in decision.GetOptions())
                         if (option is Subject)
                             AddSubject(option as Subject, plan, toAnalyze);
                         else if (option is Prerequisit)
@@ -93,8 +93,8 @@ namespace Subject_Selection
             plan.Decisions.Sort(delegate (Prerequisit p1, Prerequisit p2)
             {
                 int compare = 0;
-                if (compare == 0) compare = p1.RequiredCompletionTime(plan)             - p2.RequiredCompletionTime(plan);
-                if (compare == 0) compare = p1.GetRemainingOptions(plan).Count          - p2.GetRemainingOptions(plan).Count;
+                //if (compare == 0) compare = p1.RequiredCompletionTime(plan)             - p2.RequiredCompletionTime(plan);
+                if (compare == 0) compare = p1.GetOptions().Count                       - p2.GetOptions().Count;
                 if (compare == 0) compare = p1.GetRemainingSubjects(plan).Count         - p2.GetRemainingSubjects(plan).Count;
                 if (compare == 0) compare = p1.GetRemainingPick(plan)                   - p2.GetRemainingPick(plan);
                 if (compare == 0) compare = p1.GetRemainingSubjects(plan)[0].GetLevel() - p2.GetRemainingSubjects(plan)[0].GetLevel();
