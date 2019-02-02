@@ -18,7 +18,7 @@ namespace Subject_Selection
     {
         public string ID { get; }
         public int CP { get; }
-        public List<string> Times { get; }
+        public List<int> Semesters { get; }
         public Prerequisit Prerequisits { get; }
         public string[] NCCWs { get; }
 
@@ -26,7 +26,16 @@ namespace Subject_Selection
         {
             ID = id;
             CP = int.Parse(cp);
-            Times = times.Split(' ').ToList();
+
+            Semesters = new List<int>();
+            foreach (string time in times.Split(' '))
+                if (time.StartsWith("S"))
+                    Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
+                //TODO: FY1, FY2, WV
+                else if (time.StartsWith("FY"))
+                    Semesters.Add(int.Parse(time.Substring(2, 1)) - 1); //The -1 is to account for the zero-based indexing
+            Semesters = Semesters.Distinct().ToList();
+
             Prerequisits = new Prerequisit(this, prerequisits);
             NCCWs = nccws.Split(' ');
         }
@@ -53,7 +62,7 @@ namespace Subject_Selection
         {
             //Find the first time after the prerequisits has been satisfied which also allows for the semester
             int time = Prerequisits.EarliestCompletionTime(MaxSubjects) + 1;
-            while (!Semesters().Contains(time % 3)) time++; //TODO %6 (3 new semesters)
+            while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
             return time;
         }
 
@@ -61,22 +70,9 @@ namespace Subject_Selection
         {
             List<int> output = new List<int>();
             for (int time = EarliestCompletionTime(plan.MaxSubjects); time < plan.MaxSubjects.Count; time++)
-                if (Semesters().Contains(time % 3))
+                if (Semesters.Contains(time % 3))
                     output.Add(time);
             return output;
-        }
-
-        //TODO: cache results
-        public List<int> Semesters()
-        {
-            List<int> output = new List<int>();
-            foreach (string time in Times)
-                if (time.StartsWith("S"))
-                    output.Add(int.Parse(time.Substring(1, 1)) - 1);
-                //TODO: FY1, FY2, WV
-                else if (time.StartsWith("FY"))
-                    output.Add(int.Parse(time.Substring(2, 1)) - 1); //The -1 is to account for the zero-based indexing
-            return output.Distinct().ToList();
         }
 
         public int GetChosenTime(Plan plan)
@@ -92,7 +88,7 @@ namespace Subject_Selection
         private string criteria;
         private List<Criteria> options;
         private int pick;
-        private string selectionType = "and";
+        private Selection selectionType = Selection.AND;
         private int earliestCompletionTime = -1;
 
         public Prerequisit(Criteria reason, string criteria)
@@ -104,7 +100,7 @@ namespace Subject_Selection
             this.criteria = criteria;
         }
 
-        public Prerequisit(Criteria reason, List<Criteria> options, int pick, string selectionType, string criteria)
+        public Prerequisit(Criteria reason, List<Criteria> options, int pick, Selection selectionType, string criteria)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
@@ -164,14 +160,17 @@ namespace Subject_Selection
                     {
                         //If the word was a number, then it is counting how many of the options need to be selected
                         pick = int.Parse(currentWord.Substring(0, currentWord.Length - 2)) / 3;
-                        selectionType = "CP";
+                        selectionType = Selection.CP;
                     }
-                    else if (currentWord == "AND" || currentWord == "OR")
+                    else if (currentWord == "OR")
                     {
                         //This means the word described how to pick options
-                        selectionType = currentWord;
-                        if (currentWord == "OR")
-                            pick = 1;
+                        selectionType = Selection.OR;
+                        pick = 1;
+                    }
+                    else if (currentWord == "AND")
+                    {
+                        selectionType = Selection.AND;
                     }
                     else if (currentWord.Contains('-') || currentWord.Contains('+'))
                     {
@@ -192,7 +191,7 @@ namespace Subject_Selection
                 i++;
             }
 
-            if (selectionType.ToUpper() == "AND") pick = options.Count;
+            if (selectionType == Selection.AND) pick = options.Count;
 
             return options;
         }
@@ -203,11 +202,10 @@ namespace Subject_Selection
             return pick;
         }
 
-        public string GetSelectionType()
+        public Selection GetSelectionType()
         {
-            //TODO: use an enum instead of string variable
             if (options == null) GetOptions();
-            return selectionType.ToUpper();
+            return selectionType;
         }
 
         public override string ToString()
@@ -215,12 +213,11 @@ namespace Subject_Selection
             if (criteria != "" && criteria != null)
                 return criteria;
             //This is used by the GetRemainingDecision method.
-            if (selectionType == "CP")
+            if (selectionType == Selection.CP)
             {
                 criteria = (GetPick() * 3).ToString() + "CP ";
                 foreach (Subject subject in GetOptions())
                     criteria += subject + " ";
-
             }
             else
             {
@@ -357,7 +354,14 @@ namespace Subject_Selection
 
         public bool IsVague()
         {
-            return selectionType == "CP" && (criteria.Contains('*') || GetSubjects().Intersect(GetReasons()).Any());
+            return selectionType == Selection.CP && (criteria.Contains('*') || GetSubjects().Intersect(GetReasons()).Any());
+        }
+
+        public bool HasVaguePrerequisit()
+        {
+            return IsVague() || GetOptions().Exists(criteria => criteria is Prerequisit && (criteria as Prerequisit).HasVaguePrerequisit());
         }
     }
+
+    public enum Selection { AND, OR, CP }
 }
