@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Subject_Selection
 {
@@ -62,6 +63,9 @@ namespace Subject_Selection
 
         public void Order()
         {
+            Stopwatch timer3 = new Stopwatch();
+            timer3.Start();
+
             int session = 0;
             SubjectsInOrder.Clear();
             while (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
@@ -80,11 +84,15 @@ namespace Subject_Selection
                     //Favour subjects forced into this timeslot
                     .Except(SelectedSubjects.Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session))
                     .OrderBy(subject => forcedTimes.ContainsKey(subject) ? forcedTimes[subject] : MaxSubjects.Count)
-                    //Only select 4 subjects
+                    //Don't select more subjects than is allowed
                     .Take(MaxSubjects[session])));
+                //TODO: include levels of how 'forced' a time is
 
                 session = session + 1;
             }
+            
+            timer3.Stop();
+            Console.WriteLine("Ordering Subjects:   " + timer3.ElapsedMilliseconds + "ms");
         }
 
         //IsLeaf and IsAbove are helper functions for Order()
@@ -95,14 +103,17 @@ namespace Subject_Selection
             //If the prerequisit is met, return true
             if (prerequisit.HasBeenMet(this, time))
                 return true;
+            //TODO: what if the prerequisit is vague?
+            if (prerequisit.IsVague())
+                return true;
             //Consider each option
             foreach (Criteria criteria in prerequisit.GetOptions())
-                //If the option needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
+                //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
-                else if (criteria is Prerequisit && !(criteria as Prerequisit).IsVague() && !IsLeaf(subject, time, criteria as Prerequisit))
-                    return false;
+                else if (criteria is Prerequisit && !IsLeaf(subject, time, criteria as Prerequisit))
+                    return false; 
             return true;
         }
 
