@@ -41,7 +41,6 @@ namespace Subject_Selection
             currentSubject = selected as Subject;
             currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
             UpdateDecisionList();
-            LoadCurrentDecision();
             LoadPossibleTimes(currentSubject);
 
             Console.WriteLine(currentSubject.Prerequisits);
@@ -50,7 +49,6 @@ namespace Subject_Selection
         void UpdateScreen()
         {
             UpdateDecisionList();
-            LoadCurrentDecision();
             UpdatePlanGUI();
         }
 
@@ -59,6 +57,8 @@ namespace Subject_Selection
             LBXdecisions.Items.Clear();
             foreach (Prerequisit decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
+            LBXdecisions.SelectedItem = currentDecision;
+            LoadCurrentDecision();
         }
 
         void LoadCurrentDecision()
@@ -107,6 +107,9 @@ namespace Subject_Selection
                 Decider.AddSubject(currentSubject, plan);
                 
                 currentDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
+                if (currentDecision == null && plan.Decisions.Count != 0)
+                    currentDecision = plan.Decisions[0];
+
                 UpdateScreen();
             }
             else if (LBXchoose.SelectedItem is Prerequisit)
