@@ -52,6 +52,8 @@ namespace Subject_Selection
             LBXdecisions.Items.Clear();
             foreach (Prerequisit decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
+            if (currentDecision == null && plan.Decisions.Count != 0)
+                currentDecision = plan.Decisions[0];
             LBXdecisions.SelectedItem = currentDecision;
             LoadCurrentDecision();
         }
@@ -101,13 +103,13 @@ namespace Subject_Selection
             {
                 currentSubject = LBXchoose.SelectedItem as Subject;
                 Decider.AddSubject(currentSubject, plan);
-                
-                currentDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
-                if (currentDecision == null && plan.Decisions.Count != 0)
-                    currentDecision = plan.Decisions[0];
-
-                UpdateDecisionList();
+                Prerequisit nextDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
                 UpdatePlanGUI();
+                if (nextDecision != null)
+                {
+                    currentDecision = nextDecision;
+                    UpdateDecisionList();
+                }
             }
             else if (LBXchoose.SelectedItem is Prerequisit)
             {
