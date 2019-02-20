@@ -53,7 +53,7 @@ namespace Subject_Selection
             foreach (Prerequisit decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
             if (currentDecision == null && plan.Decisions.Count != 0)
-                currentDecision = plan.Decisions[0];
+                currentDecision = plan.Decisions[0]; //TODO: pick best next decision
             LBXdecisions.SelectedItem = currentDecision;
             LoadCurrentDecision();
         }
