@@ -27,7 +27,8 @@ namespace Subject_Selection
                 "COMP115 COMP125 ISYS114 (STAT170 OR STAT171) COMP225 COMP257 ISYS224 (STAT270 OR STAT271) COMP336 ISYS358 STAT302 (3CP COMP332 COMP348 STAT375)"
                 , "");
             Decider.AddSubject(degree, plan);
-            UpdateScreen();
+            UpdateDecisionList();
+            UpdatePlanGUI();
         }
 
         Plan plan = new Plan();
@@ -44,12 +45,6 @@ namespace Subject_Selection
             LoadPossibleTimes(currentSubject);
 
             Console.WriteLine(currentSubject.Prerequisits);
-        }
-
-        void UpdateScreen()
-        {
-            UpdateDecisionList();
-            UpdatePlanGUI();
         }
 
         void UpdateDecisionList()
@@ -79,6 +74,7 @@ namespace Subject_Selection
                     foreach (DataGridViewCell cell in row.Cells)
                         if (cell.Value is Subject && cell.Value == currentSubject)
                             dataGridView1.CurrentCell = cell;
+            DataGridView1_CellClick(null, null);
         }
 
         void LoadPossibleTimes(Subject selected)
@@ -110,7 +106,8 @@ namespace Subject_Selection
                 if (currentDecision == null && plan.Decisions.Count != 0)
                     currentDecision = plan.Decisions[0];
 
-                UpdateScreen();
+                UpdateDecisionList();
+                UpdatePlanGUI();
             }
             else if (LBXchoose.SelectedItem is Prerequisit)
             {
@@ -124,7 +121,6 @@ namespace Subject_Selection
             int time = int.Parse(LBXtime.SelectedItem.ToString());
             Decider.MoveSubject(currentSubject, plan, time);
             UpdatePlanGUI();
-            DataGridView1_CellClick(null, null);
         }
     }
 }
