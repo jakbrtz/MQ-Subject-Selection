@@ -103,8 +103,8 @@ namespace Subject_Selection
             //If the prerequisit is met, return true
             if (prerequisit.HasBeenMet(this, time))
                 return true;
-            //If the prerequisit is vague and the recommended year has passed, count this as a leaf
-            if (prerequisit.IsVague() && subject.GetLevel() <= time/3 + 1)
+            //If the prerequisit is an elective and the recommended year has passed, count this as a leaf
+            if (prerequisit.IsElective() && subject.GetLevel() <= time/3 + 1)
                 return true;
             //Consider each option
             foreach (Criteria criteria in prerequisit.GetOptions())

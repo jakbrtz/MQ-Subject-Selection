@@ -250,7 +250,7 @@ namespace Subject_Selection
         public override bool HasBeenBanned(Plan plan)
         {
             //Severly speed up calculation time
-            if (IsVague()) return false;
+            if (IsElective()) return false;
             //This is a simple catch to check for bans without checking recursively
             if (GetRemainingPick(plan) > GetOptions().Count)
                 return true;
@@ -306,7 +306,7 @@ namespace Subject_Selection
                 else if (option is Prerequisit)
                     remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
             string newcriteria = "";
-            if (IsVague()) newcriteria = (GetRemainingPick(plan)*3) + "CP " + criteria.Substring(criteria.IndexOf(' ') + 1);
+            if (IsElective()) newcriteria = (GetRemainingPick(plan)*3) + "CP " + criteria.Substring(criteria.IndexOf(' ') + 1);
             return new Prerequisit(this, remainingOptions, GetRemainingPick(plan), selectionType, newcriteria);
         }
 
@@ -319,7 +319,7 @@ namespace Subject_Selection
             //Lock the value to avoid infinite loops
             earliestCompletionTime = 100;
             //This makes finding the time based on credit points a lot faster
-            if (IsVague())
+            if (IsElective())
             {
                 int count = 0;
                 int time = -1;
@@ -353,14 +353,14 @@ namespace Subject_Selection
             return reasons;
         }
 
-        public bool IsVague()
+        public bool IsElective()
         {
             return selectionType == Selection.CP && (criteria.Contains('*') || GetSubjects().Intersect(GetReasons()).Any());
         }
 
-        public bool HasVaguePrerequisit()
+        public bool HasElectivePrerequisit()
         {
-            return IsVague() || GetOptions().Exists(criteria => criteria is Prerequisit && (criteria as Prerequisit).HasVaguePrerequisit());
+            return IsElective() || GetOptions().Exists(criteria => criteria is Prerequisit && (criteria as Prerequisit).HasElectivePrerequisit());
         }
     }
 
