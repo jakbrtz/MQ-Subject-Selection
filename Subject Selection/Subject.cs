@@ -130,6 +130,7 @@ namespace Subject_Selection
 
             while (i < criteria.Length)
             {
+
                 string currentWord = "";
                 for (char c; i < criteria.Length && (c = criteria[i]) != ' ' && c != '('; i++)
                     currentWord += c;
@@ -180,7 +181,7 @@ namespace Subject_Selection
                     }
                     else
                     {
-                        //otherwise it's just a normal subject
+                        //otherwise it's treated as normal subject
                         Subject subject = SubjectReader.GetSubject(currentWord);
                         if (subject != null)
                             options.Add(subject);

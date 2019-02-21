@@ -8,17 +8,16 @@ namespace Subject_Selection
 {
     public static class SubjectReader
     {
+        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
-
-        private static void AddSubject(Subject subject)
-        {
-            subjects.Add(subject.ID, subject);
-        }
 
         public static Subject GetSubject(string id)
         {
-            if (subjects.TryGetValue(id.Split('[')[0], out Subject value))
-                return value;
+            id = id.Split('[')[0];
+            if (subjects.TryGetValue(id, out Subject subject))
+                return subject;
+            if (majors.TryGetValue(id, out Subject major))
+                return major;
             return null;
         }
 
@@ -27,7 +26,8 @@ namespace Subject_Selection
             foreach (string line in Properties.Resources.Subjects.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None))
             {
                 string[] properties = line.Split('|');
-                AddSubject(new Subject(properties[0], properties[1], properties[2], properties[3], properties[4]));
+                Subject subject = new Subject(properties[0], properties[1], properties[2], properties[3], properties[4]);
+                subjects.Add(subject.ID, subject);
             }
 
             /* TODO:
@@ -36,6 +36,13 @@ namespace Subject_Selection
              * GetOptions() assumes that all subjects are always 3cp
              * consider the fact the offer times change (and some subjects aren't offered)
              */
+
+            foreach (string line in Properties.Resources.Majors.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None))
+            {
+                string[] properties = line.Split('|');
+                Subject major = new Subject(properties[0], "0", "S1D S2D S3D", properties[1], ""); //TODO, treat majors differently
+                majors.Add(major.ID, major);
+            }
         }
 
         public static List<string> GetSubjectsFromRange(string query)
@@ -79,9 +86,10 @@ namespace Subject_Selection
 
         public static int GetNumber(this Subject subject)
         {
-            if (subject.ID == "COURSES") return 10; //TODO: remove this by no longer treating COURSES as a subject
             //Assumes all IDs have 3 digits at end
-            return int.Parse(subject.ID.Substring(subject.ID.Length - 3));
+            if(int.TryParse(subject.ID.Substring(subject.ID.Length - 3), out int value)) //TODO: remove this by no longer treating COURSES and majors as subjects
+                return value;
+            return 10;
         }
 
         public static int GetLevel(this Subject subject)

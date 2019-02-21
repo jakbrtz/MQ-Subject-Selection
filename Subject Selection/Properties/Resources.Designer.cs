@@ -61,22 +61,29 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to COMP111
-        ///COMP115
-        ///COMP125|COMP115
-        ///COMP188
-        ///COMP202|COMP125
-        ///COMP225|COMP125 (1 MATH132-136 DMTH137 STAT150 STAT170 STAT171 STAT175)
-        ///COMP229|COMP125
-        ///COMP247|1 COMP115 ISYS114
-        ///COMP249|COMP125 ISYS114
-        ///COMP255|(6 100-999) COMP125
-        ///COMP257|COMP125 ISYS114 (1 STAT170 STAT171)
-        ///COMP260|COMP115 (1 COMP111 MAS_111)
-        ///COMP329|(13 100-999) (1 COMP225 COMP229 COMP249)
-        ///COMP330|(13 100-999) COMP202 (1 COMP225 COMP229) (1 MATH135 DMTH137)
-        ///COMP332|(13 100-999) (1 COMP225 COMP229)
-        ///COMP333|(13 100-999) (COMP225 DMTH23 [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to WEB18V1|COMP115 COMP125 DMTH137 ISYS114 MAS_110 COMP249 ISYS224 MAS_241 COMP344 COMP348 ISYS358 MAS_340
+        ///DES18V1|(STAT150 OR STAT170 OR STAT171) STAT279 (STAT270 OR STAT271) (STAT272 OR STAT273 OR STAT278) STAT399 STAT321 STAT379 (STAT302 OR STAT328)
+        ///CMP18V1|(6CP COMP100-199 ISYS100-199) (6CP COMP200-299 ISYS200-299) ISYS358 (9CP COMP300-350 ISYS300-350 ISYS360)
+        ///STA18V1|(STAT150 OR STAT170 OR STAT171) (STAT270 OR STAT271) (STAT272 OR STAT273) (STAT278 OR STAT279) STAT399 STAT375 (6CP STAT302 STAT306 STAT3 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Majors {
+            get {
+                return ResourceManager.GetString("Majors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to COMP111|3|S2D||INFO111 MAS111
+        ///COMP115|3|S1D S1E S3D||COMP124 COMP155 ITEC100
+        ///COMP125|3|S1E S2D|COMP115|COMP165
+        ///COMP188|3|FY1D S1D S2D||
+        ///COMP202|3|S2D|COMP125|COMP226
+        ///COMP225|3|S1D|COMP125 AND (3CP MATH132-136 DMTH137 STAT150 STAT170 STAT171 STAT175)|ITEC200
+        ///COMP229|3|S2D|COMP125|ITEC200
+        ///COMP247|3|S1D|COMP115 OR ISYS114|COMP327 COMP341 ITEC102
+        ///COMP249|3|S1D|COMP125 ISYS114|ITEC301
+        ///COMP255|3|S2D|(18CP *100+) COMP125|COMP227 ISYS227 ITEC202
+        ///COMP257|3|S2D|(COMP115 OR COMP125) AND (STAT150 OR STAT170 O [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Subjects {
             get {
