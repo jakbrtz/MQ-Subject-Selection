@@ -89,7 +89,7 @@ namespace Subject_Selection
             //Assumes all IDs have 3 digits at end
             if(int.TryParse(subject.ID.Substring(subject.ID.Length - 3), out int value)) //TODO: remove this by no longer treating COURSES and majors as subjects
                 return value;
-            return 10;
+            return 1000;
         }
 
         public static int GetLevel(this Subject subject)
