@@ -20,9 +20,9 @@ namespace Subject_Selection
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            foreach (int i in new int[]{ 4, 4, 1, 4, 4, 1, 4, 4, 1, 4, 4, 1})
+            foreach (int i in new int[]{ 4, 4, 1, 4, 4, 0, 4, 4, 0, 2, 1})
                 plan.MaxSubjects.Add(i);
-            Subject degree = new Subject("COURSES", "0", "S1D S2D S3D", "STA18V1 OR DAS18V1", "");
+            Subject degree = new Subject("COURSES", "0", "S1D S2D S3D", "(69CP *100+) STA18V1 DAS18V1", "");
             Decider.AddSubject(degree, plan);
             UpdateDecisionList();
             UpdatePlanGUI();
@@ -49,8 +49,8 @@ namespace Subject_Selection
             LBXdecisions.Items.Clear();
             foreach (Prerequisit decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
-            if (currentDecision == null && plan.Decisions.Count != 0)
-                currentDecision = plan.Decisions[0]; //TODO: pick best next decision
+            if (currentDecision == null)
+                currentDecision = plan.PickNextDecision();
             LBXdecisions.SelectedItem = currentDecision;
             LoadCurrentDecision();
         }
