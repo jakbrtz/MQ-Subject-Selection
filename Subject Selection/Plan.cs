@@ -73,9 +73,8 @@ namespace Subject_Selection
             Stopwatch timer3 = new Stopwatch();
             timer3.Start();
 
-            int session = 0;
             SubjectsInOrder.Clear();
-            while (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
+            for (int session = 0; session < MaxSubjects.Count; session++)
             {
                 //Only select subjects which have not been selected yet
                 SubjectsInOrder.Add(new List<Subject>(SelectedSubjects
@@ -88,15 +87,17 @@ namespace Subject_Selection
                     IsLeaf(subject, session)))
                     //Favour lower level subjects
                     .OrderBy(subject => subject.GetLevel())
+                    .OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(parent => IsAbove(parent, subject)))
                     //Favour subjects forced into this timeslot
                     .Except(SelectedSubjects.Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session))
                     .OrderBy(subject => forcedTimes.ContainsKey(subject) ? forcedTimes[subject] : MaxSubjects.Count)
                     //Don't select more subjects than is allowed
                     .Take(MaxSubjects[session])));
                 //TODO: include levels of how 'forced' a time is
-
-                session = session + 1;
             }
+
+            if (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
+                Console.WriteLine("ERROR: Couldn't fit in all your subjects");
             
             timer3.Stop();
             Console.WriteLine("Ordering Subjects:   " + timer3.ElapsedMilliseconds + "ms");
