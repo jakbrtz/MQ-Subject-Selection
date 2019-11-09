@@ -19,7 +19,7 @@ namespace Subject_Selection.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -69,6 +69,26 @@ namespace Subject_Selection.Properties {
         internal static string Majors {
             get {
                 return ResourceManager.GetString("Majors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Scope,Code,Name,&quot;Credit
+        ///Points&quot;,Unit Designation,Unit Type,Prerequisites,Corequisites,NCCW,When Offered,On Campus Attendance,Staff Contact,&quot;Offering
+        ///Department&quot;,Offering Faculty,&quot;FOE -
+        ///Narrow&quot;,Pass/Fail,Co-taught Units,Quota,Unit Activity,ASQCNew,ASQCRecoded,WWCC,Status,Placement in SONIA,Authority,Capstone unit?,Awards/Majors
+        ///Undergraduate,ABST1000,Introducing Indigenous Australia,10,,,,,&quot;ABSP100, ABST100&quot;,&quot;S1 Day
+        ///S1 Online
+        ///S2 Day
+        ///S2 Online&quot;,&quot;
+        ///
+        ///
+        ///&quot;,&quot;Ms Josephine Bourne
+        ///        ///&quot;,Department of Indigenous Stud [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ScheduleOfUndergraduateUnits {
+            get {
+                return ResourceManager.GetString("ScheduleOfUndergraduateUnits", resourceCulture);
             }
         }
         
