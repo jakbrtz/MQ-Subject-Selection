@@ -17,27 +17,22 @@ namespace Subject_Selection
     public class Subject : Criteria
     {
         public string ID { get; }
-        public int CP { get; }
         public List<int> Semesters { get; }
         public Prerequisit Prerequisits { get; }
         public string[] NCCWs { get; }
 
-        public Subject(string id, string cp, string times, string prerequisits, string nccws)
+        public Subject(string id, string times, string prerequisits, string nccws)
         {
             ID = id;
-            CP = int.Parse(cp);
 
             Semesters = new List<int>();
-            foreach (string time in times.Split(' '))
+            foreach (string time in times.Split('\n'))
                 if (time.StartsWith("S"))
                     Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
-                //TODO: FY1, FY2, WV
-                else if (time.StartsWith("FY"))
-                    Semesters.Add(int.Parse(time.Substring(2, 1)) - 1); //The -1 is to account for the zero-based indexing
             Semesters = Semesters.Distinct().ToList();
 
             Prerequisits = new Prerequisit(this, prerequisits);
-            NCCWs = nccws.Split(' ');
+            NCCWs = nccws.Split(',');
         }
 
         public override string ToString()
@@ -87,8 +82,8 @@ namespace Subject_Selection
         List<Subject> reasons = new List<Subject>();
         private string criteria;
         private List<Criteria> options;
-        private int pick;
-        private Selection selectionType = Selection.AND;
+        private int pick = 1;
+        private Selection selectionType = Selection.OR;
         private int earliestCompletionTime = -1;
 
         public Prerequisit(Criteria reason, string criteria)
@@ -114,84 +109,118 @@ namespace Subject_Selection
 
         public List<Criteria> GetOptions()
         {
+            // Load the cached result
             if (options != null) return options;
 
-            /* Criterior are imported as text, and need to be parsed. For example:
-             * (39CP *100+) AND COMP202 AND (COMP225 OR COMP229) AND (MATH135 OR DMTH137)
-             * Anything in brackets is another prereqisit
-             * Anything with a dash/plus represents a range of subjects
-             * The words CP/AND/OR explain how many criteria must be selected
-             * It is assumed that AND and OR are not both selected
-             */
-
-            //Start by traversing the text until a space or bracket is reached
+            // Create a list of options and prepare to translate the text description
             options = new List<Criteria>();
-            int i = 0;
 
-            while (i < criteria.Length)
+            criteria = SubjectReader.DealWithBrackets(criteria);
+
+            // Get rid of words that make this difficult
+            criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
+
+            // Check if the criteria is a single subject
+            if (SubjectReader.TryGetSubject(criteria, out Subject subject))
             {
-
-                string currentWord = "";
-                for (char c; i < criteria.Length && (c = criteria[i]) != ' ' && c != '('; i++)
-                    currentWord += c;
-                
-                if (i < criteria.Length && criteria[i] == '(')
-                {
-                    //If a bracket is reached, find it's closing bracket and create another prerequisit
-                    i++;
-                    int indents = 1;
-                    for (char c; !((c = criteria[i]) == ')' && indents == 1); i++)
-                    {
-                        currentWord += c;
-                        if (c == '(')
-                            indents++;
-                        else if (c == ')')
-                            indents--;
-                    }
-                    options.Add(new Prerequisit(this, currentWord));
-                }
-                else
-                {
-                    //If a space is reached, determine what the previous word was
-                    if (currentWord == "")
-                    {
-                        //I can't be bothered to write the parser properly, so sometimes the word ends up being ""
-                    }
-                    else if (currentWord.EndsWith("CP"))
-                    {
-                        //If the word was a number, then it is counting how many of the options need to be selected
-                        pick = int.Parse(currentWord.Substring(0, currentWord.Length - 2)) / 3;
-                        selectionType = Selection.CP;
-                    }
-                    else if (currentWord == "OR")
-                    {
-                        //This means the word described how to pick options
-                        selectionType = Selection.OR;
-                        pick = 1;
-                    }
-                    else if (currentWord == "AND")
-                    {
-                        selectionType = Selection.AND;
-                    }
-                    else if (currentWord.Contains('-') || currentWord.Contains('+'))
-                    {
-                        //This refers to a range of subjects to pick from
-                        foreach (string subject in SubjectReader.GetSubjectsFromRange(currentWord))
-                            options.Add(SubjectReader.GetSubject(subject));
-                    }
-                    else
-                    {
-                        //otherwise it's treated as normal subject
-                        Subject subject = SubjectReader.GetSubject(currentWord);
-                        if (subject != null)
-                            options.Add(subject);
-                    }
-
-                }
-
-                i++;
+                options.Add(subject);
+                selectionType = Selection.AND;
+                return options;
             }
 
+            // Splits the criteria accounting for brackets, and putting the output in `tokens`
+            List<string> tokens;
+            bool TrySplit(string search, string without = "", bool firstWord = false)
+            {
+                return SubjectReader.SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
+            }
+
+            // Check if the criteria contains specific key words
+
+            if (TrySplit(" INCLUDING "))
+            {
+                selectionType = Selection.AND;
+                options.Add(new Prerequisit(this, tokens[0]));
+                options.Add(new Prerequisit(this, tokens[1]));
+            }
+
+            else if (TrySplit("POST HSC"))
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 3);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            else if (TrySplit("HSC"))
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 3);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            else if (TrySplit(" AND "))
+            {
+                selectionType = Selection.AND;
+                foreach (string token in tokens)
+                    options.Add(new Prerequisit(this, token));
+            }
+
+            else if (TrySplit("ADMISSION TO"))
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 3);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            else if (TrySplit("PERMISSION"))
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 3);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            else if (TrySplit("A GPA OF"))
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 3);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            else if (TrySplit("CP", without: "CP OR", firstWord: true)) //Includes `CP AT`, 'CP IN`, and `CP FROM`
+            {
+                selectionType = Selection.CP;
+                pick = int.Parse(tokens[0]) / 10; // 10 is a magic number equal to the amount of credit points per subject
+                options = SubjectReader.GetSubjectsFromQuery(tokens[1]);
+            }
+
+            else if (TrySplit(" OR "))
+            {
+                selectionType = Selection.OR;
+                pick = 1;
+                foreach (string token in tokens)
+                    options.Add(new Prerequisit(this, token));
+            }
+
+            // Unknown edge cases
+            else if (criteria != "" &&
+                !(criteria.Split('(')[0].Length <  8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length-3), out int idk)) &&
+                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out int wut)))
+            {
+                Console.WriteLine(reasons[0]);
+                throw new Exception("idk how to parse this:\n" + criteria);
+            }
+
+            // If the selection type is AND then everything must be picked
             if (selectionType == Selection.AND) pick = options.Count;
 
             return options;
@@ -216,7 +245,7 @@ namespace Subject_Selection
             //This is used by the GetRemainingDecision method.
             if (selectionType == Selection.CP)
             {
-                criteria = (GetPick() * 3).ToString() + "CP ";
+                criteria = (GetPick() * 10).ToString() + "CP ";
                 foreach (Subject subject in GetOptions())
                     criteria += subject + " ";
             }
@@ -330,7 +359,7 @@ namespace Subject_Selection
                 }
                 return earliestCompletionTime = time;
             }
-            //cache the result
+            //cache the result // todo: use lazy values to cache results
             return earliestCompletionTime =
                 //Get a list of all the option's earliest completion times
                 GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime(MaxSubjects))

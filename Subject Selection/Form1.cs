@@ -22,7 +22,7 @@ namespace Subject_Selection
         {
             foreach (int i in new int[]{ 4, 4, 1, 4, 4, 0, 4, 4, 0, 2, 1})
                 plan.MaxSubjects.Add(i);
-            Subject degree = new Subject("COURSES", "0", "S1D S2D S3D", "(69CP *100+) STA18V1 DAS18V1", "");
+            Subject degree = new Subject("COURSES", "S1D S2D S3D", "10CP", "");
             Decider.AddSubject(degree, plan);
             UpdateDecisionList();
             UpdatePlanGUI();
