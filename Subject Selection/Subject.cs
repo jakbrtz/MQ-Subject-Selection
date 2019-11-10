@@ -149,7 +149,7 @@ namespace Subject_Selection
                 selectionType = Selection.AND;
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 3);
+                    remaining = remaining.Substring(0, remaining.Length - 4);
                 options.Add(new Prerequisit(this, remaining));
             }
 
@@ -158,7 +158,7 @@ namespace Subject_Selection
                 selectionType = Selection.AND;
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 3);
+                    remaining = remaining.Substring(0, remaining.Length - 4);
                 options.Add(new Prerequisit(this, remaining));
             }
 
@@ -174,7 +174,7 @@ namespace Subject_Selection
                 selectionType = Selection.AND;
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 3);
+                    remaining = remaining.Substring(0, remaining.Length - 4);
                 options.Add(new Prerequisit(this, remaining));
             }
 
@@ -183,7 +183,7 @@ namespace Subject_Selection
                 selectionType = Selection.AND;
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 3);
+                    remaining = remaining.Substring(0, remaining.Length - 4);
                 options.Add(new Prerequisit(this, remaining));
             }
 
@@ -192,7 +192,7 @@ namespace Subject_Selection
                 selectionType = Selection.AND;
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 3);
+                    remaining = remaining.Substring(0, remaining.Length - 4);
                 options.Add(new Prerequisit(this, remaining));
             }
 
@@ -211,8 +211,14 @@ namespace Subject_Selection
                     options.Add(new Prerequisit(this, token));
             }
 
+            else if (criteria == "")
+            {
+                selectionType = Selection.AND;
+                pick = 0;
+            }
+
             // Unknown edge cases
-            else if (criteria != "" &&
+            else if (
                 !(criteria.Split('(')[0].Length <  8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length-3), out int idk)) &&
                 !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out int wut)))
             {
@@ -278,11 +284,13 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
-            //Severly speed up calculation time
+            // Severly speed up calculation time
             if (IsElective()) return false;
-            //This is a simple catch to check for bans without checking recursively
+            // This is a simple catch to check for bans without checking recursively
             if (GetRemainingPick(plan) > GetOptions().Count)
                 return true;
+            // TODO: remove this
+            return false;
             //This is the most accurate, however it leads to infinite loops
             return GetRemainingPick(plan) > GetRemainingOptions(plan).Count;
         }
@@ -335,7 +343,12 @@ namespace Subject_Selection
                 else if (option is Prerequisit)
                     remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
             string newcriteria = "";
-            if (IsElective()) newcriteria = (GetRemainingPick(plan)*3) + "CP " + criteria.Substring(criteria.IndexOf(' ') + 1);
+            if (IsElective())
+            {
+                newcriteria = (GetRemainingPick(plan) * 10) + "CP";
+                if (criteria.Contains("CP "))
+                    newcriteria += " " + criteria.Substring(criteria.IndexOf(' ') + 1);
+            }
             return new Prerequisit(this, remainingOptions, GetRemainingPick(plan), selectionType, newcriteria);
         }
 
@@ -384,7 +397,7 @@ namespace Subject_Selection
 
         public bool IsElective()
         {
-            return selectionType == Selection.CP && (criteria.Contains('*') || GetSubjects().Intersect(GetReasons()).Any());
+            return selectionType == Selection.CP && ((!criteria.Contains("units") && !criteria.Contains("from")) || GetSubjects().Intersect(GetReasons()).Any());
         }
 
         public bool HasElectivePrerequisit()
