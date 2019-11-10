@@ -93,6 +93,8 @@ namespace Subject_Selection
             else if (reason is Prerequisit)
                 reasons.AddRange((reason as Prerequisit).reasons);
             this.criteria = criteria;
+
+            if (criteria == "") ToString();
         }
 
         public Prerequisit(Criteria reason, List<Criteria> options, int pick, Selection selectionType, string criteria)
@@ -105,6 +107,8 @@ namespace Subject_Selection
             this.options = options;
             this.pick = pick;
             this.selectionType = selectionType;
+
+            if (criteria == "") ToString();
         }
 
         public List<Criteria> GetOptions()
@@ -251,9 +255,8 @@ namespace Subject_Selection
             //This is used by the GetRemainingDecision method.
             if (selectionType == Selection.CP)
             {
-                criteria = (GetPick() * 10).ToString() + "CP ";
-                foreach (Subject subject in GetOptions())
-                    criteria += subject + " ";
+                criteria = (GetPick() * 10).ToString() + "cp from ";
+                criteria += string.Join(" or ", GetOptions());
             }
             else
             {
@@ -345,8 +348,8 @@ namespace Subject_Selection
             string newcriteria = "";
             if (IsElective())
             {
-                newcriteria = (GetRemainingPick(plan) * 10) + "CP";
-                if (criteria.Contains("CP "))
+                newcriteria = (GetRemainingPick(plan) * 10) + "cp";
+                if (criteria.Contains("cp "))
                     newcriteria += " " + criteria.Substring(criteria.IndexOf(' ') + 1);
             }
             return new Prerequisit(this, remainingOptions, GetRemainingPick(plan), selectionType, newcriteria);

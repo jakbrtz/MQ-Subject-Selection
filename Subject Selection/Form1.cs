@@ -20,9 +20,19 @@ namespace Subject_Selection
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            foreach (int i in new int[]{ 4, 4, 1, 4, 4, 0, 4, 4, 0, 2, 1})
+            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 2, 1})
                 plan.MaxSubjects.Add(i);
-            Subject degree = new Subject("COURSES", "S1D S2D S3D", "10CP", "");
+            Subject degree = new Subject("COURSES", "S1D S2D S3D", 
+                "240cp including " +
+                //"FOSE3000 and " + // this subject got rejects by the parser because it doesn't specify a time
+                "(20cp from FOSE1005 or FOSE1015 or FOSE1025) and " +
+                "(10cp from ASTR3810 or BIOL3420 or BIOL3610 or BIOL3640 or COGS3999 or COMP3850 or ENVS3390 or GEOP3800 or GEOS3080 or HLTH3050 or MATH3919 or MOLS3002 or MOLS3003 or PHYS3810 or STAT3199) and " +
+                "(COMP1000 and COMP1350 and COMP2250 and " +
+                "(10cp from COMP1010 or COMP1150 or COMP1300 or COMP1750) and " +
+                "(10cp from ACCG1000 or BIOL1110 or BIOL1310 or CHEM1001 or COGS1000 or ENVS1017 or ENVS1018 or GEOP1010 or GEOP1030 or GEOS1110 or GEOS1120 or MATH1010 or MATH1015 or PHSY1010) and " +
+                "(30cp from COMP2000-COMP2999) and " +
+                "(40cp from COMP3000 or COMP3010 or COMP3100 or COMP3120 or COMP3130 or COMP3150 or COMP3151 or COMP3160 or COMP3170 or COMP3180 or COMP3210 or COMP3220 or COMP3250 or COMP3300 or COMP3310 or COMP3320 or COMP3760 or COMP3770 or COMP3860 or COMP3870 or COMP3900))"
+                , "");
             Decider.AddSubject(degree, plan);
             UpdateDecisionList();
             UpdatePlanGUI();
