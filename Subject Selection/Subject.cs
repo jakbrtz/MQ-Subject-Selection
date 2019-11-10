@@ -31,6 +31,13 @@ namespace Subject_Selection
                     Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
             Semesters = Semesters.Distinct().ToList();
 
+            // TODO: parse more types of times
+            if (!Semesters.Any())
+            {
+                Semesters.Add(0);
+                Semesters.Add(1);
+            }
+
             Prerequisits = new Prerequisit(this, prerequisits);
             NCCWs = nccws.Split(',');
         }
