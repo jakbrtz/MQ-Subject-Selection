@@ -205,9 +205,9 @@ namespace Subject_Selection
             }
         }
 
-        static bool CouldBeCode(string id)
+        public static bool CouldBeCode(string id)
         {
-            return id.Length <= 8 && int.TryParse(id.Substring(id.Length - 3), out _);
+            return id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
         }
 
         public static bool SplitAvoidingBrackets(string source, string search, out List<string> result, string without = "", bool firstWord = false)

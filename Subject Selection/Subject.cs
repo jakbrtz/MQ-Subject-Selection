@@ -146,65 +146,66 @@ namespace Subject_Selection
                 return SubjectReader.SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
             }
 
+            void AddAllTokens()
+            {
+                foreach (string token in tokens)
+                {
+                    if (SubjectReader.CouldBeCode(token))
+                    {
+                        if (SubjectReader.TryGetSubject(token, out subject))
+                            options.Add(subject);
+                    }
+                    else
+                        options.Add(new Prerequisit(this, token));
+                }
+            }
+
+            void AddFirstTokenOnly()
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 4);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
             // Check if the criteria contains specific key words
 
             if (TrySplit(" INCLUDING "))
             {
                 selectionType = Selection.AND;
-                options.Add(new Prerequisit(this, tokens[0]));
-                options.Add(new Prerequisit(this, tokens[1]));
+                AddAllTokens();
             }
 
             else if (TrySplit("POST HSC"))
             {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                AddFirstTokenOnly();
             }
 
             else if (TrySplit("HSC"))
             {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                AddFirstTokenOnly();
             }
 
             else if (TrySplit(" AND "))
             {
                 selectionType = Selection.AND;
-                foreach (string token in tokens)
-                    options.Add(new Prerequisit(this, token));
+                AddAllTokens();
             }
 
             else if (TrySplit("ADMISSION TO"))
             {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                AddFirstTokenOnly();
             }
 
             else if (TrySplit("PERMISSION"))
             {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                AddFirstTokenOnly();
             }
 
             else if (TrySplit("A GPA OF"))
             {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                AddFirstTokenOnly();
             }
 
             else if (TrySplit("CP", without: "CP OR", firstWord: true)) //Includes `CP AT`, 'CP IN`, and `CP FROM`
@@ -218,8 +219,7 @@ namespace Subject_Selection
             {
                 selectionType = Selection.OR;
                 pick = 1;
-                foreach (string token in tokens)
-                    options.Add(new Prerequisit(this, token));
+                AddAllTokens();
             }
 
             else if (criteria == "")
