@@ -52,6 +52,7 @@ namespace Subject_Selection
             Console.WriteLine("Subject:        " + currentSubject.ID);
 
             currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
+            Console.WriteLine("Decision:       " + currentDecision??currentDecision.ToString());
             UpdateDecisionList();
             LoadPossibleTimes(currentSubject);
 
@@ -102,8 +103,8 @@ namespace Subject_Selection
         {
             currentDecision = LBXdecisions.SelectedItem as Prerequisit;
             LoadCurrentDecision();
-
             if (currentDecision == null) return;
+
             Console.Write("Reasons:        ");
             foreach (Subject reason in currentDecision.GetReasons())
                 Console.Write(reason + " ");
