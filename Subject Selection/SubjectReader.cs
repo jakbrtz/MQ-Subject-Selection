@@ -10,27 +10,9 @@ using CsvHelper.Configuration.Attributes;
 
 namespace Subject_Selection
 {
+    // This class deals with everything related to parsing from databases
     public static class SubjectReader
     {
-        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
-
-        public static Subject GetSubject(string id)
-        {
-            id = id.Split('(')[0];
-            if (subjects.TryGetValue(id, out Subject subject))
-                return subject;
-            if (majors.TryGetValue(id, out Subject major))
-                return major;
-            return null;
-        }
-
-        public static bool TryGetSubject(string id, out Subject subject)
-        {
-            subject = GetSubject(id);
-            return subject != null;
-        }
-
         public static void Load()
         {
             using (var reader = new StringReader(Properties.Resources.ScheduleOfUndergraduateUnits))
@@ -52,6 +34,25 @@ namespace Subject_Selection
                 Subject major = new Subject(properties[0], "S1D S2D S3D", properties[1], ""); //TODO, treat majors differently
                 majors.Add(major.ID, major);
             }
+        }
+
+        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
+
+        public static Subject GetSubject(string id)
+        {
+            id = id.Split('(')[0];
+            if (subjects.TryGetValue(id, out Subject subject))
+                return subject;
+            if (majors.TryGetValue(id, out Subject major))
+                return major;
+            return null;
+        }
+
+        public static bool TryGetSubject(string id, out Subject subject)
+        {
+            subject = GetSubject(id);
+            return subject != null;
         }
 
         public static string DealWithBrackets(string source)
