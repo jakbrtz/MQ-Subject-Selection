@@ -39,7 +39,7 @@ namespace Subject_Selection
             }
 
             Prerequisits = new Prerequisit(this, prerequisits);
-            NCCWs = nccws.Split(',');
+            NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
         }
 
         public override string ToString()
