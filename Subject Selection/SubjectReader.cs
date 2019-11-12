@@ -252,6 +252,168 @@ namespace Subject_Selection
         }
     }
 
+    public partial class Prerequisit
+    {
+
+
+        public List<Criteria> GetOptions()
+        {
+            // Load the cached result
+            if (options != null) return options;
+
+            // Create a list of options and prepare to translate the text description
+            options = new List<Criteria>();
+
+            criteria = SubjectReader.DealWithBrackets(criteria);
+
+            // Get rid of words that make this difficult
+            criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
+
+            // Check if the criteria is a single subject
+            if (SubjectReader.TryGetSubject(criteria, out Subject subject))
+            {
+                options.Add(subject);
+                selectionType = Selection.AND;
+                return options;
+            }
+
+            // Splits the criteria accounting for brackets, and putting the output in `tokens`
+            List<string> tokens;
+            bool TrySplit(string search, string without = "", bool firstWord = false)
+            {
+                return SubjectReader.SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
+            }
+
+            void AddAllTokens()
+            {
+                foreach (string token in tokens)
+                {
+                    if (SubjectReader.CouldBeCode(token))
+                    {
+                        if (SubjectReader.TryGetSubject(token, out subject))
+                            options.Add(subject);
+                    }
+                    else
+                        options.Add(new Prerequisit(this, token));
+                }
+            }
+
+            void AddFirstTokenOnly()
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 4);
+                options.Add(new Prerequisit(this, remaining));
+            }
+
+            // Check if the criteria contains specific key words
+
+            if (TrySplit(" INCLUDING "))
+            {
+                selectionType = Selection.AND;
+                AddAllTokens();
+            }
+
+            else if (TrySplit("POST HSC"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("HSC"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit(" AND "))
+            {
+                selectionType = Selection.AND;
+                AddAllTokens();
+            }
+
+            else if (TrySplit("ADMISSION TO"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("PERMISSION"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("A GPA OF"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("CP", without: "CP OR", firstWord: true)) //Includes `CP AT`, 'CP IN`, and `CP FROM`
+            {
+                selectionType = Selection.CP;
+                pick = int.Parse(tokens[0]) / 10; // 10 is a magic number equal to the amount of credit points per subject
+                options = SubjectReader.GetSubjectsFromQuery(tokens[1]);
+            }
+
+            else if (TrySplit(" OR "))
+            {
+                selectionType = Selection.OR;
+                pick = 1;
+                AddAllTokens();
+            }
+
+            else if (criteria == "")
+            {
+                selectionType = Selection.AND;
+                pick = 0;
+            }
+
+            // Unknown edge cases
+            else if (
+                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out int idk)) &&
+                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out int wut)))
+            {
+                Console.WriteLine(reasons[0]);
+                throw new Exception("idk how to parse this:\n" + criteria);
+            }
+
+            // If the selection type is AND then everything must be picked
+            if (selectionType == Selection.AND) pick = options.Count;
+
+            return options;
+        }
+
+        public bool IsElective()
+        {
+            return selectionType == Selection.CP && ((!criteria.Contains("units") && !criteria.Contains("from")) || GetSubjects().Intersect(GetReasons()).Any());
+        }
+
+        string ElectiveConditions(int remainingPick)
+        {
+            string output = (remainingPick * 10) + "cp";
+            if (criteria.Contains("cp "))
+                output += " " + criteria.Substring(criteria.IndexOf(' ') + 1);
+            return output;
+        }
+
+        public override string ToString()
+        {
+            if (criteria != "" && criteria != null)
+                return criteria;
+            //This is used by the GetRemainingDecision method.
+            if (selectionType == Selection.CP)
+            {
+                criteria = (GetPick() * 10).ToString() + "cp from ";
+                criteria += string.Join(" or ", GetOptions());
+            }
+            else
+            {
+                string separator = " " + selectionType + " ";
+                criteria = string.Join(separator, GetOptions());
+            }
+            return criteria;
+        }
+    }
+
+
     public class SubjectRecord
     {
         [Name("Name")]
