@@ -59,7 +59,7 @@ namespace Subject_Selection
             if (checkingForBan)
                 return true;
             checkingForBan = true;
-            // TODO: careful because not all NCCW relations are undirected (FOSE1015 and STAT)
+            // TODO: check that all NCCW relations are undirected
             bool output = plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisites.HasBeenBanned(plan);
             checkingForBan = false;
             return output;
