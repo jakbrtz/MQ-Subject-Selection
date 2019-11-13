@@ -12,6 +12,7 @@ namespace Subject_Selection
         public abstract bool HasBeenMet(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects);
+        public bool IsAllowed(Plan plan, int time) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan); }
     }
 
     public class Subject : Criteria
@@ -126,8 +127,8 @@ namespace Subject_Selection
 
         public List<Criteria> GetRemainingOptions(Plan plan)
         {
-            return GetOptions().Where(criteria => !criteria.HasBeenMet(plan, RequiredCompletionTime(plan)) && 
-                !criteria.HasBeenBanned(plan)).ToList();
+            int requiredCompletionTime = RequiredCompletionTime(plan);
+            return GetOptions().Where(criteria => criteria.IsAllowed(plan, requiredCompletionTime)).ToList();
         }
 
         public int GetRemainingPick(Plan plan)
@@ -150,7 +151,7 @@ namespace Subject_Selection
             // This is a simple catch to check for bans without checking recursively
             if (GetRemainingPick(plan) > GetOptions().Count)
                 return true;
-            //This is the most accurate, however it leads to infinite loops
+            //This is the most accurate, but it takes longer than the other tests
             return GetRemainingPick(plan) > GetRemainingOptions(plan).Count;
         }
 
