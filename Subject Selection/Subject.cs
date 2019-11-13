@@ -146,13 +146,31 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
-            // Severly speed up calculation time
+            // If there is nothing to pick from, it cannot be banned
+            int remainingPick = GetRemainingPick(plan);
+            if (remainingPick == 0)
+                return false;
+            // Assume electives cannot be banned
             if (IsElective()) return false;
             // This is a simple catch to check for bans without checking recursively
-            if (GetRemainingPick(plan) > GetOptions().Count)
+            if (remainingPick > GetOptions().Count)
                 return true;
-            //This is the most accurate, but it takes longer than the other tests
-            return GetRemainingPick(plan) > GetRemainingOptions(plan).Count;
+            // This compares the number of options that still need to be picked with the number of options that can be picked
+            // It can be done in one line of LINQ but I wrote it like this so it excecutes faster
+            int requiredCompletionTime = RequiredCompletionTime(plan);
+            int countRemainingOptions = 0;
+            foreach (Criteria option in GetOptions())
+            {
+                if (option.CanBePicked(plan, requiredCompletionTime))
+                {
+                    countRemainingOptions++;
+                    if (countRemainingOptions == remainingPick)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public List<Subject> GetSubjects()
