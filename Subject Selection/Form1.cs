@@ -24,7 +24,7 @@ namespace Subject_Selection
                 plan.MaxSubjects.Add(i);
             Subject degree = new Subject("COURSES", "S1D S2D S3D", 
                 "240cp including " +
-                "FOSE3000 and " + // this subject got rejects by the parser because it doesn't specify a time
+                "FOSE3000 and " + 
                 "(20cp from FOSE1005 or FOSE1015 or FOSE1025) and " +
                 "(10cp from ASTR3810 or BIOL3420 or BIOL3610 or BIOL3640 or COGS3999 or COMP3850 or ENVS3390 or GEOP3800 or GEOS3080 or HLTH3050 or MATH3919 or MOLS3002 or MOLS3003 or PHYS3810 or STAT3199) and " +
                 "(COMP1000 and COMP1350 and COMP2250 and " +
