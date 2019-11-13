@@ -12,7 +12,7 @@ namespace Subject_Selection
         public abstract bool HasBeenMet(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects);
-        public bool IsAllowed(Plan plan, int time) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan); }
+        public bool CanBePicked(Plan plan, int time) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan); }
     }
 
     public class Subject : Criteria
@@ -128,7 +128,7 @@ namespace Subject_Selection
         public List<Criteria> GetRemainingOptions(Plan plan)
         {
             int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetOptions().Where(criteria => criteria.IsAllowed(plan, requiredCompletionTime)).ToList();
+            return GetOptions().Where(criteria => criteria.CanBePicked(plan, requiredCompletionTime)).ToList();
         }
 
         public int GetRemainingPick(Plan plan)
