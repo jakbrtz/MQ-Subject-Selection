@@ -55,54 +55,6 @@ namespace Subject_Selection
             return subject != null;
         }
 
-        public static string DealWithBrackets(string source)
-        {   
-            // Remove leading/trailing whitespace
-            source = source.Trim();
-
-            if (source.Length > 1)
-            {
-                // If the description contains a closing bracket without an opening bracket, add an opening bracket (looking at you, ACCG3040)
-                int brackets = 0;
-                for (int i = 0; i < source.Length; i++)
-                {
-                    if (source[i] == '(' || source[i] == '[')
-                        brackets++;
-                    if (source[i] == ')' || source[i] == ']')
-                        brackets--;
-                    if (brackets == -1)
-                    {
-                        source = (source[i] == ')' ? '(' : '[') + source;
-                        i++;
-                        brackets = 0;
-                    }
-                }
-
-                // If the entire text is in backets, remove the brackets
-                bool shouldRemoveBrackets = true;
-                while (shouldRemoveBrackets)
-                {
-                    brackets = 0;
-                    for (int i = 0; i < source.Length - 1; i++)
-                    {
-                        if (source[i] == '(' || source[i] == '[')
-                            brackets++;
-                        if (source[i] == ')' || source[i] == ']')
-                            brackets--;
-                        if (brackets == 0)
-                        {
-                            shouldRemoveBrackets = false;
-                            break;
-                        }
-                    }
-                    if (shouldRemoveBrackets)
-                        source = source.Substring(1, source.Length - 2);
-                }
-            }
-
-            return source;
-        }
-
         public static List<Criteria> GetSubjectsFromQuery(string query)
         {
             query = query.Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "");
@@ -217,33 +169,6 @@ namespace Subject_Selection
             return id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
         }
 
-        public static bool SplitAvoidingBrackets(string source, string search, out List<string> result, string without = "", bool firstWord = false)
-        {
-            // Prepare a list for the output
-            result = new List<string>();
-            // Count whether there are brackets
-            int brackets = 0;
-            int startOfSubstring = 0;
-            for (int i = 0; i < source.Length; i++)
-            {
-                if (source[i] == '(' || source[i] == '[')
-                    brackets++;
-                if (source[i] == ')' || source[i] == ']')
-                    brackets--;
-                // If there are no brackets and the text has been found, add that to the output
-                if (brackets == 0 && source.ToUpper().Substring(i).StartsWith(search) && (without == "" || !source.ToUpper().Substring(i).StartsWith(without)))
-                {
-                    result.Add(source.Substring(startOfSubstring, i - startOfSubstring));
-                    startOfSubstring = i + search.Length;
-                }
-                // If the search is known to be in the first word, and a space has been reached, leave
-                if (firstWord && source[i] == ' ')
-                    break;
-            }
-            result.Add(source.Substring(startOfSubstring, source.Length - startOfSubstring));
-            return result.Count > 1;
-        }
-
         public static int GetNumber(this Subject subject)
         {
             //Assumes all IDs are made of 4 letters then 4 digits
@@ -268,7 +193,7 @@ namespace Subject_Selection
             // Create a list of options and prepare to translate the text description
             options = new List<Criteria>();
 
-            criteria = SubjectReader.DealWithBrackets(criteria);
+            DealWithBrackets(ref criteria);
 
             // Get rid of words that make this difficult
             criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
@@ -285,7 +210,7 @@ namespace Subject_Selection
             List<string> tokens;
             bool TrySplit(string search, string without = "", bool firstWord = false)
             {
-                return SubjectReader.SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
+                return SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
             }
 
             void AddAllTokens()
@@ -417,6 +342,81 @@ namespace Subject_Selection
                 criteria = string.Join(separator, GetOptions());
             }
             return criteria;
+        }
+
+        private static string DealWithBrackets(ref string source)
+        {
+            // Remove leading/trailing whitespace
+            source = source.Trim();
+
+            if (source.Length > 1)
+            {
+                // If the description contains a closing bracket without an opening bracket, add an opening bracket (looking at you, ACCG3040)
+                int brackets = 0;
+                for (int i = 0; i < source.Length; i++)
+                {
+                    if (source[i] == '(' || source[i] == '[')
+                        brackets++;
+                    if (source[i] == ')' || source[i] == ']')
+                        brackets--;
+                    if (brackets == -1)
+                    {
+                        source = (source[i] == ')' ? '(' : '[') + source;
+                        i++;
+                        brackets = 0;
+                    }
+                }
+
+                // If the entire text is in backets, remove the brackets
+                bool shouldRemoveBrackets = true;
+                while (shouldRemoveBrackets)
+                {
+                    brackets = 0;
+                    for (int i = 0; i < source.Length - 1; i++)
+                    {
+                        if (source[i] == '(' || source[i] == '[')
+                            brackets++;
+                        if (source[i] == ')' || source[i] == ']')
+                            brackets--;
+                        if (brackets == 0)
+                        {
+                            shouldRemoveBrackets = false;
+                            break;
+                        }
+                    }
+                    if (shouldRemoveBrackets)
+                        source = source.Substring(1, source.Length - 2);
+                }
+            }
+
+            return source;
+        }
+
+        private static bool SplitAvoidingBrackets(string source, string search, out List<string> result, string without = "", bool firstWord = false)
+        {
+            // Prepare a list for the output
+            result = new List<string>();
+            // Count whether there are brackets
+            int brackets = 0;
+            int startOfSubstring = 0;
+            for (int i = 0; i < source.Length; i++)
+            {
+                if (source[i] == '(' || source[i] == '[')
+                    brackets++;
+                if (source[i] == ')' || source[i] == ']')
+                    brackets--;
+                // If there are no brackets and the text has been found, add that to the output
+                if (brackets == 0 && source.ToUpper().Substring(i).StartsWith(search) && (without == "" || !source.ToUpper().Substring(i).StartsWith(without)))
+                {
+                    result.Add(source.Substring(startOfSubstring, i - startOfSubstring));
+                    startOfSubstring = i + search.Length;
+                }
+                // If the search is known to be in the first word, and a space has been reached, leave
+                if (firstWord && source[i] == ' ')
+                    break;
+            }
+            result.Add(source.Substring(startOfSubstring, source.Length - startOfSubstring));
+            return result.Count > 1;
         }
     }
 
