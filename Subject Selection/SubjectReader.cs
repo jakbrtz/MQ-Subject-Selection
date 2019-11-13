@@ -122,19 +122,23 @@ namespace Subject_Selection
 
                 string FindText(string left, string right)
                 {
-                    return query.Substring(query.IndexOf(left) + left.Length, query.IndexOf(right) - (query.IndexOf(left) + left.Length));
+                    int leftIndex = query.IndexOf(left) + left.Length;
+                    int rightIndex = query.IndexOf(right);
+                    if (rightIndex == -1)
+                        rightIndex = query.Length;
+                    return query.Substring(leftIndex, rightIndex - leftIndex);
                 }
 
                 // Specify text part
-                if (query.Contains("IN"))
-                {
-                    textFilters = FindText("in ", " units").Split(new string[] { " OR " }, StringSplitOptions.None);
-                }
+                if (query.Contains("in"))
+                    textFilters = FindText("in ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
+                if (query.Contains("of"))
+                    textFilters = FindText("of ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
 
                 // Specify number part
-                if (query.Contains("AT"))
+                if (query.Contains("at"))
                 {
-                    lower = int.Parse(FindText("at ", " level"));
+                    lower = int.Parse(FindText("at ", " level").Substring(0, 4));
                     upper = lower + 999;
 
                     if (query.Contains("ABOVE"))
@@ -254,8 +258,6 @@ namespace Subject_Selection
 
     public partial class Prerequisit
     {
-
-
         public List<Criteria> GetOptions()
         {
             // Load the cached result
