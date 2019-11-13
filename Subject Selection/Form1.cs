@@ -30,7 +30,7 @@ namespace Subject_Selection
                 "(COMP1000 and COMP1350 and COMP2250 and " +
                 "(10cp from COMP1010 or COMP1150 or COMP1300 or COMP1750) and " +
                 "(10cp from ACCG1000 or BIOL1110 or BIOL1310 or CHEM1001 or COGS1000 or ENVS1017 or ENVS1018 or GEOP1010 or GEOP1030 or GEOS1110 or GEOS1120 or MATH1010 or MATH1015 or PHSY1010) and " +
-                "(30cp from COMP2000-COMP2999) and " +
+                "(30cp from COMP units at 2000 level) and " +
                 "(40cp from COMP3000 or COMP3010 or COMP3100 or COMP3120 or COMP3130 or COMP3150 or COMP3151 or COMP3160 or COMP3170 or COMP3180 or COMP3210 or COMP3220 or COMP3250 or COMP3300 or COMP3310 or COMP3320 or COMP3760 or COMP3770 or COMP3860 or COMP3870 or COMP3900))"
                 , "");
             Decider.AddSubject(degree, plan);

@@ -199,8 +199,8 @@ namespace Subject_Selection
                 else if (option is Prerequisit)
                     remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
             string newcriteria = "";
-            if (IsElective())
-                newcriteria = ElectiveConditions(GetRemainingPick(plan));
+            if (selectionType == Selection.CP)
+                newcriteria = CopyCriteria(GetRemainingPick(plan));
             return new Prerequisit(this, newcriteria, remainingOptions, GetRemainingPick(plan), selectionType);
         }
 

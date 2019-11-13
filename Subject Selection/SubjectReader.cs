@@ -134,6 +134,8 @@ namespace Subject_Selection
                     textFilters = FindText("in ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
                 if (query.Contains("of"))
                     textFilters = FindText("of ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
+                if (query.Contains("from"))
+                    textFilters = FindText("from ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
 
                 // Specify number part
                 if (query.Contains("at"))
@@ -385,11 +387,14 @@ namespace Subject_Selection
 
         public bool IsElective()
         {
-            return selectionType == Selection.CP && ((!criteria.Contains("units") && !criteria.Contains("from")) || GetSubjects().Intersect(GetReasons()).Any());
+            return selectionType == Selection.CP && (!criteria.Contains("units") || GetSubjects().Intersect(GetReasons()).Any());
         }
 
-        string ElectiveConditions(int remainingPick)
+        string CopyCriteria(int remainingPick)
         {
+            if (criteria.Contains("cp ") && !criteria.Contains("units") && !criteria.Contains("level"))
+                return "";
+
             string output = (remainingPick * 10) + "cp";
             if (criteria.Contains("cp "))
                 output += " " + criteria.Substring(criteria.IndexOf(' ') + 1);
