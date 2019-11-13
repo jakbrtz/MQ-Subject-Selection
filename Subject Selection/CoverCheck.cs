@@ -9,32 +9,32 @@ namespace Subject_Selection
     //I think this file will end up being merged into Decider.cs
     public static class Extentions
     {
-        public static bool IsSubset(this Prerequisit prerequisit, Prerequisit other)
+        public static bool IsSubset(this Prerequisite prerequisite, Prerequisite other)
         {
-            return prerequisit.GetOptions().All(option => other.GetOptions().Contains(option)) || 
-                other.GetOptions().Exists(criteria => criteria is Prerequisit && prerequisit.IsSubset(criteria as Prerequisit))
-                 && prerequisit.GetPick() >= other.GetPick();
+            return prerequisite.GetOptions().All(option => other.GetOptions().Contains(option)) || 
+                other.GetOptions().Exists(criteria => criteria is Prerequisite && prerequisite.IsSubset(criteria as Prerequisite))
+                 && prerequisite.GetPick() >= other.GetPick();
         }
 
-        public static bool IsCovered(this Prerequisit prerequisit, Plan plan)
+        public static bool IsCovered(this Prerequisite prerequisite, Plan plan)
         {
-            //Make sure that the main prerequisit isn't in the list of decisions
-            List<Prerequisit> decisions = plan.Decisions.Where(decision => decision != prerequisit).ToList();
+            //Make sure that the main prerequisite isn't in the list of decisions
+            List<Prerequisite> decisions = plan.Decisions.Where(decision => decision != prerequisite).ToList();
 
-            //Remove all prerequisits that don't have any overlap with the main prerequisit 
-            //decisions = decisions.Where(decision => decision.GetRemainingSubjects(plan).Any(subject => prerequisit.GetRemainingSubjects(plan).Contains(subject))).ToList();
+            //Remove all prerequisites that don't have any overlap with the main prerequisite 
+            //decisions = decisions.Where(decision => decision.GetRemainingSubjects(plan).Any(subject => prerequisite.GetRemainingSubjects(plan).Contains(subject))).ToList();
             //if (decisions.Count == 0)
             //    return false;
 
-            //Check if the sum of the prerequisits' pick is more than the main prerequisit's pick
-            if (decisions.Sum(decision => decision.GetRemainingPick(plan)) < prerequisit.GetRemainingPick(plan))
+            //Check if the sum of the prerequisites' pick is more than the main prerequisite's pick
+            if (decisions.Sum(decision => decision.GetRemainingPick(plan)) < prerequisite.GetRemainingPick(plan))
                 return false;
 
             //Check if any of the prerequisists are an obvious subset of the main prequisit
-            if (decisions.Exists(decision => decision.IsSubset(prerequisit)))
+            if (decisions.Exists(decision => decision.IsSubset(prerequisite)))
             {
-                foreach (Prerequisit decision in decisions.Where(decision => decision.IsSubset(prerequisit)))
-                    decision.AddReasons(prerequisit);
+                foreach (Prerequisite decision in decisions.Where(decision => decision.IsSubset(prerequisite)))
+                    decision.AddReasons(prerequisite);
                 return true;
             }
                 
@@ -42,17 +42,17 @@ namespace Subject_Selection
 
             //TODO: other heuristic checks
             return false;
-            return AllOptionsMeetPrerequisit(prerequisit, plan);
+            return AllOptionsMeetPrerequisite(prerequisite, plan);
         }
 
-        static bool AllOptionsMeetPrerequisit(Prerequisit prerequisit, Plan plan)
+        static bool AllOptionsMeetPrerequisite(Prerequisite prerequisite, Plan plan)
         {
             /* TODO: consider this:
              * (1 MATH331-332) (1 MATH235 MATH288 MATH331)
-             * The algorithm says the second one is redundant, because it contains a prerequisit of everything from the first option
+             * The algorithm says the second one is redundant, because it contains a prerequisite of everything from the first option
              */
 
-            if (prerequisit.HasBeenMet(plan, prerequisit.RequiredCompletionTime(plan)))
+            if (prerequisite.HasBeenMet(plan, prerequisite.RequiredCompletionTime(plan)))
             {
                 return true;
             }
@@ -66,7 +66,7 @@ namespace Subject_Selection
                 {
                     Plan recursivePlan = new Plan(plan);
                     Decider.AddSubject(option, recursivePlan);
-                    if (!AllOptionsMeetPrerequisit(prerequisit, recursivePlan))
+                    if (!AllOptionsMeetPrerequisite(prerequisite, recursivePlan))
                         return false;
                 }
                 return true;

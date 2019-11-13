@@ -183,7 +183,7 @@ namespace Subject_Selection
         }
     }
 
-    public partial class Prerequisit
+    public partial class Prerequisite
     {
         public List<Criteria> GetOptions()
         {
@@ -223,7 +223,7 @@ namespace Subject_Selection
                             options.Add(subject);
                     }
                     else
-                        options.Add(new Prerequisit(this, token));
+                        options.Add(new Prerequisite(this, token));
                 }
             }
 
@@ -233,7 +233,7 @@ namespace Subject_Selection
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
                     remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisit(this, remaining));
+                options.Add(new Prerequisite(this, remaining));
             }
 
             // Check if the criteria contains specific key words

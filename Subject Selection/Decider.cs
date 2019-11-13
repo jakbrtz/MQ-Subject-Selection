@@ -9,7 +9,7 @@ namespace Subject_Selection
 {
     public static class Decider
     {
-        public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisit> toAnalyze = null)
+        public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
         {
             //Add the subject to the list
             plan.AddSubject(subject);
@@ -18,16 +18,16 @@ namespace Subject_Selection
             {
                 //Restart the Decisions list
                 plan.Decisions.Clear();
-                toAnalyze = new Queue<Prerequisit>(plan.SelectedSubjects.ConvertAll(sub => sub.Prerequisits));
+                toAnalyze = new Queue<Prerequisite>(plan.SelectedSubjects.ConvertAll(sub => sub.Prerequisites));
                 //Start analyzing
                 AnalyzeDecision(toAnalyze, plan);
             }
             else
             {
-                //Consider the new subject's prerequisits
-                toAnalyze.Enqueue(subject.Prerequisits);
+                //Consider the new subject's prerequisites
+                toAnalyze.Enqueue(subject.Prerequisites);
                 //Reconsider all existing decisions
-                foreach (Prerequisit decision in plan.Decisions)
+                foreach (Prerequisite decision in plan.Decisions)
                     toAnalyze.Enqueue(decision);
             }
         }
@@ -39,14 +39,14 @@ namespace Subject_Selection
             //Move the subject to the relevant time slot
             plan.ForceTime(subject, time);
             //Analyze all decisions that might've changed due to the move
-            Queue<Prerequisit> toAnalyze = new Queue<Prerequisit>(plan.Decisions);
-            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisits.GetSubjects().Contains(subject)))
-                toAnalyze.Enqueue(sub.Prerequisits);
-            toAnalyze.Enqueue(subject.Prerequisits);
+            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>(plan.Decisions);
+            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisites.GetSubjects().Contains(subject)))
+                toAnalyze.Enqueue(sub.Prerequisites);
+            toAnalyze.Enqueue(subject.Prerequisites);
             AnalyzeDecision(toAnalyze, plan);
         }
 
-        static void AnalyzeDecision(Queue<Prerequisit> toAnalyze, Plan plan)
+        static void AnalyzeDecision(Queue<Prerequisite> toAnalyze, Plan plan)
         {
             Stopwatch timer1 = new Stopwatch();
             Stopwatch timer2 = new Stopwatch();
@@ -56,7 +56,7 @@ namespace Subject_Selection
             while (toAnalyze.Any())
             {
                 //Consider the next decision in the queue
-                Prerequisit decision = toAnalyze.Dequeue();
+                Prerequisite decision = toAnalyze.Dequeue();
 
                 //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
                 plan.Decisions.Remove(decision);
@@ -72,12 +72,12 @@ namespace Subject_Selection
 
                 if (decision.MustPickAllRemaining(plan))
                 {
-                    //If everything must be selected, select everything. Add the new prerequisits to the list
+                    //If everything must be selected, select everything. Add the new prerequisites to the list
                     foreach (Criteria option in decision.GetOptions())
                         if (option is Subject)
                             AddSubject(option as Subject, plan, toAnalyze);
-                        else if (option is Prerequisit)
-                            toAnalyze.Enqueue(option as Prerequisit);
+                        else if (option is Prerequisite)
+                            toAnalyze.Enqueue(option as Prerequisite);
                 }
                 else
                 {
@@ -90,7 +90,7 @@ namespace Subject_Selection
             timer2.Start();
 
             //Sort decisions by the complexity of the decision (this only affects covercheck)
-            plan.Decisions.Sort(delegate (Prerequisit p1, Prerequisit p2)
+            plan.Decisions.Sort(delegate (Prerequisite p1, Prerequisite p2)
             {
                 int compare = 0;
                 //if (compare == 0) compare = p1.RequiredCompletionTime(plan)             - p2.RequiredCompletionTime(plan);
@@ -102,11 +102,11 @@ namespace Subject_Selection
                 return compare;
             });
             
-            List<Prerequisit> helpIterater = new List<Prerequisit>(plan.Decisions);
+            List<Prerequisite> helpIterater = new List<Prerequisite>(plan.Decisions);
             plan.Decisions.Clear();
-            foreach (Prerequisit prerequisit in helpIterater)
-                if (!prerequisit.IsCovered(plan))
-                    plan.Decisions.Add(prerequisit);
+            foreach (Prerequisite prerequisite in helpIterater)
+                if (!prerequisite.IsCovered(plan))
+                    plan.Decisions.Add(prerequisite);
 
             timer2.Stop();
             Console.WriteLine("Making decisions:    " + timer1.ElapsedMilliseconds + "ms");

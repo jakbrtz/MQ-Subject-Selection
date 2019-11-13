@@ -8,7 +8,7 @@ namespace Subject_Selection
 {
     abstract public class Criteria
     {
-        //I have made this superclass to allow prerequisits so be made of other prerequisits
+        //I have made this superclass to allow prerequisites so be made of other prerequisites
         public abstract bool HasBeenMet(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects);
@@ -18,10 +18,10 @@ namespace Subject_Selection
     {
         public string ID { get; }
         public List<int> Semesters { get; }
-        public Prerequisit Prerequisits { get; }
+        public Prerequisite Prerequisites { get; }
         public string[] NCCWs { get; }
 
-        public Subject(string id, string times, string prerequisits, string nccws)
+        public Subject(string id, string times, string prerequisites, string nccws)
         {
             ID = id;
 
@@ -38,7 +38,7 @@ namespace Subject_Selection
                 Semesters.Add(1);
             }
 
-            Prerequisits = new Prerequisit(this, prerequisits);
+            Prerequisites = new Prerequisite(this, prerequisites);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
         }
 
@@ -55,15 +55,15 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
-            return plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisits.HasBeenBanned(plan);
+            return plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisites.HasBeenBanned(plan);
             //MATH123 has an extra detail about NCCW, which would require this to be completely remade
             //Check whether other subjects have those conditions
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
         {
-            //Find the first time after the prerequisits has been satisfied which also allows for the semester
-            int time = Prerequisits.EarliestCompletionTime(MaxSubjects) + 1;
+            //Find the first time after the prerequisites has been satisfied which also allows for the semester
+            int time = Prerequisites.EarliestCompletionTime(MaxSubjects) + 1;
             while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
             return time;
         }
@@ -84,7 +84,7 @@ namespace Subject_Selection
         
     }
 
-    public partial class Prerequisit : Criteria
+    public partial class Prerequisite : Criteria
     {
         List<Subject> reasons = new List<Subject>();
         private string criteria;
@@ -93,12 +93,12 @@ namespace Subject_Selection
         private Selection selectionType;
         private int earliestCompletionTime = -1;
 
-        public Prerequisit(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
+        public Prerequisite(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
-            else if (reason is Prerequisit)
-                reasons.AddRange((reason as Prerequisit).reasons);
+            else if (reason is Prerequisite)
+                reasons.AddRange((reason as Prerequisite).reasons);
             this.criteria = criteria;
             this.options = options;
             this.pick = pick;
@@ -157,8 +157,8 @@ namespace Subject_Selection
             foreach (Criteria option in GetOptions())
                 if (option is Subject)
                     output.Add(option as Subject);
-                else if (option is Prerequisit)
-                    output.AddRange((option as Prerequisit).GetSubjects());
+                else if (option is Prerequisite)
+                    output.AddRange((option as Prerequisite).GetSubjects());
             return output;
         }
 
@@ -168,8 +168,8 @@ namespace Subject_Selection
             foreach (Criteria option in GetRemainingOptions(plan))
                 if (option is Subject)
                     output.Add(option as Subject);
-                else if (option is Prerequisit)
-                    output.AddRange((option as Prerequisit).GetRemainingSubjects(plan));
+                else if (option is Prerequisite)
+                    output.AddRange((option as Prerequisite).GetRemainingSubjects(plan));
             return output;
         }
 
@@ -178,36 +178,36 @@ namespace Subject_Selection
             return GetRemainingPick(plan) == GetRemainingOptions(plan).Count;
         }
 
-        public Prerequisit GetRemainingDecision(Plan plan)
+        public Prerequisite GetRemainingDecision(Plan plan)
         {
-            //If the prerequisit is met then there should be nothing to return
-            if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Prerequisit(this);
+            //If the prerequisite is met then there should be nothing to return
+            if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Prerequisite(this);
             //If there is only one option to pick from then pick it
             if (GetRemainingOptions(plan).Count == 1)
             {
                 Criteria lastOption = GetRemainingOptions(plan)[0];
-                if (lastOption is Prerequisit)
-                    return (lastOption as Prerequisit).GetRemainingDecision(plan);
+                if (lastOption is Prerequisite)
+                    return (lastOption as Prerequisite).GetRemainingDecision(plan);
             }
-            //Create a new list to store the remaining prerequisits
+            //Create a new list to store the remaining prerequisites
             List<Criteria> remainingOptions = new List<Criteria>();
             foreach (Criteria option in GetRemainingOptions(plan))
                 if (option is Subject)
                     remainingOptions.Add(option);
-                else if (option is Prerequisit && this.GetRemainingPick(plan) == 1 && (option as Prerequisit).GetRemainingPick(plan) == 1)
-                    remainingOptions.AddRange((option as Prerequisit).GetRemainingDecision(plan).GetOptions());
-                else if (option is Prerequisit)
-                    remainingOptions.Add((option as Prerequisit).GetRemainingDecision(plan));
+                else if (option is Prerequisite && this.GetRemainingPick(plan) == 1 && (option as Prerequisite).GetRemainingPick(plan) == 1)
+                    remainingOptions.AddRange((option as Prerequisite).GetRemainingDecision(plan).GetOptions());
+                else if (option is Prerequisite)
+                    remainingOptions.Add((option as Prerequisite).GetRemainingDecision(plan));
             string newcriteria = "";
             if (selectionType == Selection.CP)
                 newcriteria = CopyCriteria(GetRemainingPick(plan));
-            return new Prerequisit(this, newcriteria, remainingOptions, GetRemainingPick(plan), selectionType);
+            return new Prerequisite(this, newcriteria, remainingOptions, GetRemainingPick(plan), selectionType);
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
         {
             if (earliestCompletionTime > -1) return earliestCompletionTime;
-            //If there are no prerequisits, then the subject can be done straight away
+            //If there are no prerequisites, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
             //Lock the value to avoid infinite loops
@@ -237,9 +237,9 @@ namespace Subject_Selection
             return reasons.Min(reason => reason.GetChosenTime(plan));
         }
 
-        public void AddReasons(Prerequisit prerequisit)
+        public void AddReasons(Prerequisite prerequisite)
         {
-            reasons = reasons.Union(prerequisit.reasons).ToList();
+            reasons = reasons.Union(prerequisite.reasons).ToList();
         }
 
         public List<Subject> GetReasons()
@@ -247,9 +247,9 @@ namespace Subject_Selection
             return reasons;
         }
 
-        public bool HasElectivePrerequisit()
+        public bool HasElectivePrerequisite()
         {
-            return IsElective() || GetOptions().Exists(criteria => criteria is Prerequisit && (criteria as Prerequisit).HasElectivePrerequisit());
+            return IsElective() || GetOptions().Exists(criteria => criteria is Prerequisite && (criteria as Prerequisite).HasElectivePrerequisite());
         }
     }
 

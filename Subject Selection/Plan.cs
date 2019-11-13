@@ -10,7 +10,7 @@ namespace Subject_Selection
     public class Plan
     {
         public List<List<Subject>> SubjectsInOrder { get; }
-        public List<Prerequisit> Decisions { get; }
+        public List<Prerequisite> Decisions { get; }
         public List<Subject> SelectedSubjects { get; }
         Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
@@ -18,7 +18,7 @@ namespace Subject_Selection
         public Plan()
         {
             SubjectsInOrder = new List<List<Subject>>();
-            Decisions = new List<Prerequisit>();
+            Decisions = new List<Prerequisite>();
             SelectedSubjects = new List<Subject>();
             MaxSubjects = new List<int>();
         }
@@ -26,7 +26,7 @@ namespace Subject_Selection
         public Plan(Plan other)
         {
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
-            Decisions = new List<Prerequisit>(other.Decisions);
+            Decisions = new List<Prerequisite>(other.Decisions);
             SelectedSubjects = new List<Subject>(other.SelectedSubjects);
             MaxSubjects = new List<int>(other.MaxSubjects);
         }
@@ -55,7 +55,7 @@ namespace Subject_Selection
             return output;
         }
 
-        public Prerequisit PickNextDecision() //TODO
+        public Prerequisite PickNextDecision() //TODO
         {
             if (Decisions.Count == 0)
                 return null;
@@ -104,23 +104,23 @@ namespace Subject_Selection
         }
 
         //IsLeaf and IsAbove are helper functions for Order()
-        private bool IsLeaf(Subject subject, int time, Prerequisit prerequisit = null)
+        private bool IsLeaf(Subject subject, int time, Prerequisite prerequisite = null)
         {
-            //Look at the subject's prerequisits
-            if (prerequisit == null) prerequisit = subject.Prerequisits;
+            //Look at the subject's prerequisites
+            if (prerequisite == null) prerequisite = subject.Prerequisites;
             //If the prerequisit is met, return true
-            if (prerequisit.HasBeenMet(this, time))
+            if (prerequisite.HasBeenMet(this, time))
                 return true;
             //If the prerequisit is an elective and the recommended year has passed, count this as a leaf
-            if (prerequisit.IsElective() && subject.GetLevel() <= time/3 + 1)
+            if (prerequisite.IsElective() && subject.GetLevel() <= time/3 + 1)
                 return true;
             //Consider each option
-            foreach (Criteria criteria in prerequisit.GetOptions())
+            foreach (Criteria criteria in prerequisite.GetOptions())
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
-                else if (criteria is Prerequisit && !IsLeaf(subject, time, criteria as Prerequisit))
+                else if (criteria is Prerequisite && !IsLeaf(subject, time, criteria as Prerequisite))
                     return false; 
             return true;
         }
@@ -136,7 +136,7 @@ namespace Subject_Selection
                 Subject current = toAnalyze.Dequeue();
                 if (current == child) return true;
                 descendants.Add(current);
-                foreach (Subject subject in current.Prerequisits.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
+                foreach (Subject subject in current.Prerequisites.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
                     toAnalyze.Enqueue(subject);
             }
             return false;

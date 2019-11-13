@@ -39,7 +39,7 @@ namespace Subject_Selection
         }
 
         Plan plan = new Plan();
-        Prerequisit currentDecision;
+        Prerequisite currentDecision;
         Subject currentSubject;
 
         private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -56,14 +56,14 @@ namespace Subject_Selection
             UpdateDecisionList();
             LoadPossibleTimes(currentSubject);
 
-            Console.WriteLine("Prerequisites:  " + currentSubject.Prerequisits);
+            Console.WriteLine("Prerequisites:  " + currentSubject.Prerequisites);
             Console.WriteLine();
         }
 
         void UpdateDecisionList()
         {
             LBXdecisions.Items.Clear();
-            foreach (Prerequisit decision in plan.Decisions)
+            foreach (Prerequisite decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
             if (currentDecision == null)
                 currentDecision = plan.PickNextDecision();
@@ -101,7 +101,7 @@ namespace Subject_Selection
 
         private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
         {
-            currentDecision = LBXdecisions.SelectedItem as Prerequisit;
+            currentDecision = LBXdecisions.SelectedItem as Prerequisite;
             LoadCurrentDecision();
             if (currentDecision == null) return;
 
@@ -117,7 +117,7 @@ namespace Subject_Selection
             {
                 currentSubject = LBXchoose.SelectedItem as Subject;
                 Decider.AddSubject(currentSubject, plan);
-                Prerequisit nextDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
+                Prerequisite nextDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
                 UpdatePlanGUI();
                 if (nextDecision != null)
                 {
@@ -125,9 +125,9 @@ namespace Subject_Selection
                     UpdateDecisionList();
                 }
             }
-            else if (LBXchoose.SelectedItem is Prerequisit)
+            else if (LBXchoose.SelectedItem is Prerequisite)
             {
-                currentDecision = LBXchoose.SelectedItem as Prerequisit;
+                currentDecision = LBXchoose.SelectedItem as Prerequisite;
                 LoadCurrentDecision();
             }
         }
