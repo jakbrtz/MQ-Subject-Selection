@@ -53,11 +53,16 @@ namespace Subject_Selection
             return plan.SelectedSubjectsSoFar(time).Contains(this);
         }
 
+        private bool checkingForBan = false;
         public override bool HasBeenBanned(Plan plan)
         {
-            return plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisites.HasBeenBanned(plan);
-            //MATH123 has an extra detail about NCCW, which would require this to be completely remade
-            //Check whether other subjects have those conditions
+            if (checkingForBan)
+                return true;
+            checkingForBan = true;
+            // TODO: careful because not all NCCW relations are undirected (FOSE1015 and STAT)
+            bool output = plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisites.HasBeenBanned(plan);
+            checkingForBan = false;
+            return output;
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
@@ -145,8 +150,6 @@ namespace Subject_Selection
             // This is a simple catch to check for bans without checking recursively
             if (GetRemainingPick(plan) > GetOptions().Count)
                 return true;
-            // TODO: remove this
-            return false;
             //This is the most accurate, however it leads to infinite loops
             return GetRemainingPick(plan) > GetRemainingOptions(plan).Count;
         }
@@ -183,15 +186,16 @@ namespace Subject_Selection
             //If the prerequisite is met then there should be nothing to return
             if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Prerequisite(this);
             //If there is only one option to pick from then pick it
-            if (GetRemainingOptions(plan).Count == 1)
+            List<Criteria> remainingCriteria = GetRemainingOptions(plan);
+            if (remainingCriteria.Count == 1)
             {
-                Criteria lastOption = GetRemainingOptions(plan)[0];
+                Criteria lastOption = remainingCriteria[0];
                 if (lastOption is Prerequisite)
                     return (lastOption as Prerequisite).GetRemainingDecision(plan);
             }
             //Create a new list to store the remaining prerequisites
             List<Criteria> remainingOptions = new List<Criteria>();
-            foreach (Criteria option in GetRemainingOptions(plan))
+            foreach (Criteria option in remainingCriteria)
                 if (option is Subject)
                     remainingOptions.Add(option);
                 else if (option is Prerequisite && this.GetRemainingPick(plan) == 1 && (option as Prerequisite).GetRemainingPick(plan) == 1)
