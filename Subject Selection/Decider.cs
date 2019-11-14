@@ -13,23 +13,18 @@ namespace Subject_Selection
         {
             //Add the subject to the list
             plan.AddSubject(subject);
-            //Check whether this was called by the user or by AnalyzeDecisions
-            if (toAnalyze == null)
-            {
-                //Restart the Decisions list
-                plan.Decisions.Clear();
-                toAnalyze = new Queue<Prerequisite>(plan.SelectedSubjects.ConvertAll(sub => sub.Prerequisites));
-                //Start analyzing
+            // Create a queue of things to consider
+            bool createNewQueue = toAnalyze == null;
+            if (createNewQueue)
+                toAnalyze = new Queue<Prerequisite>();
+            // Consider the new subject's prerequisites
+            toAnalyze.Enqueue(subject.Prerequisites);
+            // Reconsider all existing decisions
+            foreach (Prerequisite decision in plan.Decisions)
+                toAnalyze.Enqueue(decision);
+            // If AnalyzeDecision isn't already running, run it
+            if (createNewQueue)
                 AnalyzeDecision(toAnalyze, plan);
-            }
-            else
-            {
-                //Consider the new subject's prerequisites
-                toAnalyze.Enqueue(subject.Prerequisites);
-                //Reconsider all existing decisions
-                foreach (Prerequisite decision in plan.Decisions)
-                    toAnalyze.Enqueue(decision);
-            }
         }
 
         public static void MoveSubject(Subject subject, Plan plan, int time)

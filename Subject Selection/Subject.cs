@@ -60,8 +60,7 @@ namespace Subject_Selection
             if (checkingForBan)
                 return true;
             checkingForBan = true;
-            // TODO: check that all NCCW relations are undirected
-            bool output = plan.SelectedSubjects.Exists(subject => subject.NCCWs.Contains(this.ID)) || Prerequisites.HasBeenBanned(plan);
+            bool output = plan.GetBannedSubjects().Contains(this) || Prerequisites.HasBeenBanned(plan);
             checkingForBan = false;
             return output;
         }
@@ -171,6 +170,38 @@ namespace Subject_Selection
                 }
             }
             return true;
+        }
+
+        public List<Subject> ForcedBans()
+        {
+            // For each criteria, check if it forces a subject to be banned
+            // Count how often a subject is banned by a criteria
+            // If it gets banned by too many criteria, then it gets banned by the entire prerequisite
+
+            Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
+            foreach (Criteria criteria in GetOptions())
+            {
+                if (criteria is Subject)
+                {
+                    foreach (string ID in (criteria as Subject).NCCWs)
+                    {
+                        Subject subject = SubjectReader.GetSubject(ID);
+                        if (subject == null) continue;
+                        if (!counts.ContainsKey(subject))
+                            counts[subject] = 0;
+                        counts[subject]++;
+                    }
+                }
+                else if (criteria is Prerequisite)
+                {
+                    foreach (Subject subject in (criteria as Prerequisite).ForcedBans())
+                    {
+                        counts[subject]++;
+                    }
+                }
+            }
+
+            return counts.Where(kvp => GetOptions().Count - GetPick() < kvp.Value).Select(kvp => kvp.Key).ToList();
         }
 
         public List<Subject> GetSubjects()

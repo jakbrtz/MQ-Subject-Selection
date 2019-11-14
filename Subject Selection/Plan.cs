@@ -141,5 +141,23 @@ namespace Subject_Selection
             }
             return false;
         }
+
+        // Helper method for Subject.HasBeenBanned
+        public HashSet<Subject> GetBannedSubjects()
+        {
+            HashSet<Subject> output = new HashSet<Subject>();
+            // Get all selected subjects and check them for NCCWs
+            foreach (Subject subject in SelectedSubjects)
+                foreach (string id in subject.NCCWs)
+                    output.Add(SubjectReader.GetSubject(id));
+            // TODO: make sure that all NCCW relations are undirected (looking at you, BIOL2610 - STAT2170)
+            
+            // Check which decisions force a banned subject
+            foreach (Prerequisite decision in Decisions)
+                foreach (Subject subject in decision.ForcedBans())
+                    output.Add(subject);
+
+            return output;
+        }
     }
 }
