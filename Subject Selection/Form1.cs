@@ -20,9 +20,9 @@ namespace Subject_Selection
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 2, 1})
+            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
-            Subject degree = new Subject("COURSES", "S1D S2D S3D", 
+            Subject degree = new Subject("COURSES", "S3D", 
                 "240cp including " +
                 "FOSE3000 and " + 
                 "(20cp from FOSE1005 or FOSE1015 or FOSE1025) and " +
