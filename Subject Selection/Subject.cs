@@ -60,7 +60,7 @@ namespace Subject_Selection
             if (checkingForBan)
                 return true;
             checkingForBan = true;
-            bool output = plan.GetBannedSubjects().Contains(this) || Prerequisites.HasBeenBanned(plan);
+            bool output = plan.BannedSubjects.Contains(this) || Prerequisites.HasBeenBanned(plan);
             checkingForBan = false;
             return output;
         }

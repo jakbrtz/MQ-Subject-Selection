@@ -54,7 +54,7 @@ namespace Subject_Selection
                 Prerequisite decision = toAnalyze.Dequeue();
 
                 //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
-                plan.Decisions.Remove(decision);
+                plan.RemoveDecision(decision);
 
                 //Remove all reasons that have been met
                 decision.GetReasons().RemoveAll(reason => reason.HasBeenMet(plan, reason.GetChosenTime(plan)));
@@ -77,7 +77,7 @@ namespace Subject_Selection
                 else
                 {
                     //This means that there is more than one option to choose from, so the user must make that choice
-                    plan.Decisions.Add(decision);
+                    plan.AddDecision(decision);
                 }
             }
 
@@ -98,10 +98,10 @@ namespace Subject_Selection
             });
             
             List<Prerequisite> helpIterater = new List<Prerequisite>(plan.Decisions);
-            plan.Decisions.Clear();
+            plan.ClearDecisions();
             foreach (Prerequisite prerequisite in helpIterater)
                 if (!prerequisite.IsCovered(plan))
-                    plan.Decisions.Add(prerequisite);
+                    plan.AddDecision(prerequisite);
 
             timer2.Stop();
             Console.WriteLine("Making decisions:    " + timer1.ElapsedMilliseconds + "ms");
