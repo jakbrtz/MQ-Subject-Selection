@@ -13,10 +13,12 @@ namespace Subject_Selection
         {
             //Add the subject to the list
             plan.AddSubject(subject);
-            // Create a queue of things to consider
+            // Create an empty queue of things to consider
             bool createNewQueue = toAnalyze == null;
             if (createNewQueue)
                 toAnalyze = new Queue<Prerequisite>();
+            else
+                toAnalyze.Clear();
             // Consider the new subject's prerequisites
             toAnalyze.Enqueue(subject.Prerequisites);
             // Reconsider all existing decisions
