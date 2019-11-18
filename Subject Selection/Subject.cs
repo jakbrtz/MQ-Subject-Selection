@@ -185,7 +185,7 @@ namespace Subject_Selection
                 {
                     foreach (string ID in (criteria as Subject).NCCWs)
                     {
-                        Subject subject = SubjectReader.GetSubject(ID);
+                        Subject subject = Parser.GetSubject(ID);
                         if (subject == null) continue;
                         if (!counts.ContainsKey(subject))
                             counts[subject] = 0;

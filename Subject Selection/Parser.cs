@@ -11,7 +11,7 @@ using CsvHelper.Configuration.Attributes;
 namespace Subject_Selection
 {
     // This class deals with everything related to parsing from databases
-    public static class SubjectReader
+    public static class Parser
     {
         public static void Load()
         {
@@ -199,7 +199,7 @@ namespace Subject_Selection
             criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
 
             // Check if the criteria is a single subject
-            if (SubjectReader.TryGetSubject(criteria, out Subject subject))
+            if (Parser.TryGetSubject(criteria, out Subject subject))
             {
                 options.Add(subject);
                 selectionType = Selection.AND;
@@ -217,9 +217,9 @@ namespace Subject_Selection
             {
                 foreach (string token in tokens)
                 {
-                    if (SubjectReader.CouldBeCode(token))
+                    if (Parser.CouldBeCode(token))
                     {
-                        if (SubjectReader.TryGetSubject(token, out subject))
+                        if (Parser.TryGetSubject(token, out subject))
                             options.Add(subject);
                     }
                     else
@@ -279,7 +279,7 @@ namespace Subject_Selection
             {
                 selectionType = Selection.CP;
                 pick = int.Parse(tokens[0]) / 10; // 10 is a magic number equal to the amount of credit points per subject
-                options = SubjectReader.GetSubjectsFromQuery(tokens[1]);
+                options = Parser.GetSubjectsFromQuery(tokens[1]);
             }
 
             else if (TrySplit(" OR "))

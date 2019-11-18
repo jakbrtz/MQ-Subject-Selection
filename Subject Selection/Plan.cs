@@ -171,7 +171,7 @@ namespace Subject_Selection
             // Get all selected subjects and check them for NCCWs
             foreach (Subject subject in SelectedSubjects)
                 foreach (string id in subject.NCCWs)
-                    BannedSubjects.Add(SubjectReader.GetSubject(id));
+                    BannedSubjects.Add(Parser.GetSubject(id));
             // TODO: make sure that all NCCW relations are undirected (looking at you, BIOL2610 - STAT2170)
             
             // Check which decisions force a banned subject

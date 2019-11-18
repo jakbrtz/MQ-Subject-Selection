@@ -15,7 +15,7 @@ namespace Subject_Selection
         public Form1()
         {
             InitializeComponent();
-            SubjectReader.Load();
+            Parser.Load();
         }
 
         private void Form1_Load(object sender, EventArgs e)
