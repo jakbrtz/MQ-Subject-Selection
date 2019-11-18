@@ -226,9 +226,9 @@ namespace Subject_Selection
             return output;
         }
 
-        public bool MustPickAllRemaining(Plan plan)
+        public bool MustPickAll()
         {
-            return GetRemainingPick(plan) == GetRemainingOptions(plan).Count;
+            return GetPick() == GetOptions().Count;
         }
 
         public Prerequisite GetRemainingDecision(Plan plan)

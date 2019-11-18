@@ -52,7 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CoverCheck.cs" />
     <Compile Include="Decider.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
