@@ -95,7 +95,7 @@ namespace Subject_Selection
                     lower = int.Parse(FindText("at ", " level").Substring(0, 4));
                     upper = lower + 999;
 
-                    if (query.Contains("ABOVE"))
+                    if (query.Contains("above"))
                     {
                         upper = 9999;
                     }
