@@ -22,9 +22,9 @@ namespace Subject_Selection
                 var records = csv.EnumerateRecords(record);
                 foreach (var r in records)
                 {
-                    Subject subject = new Subject(r.code, r.time, r.prerequisites, r.nccw);
+                    Subject subject = new Subject(r.Code, r.Time, r.Prerequisites, r.NCCW);
                     if (subject.Semesters.Any()) // Some subjects aren't offered yet
-                        subjects[r.code] = subject; // Sometimes a subject appears twice in the csv.
+                        subjects[r.Code] = subject; // Sometimes a subject appears twice in the csv.
                 }
             }
 
@@ -297,8 +297,8 @@ namespace Subject_Selection
 
             // Unknown edge cases
             else if (
-                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out int idk)) &&
-                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out int wut)))
+                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out _)) &&
+                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out _)))
             {
                 Console.WriteLine(reasons[0]);
                 throw new Exception("idk how to parse this:\n" + criteria);
@@ -424,24 +424,24 @@ namespace Subject_Selection
     public class SubjectRecord
     {
         [Name("Name")]
-        public string name { get; set; }
+        public string Name { get; set; }
 
         [Name("Code")]
-        public string code { get; set; }
+        public string Code { get; set; }
 
         [Name("Unit Type")]
-        public string pace { get; set; }
+        public string Pace { get; set; }
 
         [Name("Prerequisites")]
-        public string prerequisites { get; set; }
+        public string Prerequisites { get; set; }
 
         [Name("Corequisites")]
-        public string corequisites { get; set; }
+        public string Corequisites { get; set; }
 
         [Name("NCCW")]
-        public string nccw { get; set; }
+        public string NCCW { get; set; }
 
         [Name("When Offered")]
-        public string time { get; set; }
+        public string Time { get; set; }
     }
 }
