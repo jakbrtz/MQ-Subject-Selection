@@ -61,6 +61,34 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Schedule of Courses of Study 2020
+        ///
+        ///Macquarie University
+        ///
+        ///Bachelor of Actuarial Studies	C000117
+        ///
+        ///Owner:			Macquarie Business School
+        ///Owner:			Macquarie University
+        ///Award:				Bachelor of Actuarial Studies (BActStud)
+        ///Core Zone
+        ///
+        ///
+        ///Capstone unit	Credit Points
+        ///Essential		ACST3059		Actuarial Modelling (10)	10
+        ///
+        ///Essential units	 
+        ///Essential		ACST1052		Introduction to Actuarial Studies (10)	10
+        ///Essential		ECON1020		Principles of Economics 1 (10)	10
+        ///Essential		ECON1021		Principles of Economics 2 (10)	10
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _2020_ScheduleOfCoursesUG {
+            get {
+                return ResourceManager.GetString("_2020_ScheduleOfCoursesUG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to WEB18V1|COMP115 COMP125 DMTH137 ISYS114 MAS_110 COMP249 ISYS224 MAS_241 COMP344 COMP348 ISYS358 MAS_340
         ///DES18V1|(STAT150 OR STAT170 OR STAT171) STAT279 (STAT270 OR STAT271) (STAT272 OR STAT273 OR STAT278) STAT399 STAT321 STAT379 (STAT302 OR STAT328)
         ///CMP18V1|(6CP COMP100-199 ISYS100-199) (6CP COMP200-299 ISYS200-299) ISYS358 (9CP COMP300-350 ISYS300-350 ISYS360)

@@ -91,25 +91,27 @@ namespace Subject_Selection
 
     public partial class Prerequisite : Criteria
     {
-        List<Subject> reasons = new List<Subject>();
-        private string criteria;
-        private List<Criteria> options;
-        private int pick;
-        private Selection selectionType;
+        protected List<Subject> reasons = new List<Subject>();
+        protected string criteria;
+        protected List<Criteria> options;
+        protected int pick;
+        protected Selection selectionType;
         private int earliestCompletionTime = -1;
 
         public Prerequisite(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
-            else if (reason is Prerequisite)
+            else if (reason is Prerequisite && !(reason as Prerequisite).PartOfCourse())
                 reasons.AddRange((reason as Prerequisite).reasons);
+            else
+                reasons = null;
             this.criteria = criteria;
             this.options = options;
             this.pick = pick;
             this.selectionType = selectionType;
 
-            ToString();
+            //ToString();
         }
 
         public int GetPick()
@@ -196,6 +198,8 @@ namespace Subject_Selection
                 {
                     foreach (Subject subject in (criteria as Prerequisite).ForcedBans())
                     {
+                        if (!counts.ContainsKey(subject))
+                            counts[subject] = 0;
                         counts[subject]++;
                     }
                 }
@@ -288,17 +292,27 @@ namespace Subject_Selection
         //TODO: cache result
         public int RequiredCompletionTime(Plan plan)
         {
+            if (PartOfCourse())
+                return 100;
             return reasons.Min(reason => reason.GetChosenTime(plan));
         }
 
         public void AddReasons(Prerequisite prerequisite)
         {
-            reasons = reasons.Union(prerequisite.reasons).ToList();
+            if (PartOfCourse())
+                reasons = new List<Subject>(prerequisite.reasons);
+            else
+                reasons = reasons.Union(prerequisite.reasons).ToList();
         }
 
         public List<Subject> GetReasons()
         {
             return reasons;
+        }
+
+        public bool PartOfCourse()
+        {
+            return GetReasons() == null;
         }
 
         public bool HasElectivePrerequisite()
@@ -308,4 +322,17 @@ namespace Subject_Selection
     }
 
     public enum Selection { AND, OR, CP }
+
+    public partial class Course : Prerequisite
+    {
+        public string Code;
+        public string Name;
+
+        public Course(string description) : base(null)
+        {
+            LoadCourse(description);
+
+            criteria = description;
+        }
+    }
 }

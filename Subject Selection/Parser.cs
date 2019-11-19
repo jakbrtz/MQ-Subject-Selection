@@ -28,24 +28,23 @@ namespace Subject_Selection
                 }
             }
 
-            foreach (string line in Properties.Resources.Majors.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None))
+            foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                string[] properties = line.Split('|');
-                Subject major = new Subject(properties[0], "S1D S2D S3D", properties[1], ""); //TODO, treat majors differently
-                majors.Add(major.ID, major);
+                Course course = new Course("\r\nBachelor of" + description);
+                courses[course.Code] = course;
             }
         }
 
-        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Course> courses = new Dictionary<string, Course>();
 
         public static Subject GetSubject(string id)
         {
+            if (id.Contains(' '))
+                return null;
             id = id.Split('(')[0];
             if (subjects.TryGetValue(id, out Subject subject))
                 return subject;
-            if (majors.TryGetValue(id, out Subject major))
-                return major;
             return null;
         }
 
@@ -53,6 +52,13 @@ namespace Subject_Selection
         {
             subject = GetSubject(id);
             return subject != null;
+        }
+
+        public static Course GetCourse(string id)
+        {
+            if (courses.TryGetValue(id, out Course course))
+                return course;
+            return null;
         }
 
         public static List<Criteria> GetSubjectsFromQuery(string query)
@@ -185,10 +191,13 @@ namespace Subject_Selection
 
     public partial class Prerequisite
     {
-        public List<Criteria> GetOptions()
+        public virtual List<Criteria> GetOptions()
         {
             // Load the cached result
             if (options != null) return options;
+
+            if (criteria == "MATH1010(D) or MATH1015(D) or MATH135(HD) or MATH132")
+                Console.WriteLine("hmmm");
 
             // Create a list of options and prepare to translate the text description
             options = new List<Criteria>();
@@ -420,6 +429,99 @@ namespace Subject_Selection
         }
     }
 
+    public partial class Course
+    {
+        public override List<Criteria> GetOptions()
+        {
+            if (options != null) return options;
+
+            throw new NotImplementedException();
+        }
+
+        void LoadCourse(string description)
+        {
+            options = new List<Criteria>();
+
+            string criteriaBuilder = "";
+            string previousFirstCell = "";
+
+            int lineNumber = 0;
+
+            foreach (string line in description.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            {
+                lineNumber++;
+                
+                if (line.Trim() == "")
+                {
+                    // If there is nothing to add, do nothing
+                    if (criteriaBuilder == "") continue;
+                    // Conclude previous Option set
+                    if (criteriaBuilder.EndsWith(" or "))
+                        criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 4) + ") and ";
+                    // Remove " and " from the end of the option
+                    criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 5);
+                    // Create a prerequisite using the criteria
+                    // Add that criteria to the list of stuff to do
+                    options.Add(new Prerequisite(null, criteriaBuilder));
+                    // Reset the builder
+                    criteriaBuilder = "";
+                    previousFirstCell = "";
+                    continue;
+                }
+
+                string[] cells = line.Split(new string[] { "\t" }, StringSplitOptions.None);
+
+                if (line.StartsWith("Bachelor of"))
+                {
+                    Name = cells[0].Substring(12);
+                    Code = cells[1];
+                    continue;
+                }
+
+                switch (cells[0])
+                {
+                    case "Essential":
+                        criteriaBuilder += cells[2] + " and ";
+                        break;
+                    case "Option set":
+                        // Conclude previous Option set
+                        if (criteriaBuilder.EndsWith(" or "))
+                            criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 4) + ") and ";
+                        // TODO: confirm that cells[1] always ends in a space
+                        criteriaBuilder += "(" + cells[1];
+                        criteriaBuilder += cells[2] + " or ";
+                        break;
+                    case "":
+                        if (previousFirstCell == "Option set")
+                            criteriaBuilder += cells[2] + " or ";
+                        break;
+                    case "TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE":
+                        options.Add(new Prerequisite(null, cells[1] + "cp"));
+                        break;
+                    case "Note:":
+                        // TODO: "Students may count a maximum of 100cp at 1000 level towards their course requirements."
+                        break;
+                        // I might need these later
+                    case "Owner:":
+                    case "Award:":
+                    case "Core Zone":
+                    case "Capstone unit:":
+                    case "Elective units":
+                    case "Total Required for Core Zone":
+                    case "Flexible Zone":
+                    case "Electives":
+                    case "Total Required for Flexible Zone":
+                        break;
+                    default:
+                        break; //throw new NotImplementedException();
+                }
+                if (cells[0] != "") previousFirstCell = cells[0];
+            }
+
+            selectionType = Selection.AND;
+            pick = options.Count;
+        }
+    }
 
     public class SubjectRecord
     {

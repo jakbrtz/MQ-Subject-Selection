@@ -9,20 +9,24 @@ namespace Subject_Selection
 {
     public static class Decider
     {
-        public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
+        public static void Analyze(Plan plan)
         {
+            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>(plan.Decisions);
+            AnalyzeDecision(toAnalyze, plan);
+        }
+
+        public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
+         {
             //Add the subject to the list
             plan.AddSubject(subject);
             // Create an empty queue of things to consider
             bool createNewQueue = toAnalyze == null;
             if (createNewQueue)
                 toAnalyze = new Queue<Prerequisite>();
-            else
-                toAnalyze.Clear();
             // Consider the new subject's prerequisites
             toAnalyze.Enqueue(subject.Prerequisites);
             // Reconsider all existing decisions
-            foreach (Prerequisite decision in plan.Decisions)
+            foreach (Prerequisite decision in plan.Decisions.Except(toAnalyze))
                 toAnalyze.Enqueue(decision);
             // If AnalyzeDecision isn't already running, run it
             if (createNewQueue)
@@ -68,11 +72,14 @@ namespace Subject_Selection
                  * however, if decision is still the same object as decision.reasons[n].prerequisites, then it messes with the database and causes errors later
                  * I've got to find a way of putting this earlier in the code
                  */
-                //Remove all reasons that have been met
-                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
-                //If there are no more reasons to make a decision, don't analyze the decision
-                if (!decision.GetReasons().Any())
-                    continue;
+                if (!decision.PartOfCourse())
+                {
+                    //Remove all reasons that have been met
+                    decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
+                    //If there are no more reasons to make a decision, don't analyze the decision
+                    if (!decision.GetReasons().Any())
+                        continue;
+                }
 
                 if (decision.MustPickAll())
                 {

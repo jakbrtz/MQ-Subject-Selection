@@ -93,6 +93,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="2020-ScheduleOfCoursesUG.txt" />
     <Content Include="Majors.txt" />
     <Content Include="Subjects.txt" />
   </ItemGroup>
