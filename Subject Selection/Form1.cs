@@ -23,14 +23,13 @@ namespace Subject_Selection
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            plan.AddDecision(Parser.GetCourse("C000130"));
-            Decider.Analyze(plan);
+            Decider.AddSubject(Parser.GetCourse("C000130"), plan);
 
             UpdateDecisionList();
             UpdatePlanGUI();
         }
 
-        Plan plan = new Plan();
+        readonly Plan plan = new Plan();
         Prerequisite currentDecision;
         Subject currentSubject;
 
@@ -45,10 +44,7 @@ namespace Subject_Selection
             Console.WriteLine();
             Console.WriteLine("Subject:        " + currentSubject.ID);
 
-            if (currentDecision.PartOfCourse())
-                currentDecision = null;
-            else
-                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
+            currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
 
             Console.WriteLine("Decision:       " + currentDecision??currentDecision.ToString());
             UpdateDecisionList();
@@ -104,11 +100,8 @@ namespace Subject_Selection
             if (currentDecision == null) return;
 
             Console.Write("Reasons:        ");
-            if (currentDecision.PartOfCourse())
-                Console.Write("Degree");
-            else
-                foreach (Subject reason in currentDecision.GetReasons())
-                    Console.Write(reason + " ");
+            foreach (Subject reason in currentDecision.GetReasons())
+                Console.Write(reason + " ");
             Console.WriteLine();
         }
 
@@ -131,21 +124,7 @@ namespace Subject_Selection
             else if (selected is Prerequisite)
             {
                 currentDecision = selected as Prerequisite;
-
-                //if (currentDecision.PartOfCourse())
-                if (false)
-                {
-                    Course test = selected as Course;
-
-                    plan.AddDecision(selected as Course);
-                    Decider.Analyze(plan);
-                    UpdateDecisionList();
-                    UpdatePlanGUI();
-                }
-                else
-                {
-                    LoadCurrentDecision();
-                }
+                LoadCurrentDecision();
             }
         }
 

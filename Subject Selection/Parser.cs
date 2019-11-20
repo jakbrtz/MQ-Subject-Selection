@@ -31,9 +31,9 @@ namespace Subject_Selection
             void MakeMajor(string description)
             {
                 if (description == "") return;
-                Course major = new Course(description);
-                if (major.Code == null) return;
-                majors[major.Code] = major;
+                Subject major = new Subject(description);
+                if (major.ID == null) return;
+                majors[major.ID] = major;
             }
 
             string descriptionBuilder = "";
@@ -51,14 +51,14 @@ namespace Subject_Selection
 
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                Course course = new Course("\r\nBachelor of" + description);
-                courses[course.Code] = course;
+                Subject course = new Subject("\r\nBachelor of" + description);
+                courses[course.ID] = course;
             }
         }
 
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Course> majors = new Dictionary<string, Course>();
-        static readonly Dictionary<string, Course> courses = new Dictionary<string, Course>();
+        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
 
         public static Subject GetSubject(string id)
         {
@@ -76,16 +76,16 @@ namespace Subject_Selection
             return subject != null;
         }
 
-        public static Course GetMajor(string id)
+        public static Subject GetMajor(string id)
         {
-            if (majors.TryGetValue(id, out Course major))
+            if (majors.TryGetValue(id, out Subject major))
                 return major;
             return null;
         }
 
-        public static Course GetCourse(string id)
+        public static Subject GetCourse(string id)
         {
-            if (courses.TryGetValue(id, out Course course))
+            if (courses.TryGetValue(id, out Subject course))
                 return course;
             return null;
         }
@@ -467,27 +467,20 @@ namespace Subject_Selection
             result.Add(source.Substring(startOfSubstring, source.Length - startOfSubstring));
             return result.Count > 1;
         }
-    }
 
-    public partial class Course
-    {
-        public override List<Criteria> GetOptions()
+        public void LoadFromDocument(string document, out string Name, out string Code)
         {
-            if (options != null) return options;
+            Name = null;
+            Code = null;
 
-            throw new NotImplementedException();
-        }
-
-        void LoadCourse(string description)
-        {
-            if (!description.Contains("0")) return;
+            if (!document.Contains("0")) return;
 
             options = new List<Criteria>();
 
             string criteriaBuilder = "";
             string previousFirstCell = "";
 
-            foreach (string line in description.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in document.Split(new string[] { "\r\n" }, StringSplitOptions.None))
             {
                 if (line.Trim() == "" || line.Trim() == "Major")
                 {
@@ -500,7 +493,7 @@ namespace Subject_Selection
                     criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 5);
                     // Create a prerequisite using the criteria
                     // Add that criteria to the list of stuff to do
-                    options.Add(new Prerequisite(null, criteriaBuilder));
+                    options.Add(new Prerequisite(this, criteriaBuilder));
                     // Reset the builder
                     criteriaBuilder = "";
                     previousFirstCell = "";
@@ -550,12 +543,12 @@ namespace Subject_Selection
                             criteriaBuilder += cells[2] + " or ";
                         break;
                     case "TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE":
-                        options.Add(new Prerequisite(null, cells[1] + "cp"));
+                        options.Add(new Prerequisite(this, cells[1] + "cp"));
                         break;
                     case "Note:":
                         // TODO: "Students may count a maximum of 100cp at 1000 level towards their course requirements."
                         break;
-                        // I might need these later
+                    // I might need these later
                     case "Owner:":
                     case "Award:":
                     case "Core Zone":

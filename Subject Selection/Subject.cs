@@ -21,6 +21,7 @@ namespace Subject_Selection
         public List<int> Semesters { get; }
         public Prerequisite Prerequisites { get; }
         public string[] NCCWs { get; }
+        public bool IsSubject { get; }
 
         public Subject(string id, string times, string prerequisites, string nccws)
         {
@@ -41,6 +42,19 @@ namespace Subject_Selection
 
             Prerequisites = new Prerequisite(this, prerequisites);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
+
+            IsSubject = true;
+        }
+
+        public Subject(string document)
+        {
+            Prerequisites = new Prerequisite(this);
+            Prerequisites.LoadFromDocument(document, out _, out string code);
+            ID = code;
+            Semesters = new List<int>();
+            Semesters.Add(2);
+            NCCWs = new string[0];
+            IsSubject = false;
         }
 
         public override string ToString()
@@ -84,6 +98,8 @@ namespace Subject_Selection
 
         public int GetChosenTime(Plan plan)
         {
+            if (IsSubject)
+                return 100;
             return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
         
@@ -91,27 +107,25 @@ namespace Subject_Selection
 
     public partial class Prerequisite : Criteria
     {
-        protected List<Subject> reasons = new List<Subject>();
-        protected string criteria;
-        protected List<Criteria> options;
-        protected int pick;
-        protected Selection selectionType;
-        private int earliestCompletionTime = -1;
+        List<Subject> reasons = new List<Subject>();
+        string criteria;
+        List<Criteria> options;
+        int pick;
+        Selection selectionType;
+        int earliestCompletionTime = -1;
 
         public Prerequisite(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
-            else if (reason is Prerequisite && !(reason as Prerequisite).PartOfCourse())
+            else if (reason is Prerequisite)
                 reasons.AddRange((reason as Prerequisite).reasons);
-            else
-                reasons = null;
             this.criteria = criteria;
             this.options = options;
             this.pick = pick;
             this.selectionType = selectionType;
 
-            //ToString();
+            ToString();
         }
 
         public int GetPick()
@@ -298,27 +312,17 @@ namespace Subject_Selection
         //TODO: cache result
         public int RequiredCompletionTime(Plan plan)
         {
-            if (PartOfCourse())
-                return 100;
             return reasons.Min(reason => reason.GetChosenTime(plan));
         }
 
         public void AddReasons(Prerequisite prerequisite)
         {
-            if (PartOfCourse())
-                reasons = new List<Subject>(prerequisite.reasons);
-            else
-                reasons = reasons.Union(prerequisite.reasons).ToList();
+            reasons = reasons.Union(prerequisite.reasons).ToList();
         }
 
         public List<Subject> GetReasons()
         {
             return reasons;
-        }
-
-        public bool PartOfCourse()
-        {
-            return GetReasons() == null;
         }
 
         public bool HasElectivePrerequisite()
@@ -328,22 +332,4 @@ namespace Subject_Selection
     }
 
     public enum Selection { AND, OR, CP }
-
-    public partial class Course : Prerequisite
-    {
-        public string Code;
-        public string Name;
-
-        public Course(string description) : base(null)
-        {
-            LoadCourse(description);
-
-            criteria = description;
-        }
-
-        public override string ToString()
-        {
-            return Code;
-        }
-    }
 }

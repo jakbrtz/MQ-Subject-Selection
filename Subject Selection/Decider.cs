@@ -9,12 +9,6 @@ namespace Subject_Selection
 {
     public static class Decider
     {
-        public static void Analyze(Plan plan)
-        {
-            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>(plan.Decisions);
-            AnalyzeDecision(toAnalyze, plan);
-        }
-
         public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
          {
             //Add the subject to the list
@@ -72,14 +66,11 @@ namespace Subject_Selection
                  * however, if decision is still the same object as decision.reasons[n].prerequisites, then it messes with the database and causes errors later
                  * I've got to find a way of putting this earlier in the code
                  */
-                if (!decision.PartOfCourse())
-                {
-                    //Remove all reasons that have been met
-                    decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
-                    //If there are no more reasons to make a decision, don't analyze the decision
-                    if (!decision.GetReasons().Any())
-                        continue;
-                }
+                //Remove all reasons that have been met
+                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
+                //If there are no more reasons to make a decision, don't analyze the decision
+                if (!decision.GetReasons().Any())
+                    continue;
 
                 if (decision.MustPickAll())
                 {

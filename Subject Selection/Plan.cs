@@ -12,7 +12,8 @@ namespace Subject_Selection
         public List<List<Subject>> SubjectsInOrder { get; }
         public List<Prerequisite> Decisions { get; }
         public List<Subject> SelectedSubjects { get; }
-        Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
+
+        readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
         public HashSet<Subject> BannedSubjects { get; }
 
