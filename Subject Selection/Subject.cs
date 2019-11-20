@@ -250,12 +250,18 @@ namespace Subject_Selection
             //Create a new list to store the remaining prerequisites
             List<Criteria> remainingOptions = new List<Criteria>();
             foreach (Criteria option in remainingCriteria)
+            {
                 if (option is Subject)
                     remainingOptions.Add(option);
-                else if (option is Prerequisite && this.GetRemainingPick(plan) == 1 && (option as Prerequisite).GetRemainingPick(plan) == 1)
-                    remainingOptions.AddRange((option as Prerequisite).GetRemainingDecision(plan).GetOptions());
                 else if (option is Prerequisite)
-                    remainingOptions.Add((option as Prerequisite).GetRemainingDecision(plan));
+                {
+                    Prerequisite remainingDecision = (option as Prerequisite).GetRemainingDecision(plan);
+                    if (this.GetRemainingPick(plan) == 1 && remainingDecision.GetPick() == 1)
+                        remainingOptions.AddRange(remainingDecision.GetOptions());
+                    else
+                        remainingOptions.Add(remainingDecision);
+                }
+            }
             string newcriteria = "";
             if (selectionType == Selection.CP)
                 newcriteria = CopyCriteria(GetRemainingPick(plan));
@@ -333,6 +339,11 @@ namespace Subject_Selection
             LoadCourse(description);
 
             criteria = description;
+        }
+
+        public override string ToString()
+        {
+            return Code;
         }
     }
 }
