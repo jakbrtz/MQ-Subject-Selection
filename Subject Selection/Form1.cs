@@ -22,8 +22,10 @@ namespace Subject_Selection
         {
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
-            plan.AddDecision(Parser.GetCourse("C000117"));
+
+            plan.AddDecision(Parser.GetCourse("C000130"));
             Decider.Analyze(plan);
+
             UpdateDecisionList();
             UpdatePlanGUI();
         }
@@ -43,14 +45,11 @@ namespace Subject_Selection
             Console.WriteLine();
             Console.WriteLine("Subject:        " + currentSubject.ID);
 
-            try
-            {
-                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
-            }
-            catch
-            {
+            if (currentDecision.PartOfCourse())
                 currentDecision = null;
-            }
+            else
+                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
+
             Console.WriteLine("Decision:       " + currentDecision??currentDecision.ToString());
             UpdateDecisionList();
             LoadPossibleTimes(currentSubject);
@@ -115,9 +114,11 @@ namespace Subject_Selection
 
         private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (LBXchoose.SelectedItem is Subject)
+            Criteria selected = LBXchoose.SelectedItem as Criteria;
+
+            if (selected is Subject)
             {
-                currentSubject = LBXchoose.SelectedItem as Subject;
+                currentSubject = selected as Subject;
                 Decider.AddSubject(currentSubject, plan);
                 Prerequisite nextDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
                 UpdatePlanGUI();
@@ -127,10 +128,24 @@ namespace Subject_Selection
                     UpdateDecisionList();
                 }
             }
-            else if (LBXchoose.SelectedItem is Prerequisite)
+            else if (selected is Prerequisite)
             {
-                currentDecision = LBXchoose.SelectedItem as Prerequisite;
-                LoadCurrentDecision();
+                currentDecision = selected as Prerequisite;
+
+                //if (currentDecision.PartOfCourse())
+                if (false)
+                {
+                    Course test = selected as Course;
+
+                    plan.AddDecision(selected as Course);
+                    Decider.Analyze(plan);
+                    UpdateDecisionList();
+                    UpdatePlanGUI();
+                }
+                else
+                {
+                    LoadCurrentDecision();
+                }
             }
         }
 

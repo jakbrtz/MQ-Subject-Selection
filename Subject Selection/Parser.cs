@@ -28,6 +28,27 @@ namespace Subject_Selection
                 }
             }
 
+            void MakeMajor(string description)
+            {
+                if (description == "") return;
+                Course major = new Course(description);
+                if (major.Code == null) return;
+                majors[major.Code] = major;
+            }
+
+            string descriptionBuilder = "";
+            foreach (string line in Properties.Resources._2020_ScheduleOfMajors.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            {
+                if (line.Contains("N000"))
+                {
+                    MakeMajor(descriptionBuilder);
+                    descriptionBuilder = "";
+                }
+
+                descriptionBuilder += line + "\r\n";
+            }
+            MakeMajor(descriptionBuilder);
+
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 Course course = new Course("\r\nBachelor of" + description);
@@ -36,6 +57,7 @@ namespace Subject_Selection
         }
 
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Course> majors = new Dictionary<string, Course>();
         static readonly Dictionary<string, Course> courses = new Dictionary<string, Course>();
 
         public static Subject GetSubject(string id)
@@ -54,11 +76,32 @@ namespace Subject_Selection
             return subject != null;
         }
 
+        public static Course GetMajor(string id)
+        {
+            if (majors.TryGetValue(id, out Course major))
+                return major;
+            return null;
+        }
+
         public static Course GetCourse(string id)
         {
             if (courses.TryGetValue(id, out Course course))
                 return course;
             return null;
+        }
+
+        public static bool TryGetCriteria(string id, out Criteria criteria)
+        {
+            criteria = GetSubject(id);
+            if (criteria != null)
+                return true;
+            criteria = GetMajor(id);
+            if (criteria != null)
+                return true;
+            criteria = GetCourse(id);
+            if (criteria != null)
+                return true;
+            return false;
         }
 
         public static List<Criteria> GetSubjectsFromQuery(string query)
@@ -196,9 +239,6 @@ namespace Subject_Selection
             // Load the cached result
             if (options != null) return options;
 
-            if (criteria == "MATH1010(D) or MATH1015(D) or MATH135(HD) or MATH132")
-                Console.WriteLine("hmmm");
-
             // Create a list of options and prepare to translate the text description
             options = new List<Criteria>();
 
@@ -208,7 +248,7 @@ namespace Subject_Selection
             criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
 
             // Check if the criteria is a single subject
-            if (Parser.TryGetSubject(criteria, out Subject subject))
+            if (Parser.TryGetCriteria(criteria, out Criteria subject))
             {
                 options.Add(subject);
                 selectionType = Selection.AND;
@@ -228,7 +268,7 @@ namespace Subject_Selection
                 {
                     if (Parser.CouldBeCode(token))
                     {
-                        if (Parser.TryGetSubject(token, out subject))
+                        if (Parser.TryGetCriteria(token, out subject))
                             options.Add(subject);
                     }
                     else
@@ -440,18 +480,16 @@ namespace Subject_Selection
 
         void LoadCourse(string description)
         {
+            if (!description.Contains("0")) return;
+
             options = new List<Criteria>();
 
             string criteriaBuilder = "";
             string previousFirstCell = "";
 
-            int lineNumber = 0;
-
             foreach (string line in description.Split(new string[] { "\r\n" }, StringSplitOptions.None))
             {
-                lineNumber++;
-                
-                if (line.Trim() == "")
+                if (line.Trim() == "" || line.Trim() == "Major")
                 {
                     // If there is nothing to add, do nothing
                     if (criteriaBuilder == "") continue;
@@ -471,10 +509,26 @@ namespace Subject_Selection
 
                 string[] cells = line.Split(new string[] { "\t" }, StringSplitOptions.None);
 
-                if (line.StartsWith("Bachelor of"))
+                if (Code == null)
                 {
-                    Name = cells[0].Substring(12);
+                    Name = cells[0];
                     Code = cells[1];
+                    if (Code == "N000187")
+                        Console.WriteLine("hello world");
+                    continue;
+                }
+
+                if (line.StartsWith("Majors"))
+                {
+                    previousFirstCell = "Majors";
+                    criteriaBuilder = "(";
+                    continue;
+                }
+
+                if (previousFirstCell == "Majors")
+                {
+                    if (cells[0].StartsWith("N000"))
+                        criteriaBuilder += cells[0] + " or ";
                     continue;
                 }
 
@@ -511,6 +565,12 @@ namespace Subject_Selection
                     case "Flexible Zone":
                     case "Electives":
                     case "Total Required for Flexible Zone":
+                    case "Faculty:":
+                    case "Department:":
+                    case "This major must be completed as part of an award. The general requirements for the award must be satisfied in order to graduate.":
+                    case "Requirements:":
+                    case "Essential units":
+                    case "TOTAL CREDIT POINTS REQUIRED TO SATISFY THIS MAJOR":
                         break;
                     default:
                         break; //throw new NotImplementedException();

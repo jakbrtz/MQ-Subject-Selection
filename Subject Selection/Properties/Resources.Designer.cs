@@ -61,10 +61,7 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Schedule of Courses of Study 2020
-        ///
-        ///Macquarie University
-        ///
+        ///   Looks up a localized string similar to 
         ///Bachelor of Actuarial Studies	C000117
         ///
         ///Owner:			Macquarie Business School
@@ -80,11 +77,37 @@ namespace Subject_Selection.Properties {
         ///Essential		ACST1052		Introduction to Actuarial Studies (10)	10
         ///Essential		ECON1020		Principles of Economics 1 (10)	10
         ///Essential		ECON1021		Principles of Economics 2 (10)	10
-        /// [rest of string was truncated]&quot;;.
+        ///Essential		MATH1025		Mathematical Modelling IB (Advanced) ( [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string _2020_ScheduleOfCoursesUG {
             get {
                 return ResourceManager.GetString("_2020_ScheduleOfCoursesUG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///Faculty of Arts
+        ///
+        ///Ancient Egypt and the Near East	N000047
+        ///
+        ///Faculty:	Faculty of Arts
+        ///Department:	 
+        ///
+        ///This major must be completed as part of an award. The general requirements for the award must be satisfied in order to graduate.
+        ///
+        ///Requirements:
+        ///
+        ///
+        ///Essential units	Credit Points
+        ///Essential		AHIS1240		Ancient Israel and the Near East (10)	10
+        ///Essential		AHIS1250		Ancient Egyptian Archaeology (10)	10
+        ///Essential		AHIS2000		Sources and Methodology in Ancient History (10)	10
+        ///Essential		AHIS3001		Materia [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _2020_ScheduleOfMajors {
+            get {
+                return ResourceManager.GetString("_2020_ScheduleOfMajors", resourceCulture);
             }
         }
         

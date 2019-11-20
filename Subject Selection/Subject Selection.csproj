@@ -94,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="2020-ScheduleOfCoursesUG.txt" />
+    <None Include="2020-ScheduleOfMajors.txt" />
     <Content Include="Majors.txt" />
     <Content Include="Subjects.txt" />
   </ItemGroup>
