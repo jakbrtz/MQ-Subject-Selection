@@ -51,8 +51,7 @@ namespace Subject_Selection
             Prerequisites = new Prerequisite(this);
             Prerequisites.LoadFromDocument(document, out _, out string code);
             ID = code;
-            Semesters = new List<int>();
-            Semesters.Add(2);
+            Semesters = new List<int> { 2 };
             NCCWs = new string[0];
             IsSubject = false;
         }
@@ -64,8 +63,10 @@ namespace Subject_Selection
 
         public override bool HasBeenMet(Plan plan, int time)
         {
-            if (!plan.SelectedSubjects.Contains(this)) return false;
-            return plan.SelectedSubjectsSoFar(time).Contains(this);
+            if (!plan.SelectedStuff().Contains(this)) return false;
+            if (IsSubject)
+                return plan.SelectedSubjectsSoFar(time).Contains(this);
+            return true;
         }
 
         private bool checkingForBan = false;

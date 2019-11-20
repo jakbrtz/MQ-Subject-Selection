@@ -10,7 +10,7 @@ namespace Subject_Selection
     public static class Decider
     {
         public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
-         {
+        {
             //Add the subject to the list
             plan.AddSubject(subject);
             // Create an empty queue of things to consider

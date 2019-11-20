@@ -12,6 +12,7 @@ namespace Subject_Selection
         public List<List<Subject>> SubjectsInOrder { get; }
         public List<Prerequisite> Decisions { get; }
         public List<Subject> SelectedSubjects { get; }
+        public List<Subject> SelectedCourses { get; }
 
         readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
@@ -22,6 +23,7 @@ namespace Subject_Selection
             SubjectsInOrder = new List<List<Subject>>();
             Decisions = new List<Prerequisite>();
             SelectedSubjects = new List<Subject>();
+            SelectedCourses = new List<Subject>();
             MaxSubjects = new List<int>();
             BannedSubjects = new HashSet<Subject>();
         }
@@ -31,16 +33,29 @@ namespace Subject_Selection
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
             Decisions = new List<Prerequisite>(other.Decisions);
             SelectedSubjects = new List<Subject>(other.SelectedSubjects);
+            SelectedCourses = new List<Subject>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
             BannedSubjects = new HashSet<Subject>(other.BannedSubjects);
         }
 
         public void AddSubject(Subject subject)
         {
-            SelectedSubjects.Add(subject);
+            if (subject.IsSubject)
+            {
+                SelectedSubjects.Add(subject);
+            }
+            else
+            {
+                SelectedCourses.Add(subject);
+            }
             //TODO: don't reorder entire thing every time a subject is added
             Order();
             FindBannedSubjects();
+        }
+
+        public List<Subject> SelectedStuff()
+        {
+            return SelectedSubjects.Union(SelectedCourses).ToList();
         }
 
         public void AddDecision(Prerequisite decision)
