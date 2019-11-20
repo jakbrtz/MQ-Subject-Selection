@@ -234,8 +234,12 @@ namespace Subject_Selection
 
     public partial class Prerequisite
     {
-        public virtual List<Criteria> GetOptions()
+        public List<Criteria> GetOptions()
         {
+            /* The process of translating criteria into options can only happen once `subjects` has been fully populated
+             * That is why I put the translation process in this function
+             */
+            
             // Load the cached result
             if (options != null) return options;
 
