@@ -112,6 +112,34 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///Faculty of Arts
+        ///
+        ///Chinese International Studies	Q000230
+        ///
+        ///Faculty:	Faculty of Arts
+        ///Department:	 
+        ///
+        ///This specialisation must be completed as part of an award. The general requirements for the award must be satisfied in order to graduate.
+        ///
+        ///Requirements:
+        ///
+        ///
+        ///Essential units	Credit Points
+        ///Essential		INTS3000		International Studies In-Country Program (40)	40
+        ///
+        ///Elective units	 
+        ///Option set	20cp from 	CHIN units at 1000 level	
+        ///		INTS1020		China in World History (10)	20
+        ///Option set	10cp from 	CHIN units [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _2020_ScheduleOfUGSpecialisations {
+            get {
+                return ResourceManager.GetString("_2020_ScheduleOfUGSpecialisations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to WEB18V1|COMP115 COMP125 DMTH137 ISYS114 MAS_110 COMP249 ISYS224 MAS_241 COMP344 COMP348 ISYS358 MAS_340
         ///DES18V1|(STAT150 OR STAT170 OR STAT171) STAT279 (STAT270 OR STAT271) (STAT272 OR STAT273 OR STAT278) STAT399 STAT321 STAT379 (STAT302 OR STAT328)
         ///CMP18V1|(6CP COMP100-199 ISYS100-199) (6CP COMP200-299 ISYS200-299) ISYS358 (9CP COMP300-350 ISYS300-350 ISYS360)

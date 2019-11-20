@@ -23,7 +23,7 @@ namespace Subject_Selection
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            Decider.AddSubject(Parser.GetCourse("C000130"), plan);
+            Decider.AddSubject(Parser.GetCourse("C000011"), plan);
 
             UpdateDecisionList();
             UpdatePlanGUI();

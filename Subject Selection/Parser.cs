@@ -49,6 +49,27 @@ namespace Subject_Selection
             }
             MakeMajor(descriptionBuilder);
 
+            void MakeSpecialisation(string description)
+            {
+                if (description == "") return;
+                Subject specialisation = new Subject(description);
+                if (specialisation.ID == null) return;
+                specialisations[specialisation.ID] = specialisation;
+            }
+
+            descriptionBuilder = "";
+            foreach (string line in Properties.Resources._2020_ScheduleOfUGSpecialisations.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            {
+                if (line.Contains("Q000"))
+                {
+                    MakeSpecialisation(descriptionBuilder);
+                    descriptionBuilder = "";
+                }
+
+                descriptionBuilder += line + "\r\n";
+            }
+            MakeSpecialisation(descriptionBuilder);
+
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 Subject course = new Subject("\r\nBachelor of" + description);
@@ -58,6 +79,7 @@ namespace Subject_Selection
 
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Subject> specialisations = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
 
         public static Subject GetSubject(string id)
@@ -83,6 +105,13 @@ namespace Subject_Selection
             return null;
         }
 
+        public static Subject GetSpecialisation(string id)
+        {
+            if (specialisations.TryGetValue(id, out Subject specialisation))
+                return specialisation;
+            return null;
+        }
+
         public static Subject GetCourse(string id)
         {
             if (courses.TryGetValue(id, out Subject course))
@@ -96,6 +125,9 @@ namespace Subject_Selection
             if (criteria != null)
                 return true;
             criteria = GetMajor(id);
+            if (criteria != null)
+                return true;
+            criteria = GetSpecialisation(id);
             if (criteria != null)
                 return true;
             criteria = GetCourse(id);
@@ -510,8 +542,6 @@ namespace Subject_Selection
                 {
                     Name = cells[0];
                     Code = cells[1];
-                    if (Code == "N000187")
-                        Console.WriteLine("hello world");
                     continue;
                 }
 
@@ -525,6 +555,20 @@ namespace Subject_Selection
                 if (previousFirstCell == "Majors")
                 {
                     if (cells[0].StartsWith("N000"))
+                        criteriaBuilder += cells[0] + " or ";
+                    continue;
+                }
+
+                if (line.StartsWith("UG Specialisations"))
+                {
+                    previousFirstCell = "UG Specialisations";
+                    criteriaBuilder = "(";
+                    continue;
+                }
+
+                if (previousFirstCell == "UG Specialisations")
+                {
+                    if (cells[0].StartsWith("Q000"))
                         criteriaBuilder += cells[0] + " or ";
                     continue;
                 }
