@@ -22,7 +22,7 @@ namespace Subject_Selection
                 var records = csv.EnumerateRecords(record);
                 foreach (var r in records)
                 {
-                    Subject subject = new Subject(r.Code, r.Time, r.Prerequisites, r.NCCW);
+                    Subject subject = new Subject(r.Code, r.Name, r.Time, r.Prerequisites, r.NCCW);
                     if (subject.Semesters.Any()) // Some subjects aren't offered yet
                         subjects[r.Code] = subject; // Sometimes a subject appears twice in the csv.
                 }
@@ -81,6 +81,11 @@ namespace Subject_Selection
         static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> specialisations = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
+
+        public static List<Subject> AllCourses()
+        {
+            return courses.Values.ToList();
+        }
 
         public static Subject GetSubject(string id)
         {
@@ -167,7 +172,7 @@ namespace Subject_Selection
                     textFilters = FindText("in ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
                 if (query.Contains("of"))
                     textFilters = FindText("of ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
-                if (query.Contains("from"))
+                if (query.Contains("from") && !query.Contains("from units"))
                     textFilters = FindText("from ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
 
                 // Specify number part

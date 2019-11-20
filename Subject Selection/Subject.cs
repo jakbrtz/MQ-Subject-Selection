@@ -18,14 +18,16 @@ namespace Subject_Selection
     public class Subject : Criteria
     {
         public string ID { get; }
+        public string Name { get; }
         public List<int> Semesters { get; }
         public Prerequisite Prerequisites { get; }
         public string[] NCCWs { get; }
         public bool IsSubject { get; }
 
-        public Subject(string id, string times, string prerequisites, string nccws)
+        public Subject(string id, string name, string times, string prerequisites, string nccws)
         {
             ID = id;
+            Name = name;
 
             Semesters = new List<int>();
             foreach (string time in times.Split('\n'))
@@ -49,8 +51,9 @@ namespace Subject_Selection
         public Subject(string document)
         {
             Prerequisites = new Prerequisite(this);
-            Prerequisites.LoadFromDocument(document, out _, out string code);
+            Prerequisites.LoadFromDocument(document, out string name, out string code);
             ID = code;
+            Name = name;
             Semesters = new List<int> { 2 };
             NCCWs = new string[0];
             IsSubject = false;

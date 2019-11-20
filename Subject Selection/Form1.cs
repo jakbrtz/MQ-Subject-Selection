@@ -23,10 +23,11 @@ namespace Subject_Selection
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            Decider.AddSubject(Parser.GetCourse("C000011"), plan);
+            foreach (Subject course in Parser.AllCourses())
+                AddCriteriaToFLP(course);
 
-            UpdateDecisionList();
-            UpdatePlanGUI();
+            //UpdateDecisionList();
+            //UpdatePlanGUI();
         }
 
         readonly Plan plan = new Plan();
@@ -67,10 +68,10 @@ namespace Subject_Selection
 
         void LoadCurrentDecision()
         {
-            LBXchoose.Items.Clear();
+            FLPchoose.Controls.Clear();
             if (currentDecision != null)
                 foreach (Criteria criteria in currentDecision.GetOptions())
-                    LBXchoose.Items.Add(criteria);
+                    AddCriteriaToFLP(criteria);
         }
 
         void UpdatePlanGUI()
@@ -105,15 +106,32 @@ namespace Subject_Selection
             Console.WriteLine();
         }
 
-        private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
+        private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Criteria selected = LBXchoose.SelectedItem as Criteria;
+            int time = int.Parse(LBXtime.SelectedItem.ToString());
+            Decider.MoveSubject(currentSubject, plan, time);
+            UpdatePlanGUI();
+        }
+
+        void AddCriteriaToFLP(Criteria criteria)
+        {
+            OptionView optionView = new OptionView(criteria);
+            optionView.Click += OptionView_Click;
+            FLPchoose.Controls.Add(optionView);
+        }
+
+        private void OptionView_Click(object sender, EventArgs e)
+        {
+            while (!(sender is OptionView))
+                sender = (sender as Control).Parent;
+
+            Criteria selected = (sender as OptionView).Criteria;
 
             if (selected is Subject)
             {
                 currentSubject = selected as Subject;
                 Decider.AddSubject(currentSubject, plan);
-                Prerequisite nextDecision = plan.Decisions.Find(decision => decision.IsSubset(currentDecision));
+                Prerequisite nextDecision = plan.PickNextDecision();
                 UpdatePlanGUI();
                 if (nextDecision != null)
                 {
@@ -128,11 +146,9 @@ namespace Subject_Selection
             }
         }
 
-        private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
+        private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int time = int.Parse(LBXtime.SelectedItem.ToString());
-            Decider.MoveSubject(currentSubject, plan, time);
-            UpdatePlanGUI();
+            
         }
     }
 }
