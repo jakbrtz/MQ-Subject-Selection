@@ -118,14 +118,8 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Majors" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Majors.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
   <data name="ScheduleOfUndergraduateUnits" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ScheduleOfUndergraduateUnits.csv;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="Subjects" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Subjects.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="_2020_ScheduleOfCoursesUG" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\2020-ScheduleOfCoursesUG.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
