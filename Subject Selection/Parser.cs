@@ -143,116 +143,148 @@ namespace Subject_Selection
 
         public static List<Criteria> GetSubjectsFromQuery(string query)
         {
-            query = query.Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "");
+            /* Aight now here me out
+             * This doesn't properly parse a query, but it succeeds in parsing every query at Macquarie
+             * I haven't tested every query, but I'm sure it works
+             * This works by splitting the query at spaces, then assuming the meaning of every word that isn't already a keyword
+             * It also builds a list of conditions to filter the full list of subjects by: the smallest number, largest number, and list of possible Letters that it can start with
+             
+             * Some inputs include:
+             * " in COMP or ISYS or ACCG or STAT or BUS or BBA or MGMT units at 2000 level"
+             * " from BIOL or ENVS or GEOS or ANTH1051 or ANTH151 or AHIS190"
+             * " from FOSE1005 or MATH1000 or MATH1010-MATH1025 or MATH111-MATH339"
+             * ""
+             * " from COMP units at 2000 level or MATH units at 2000 level or STAT units at 2000 level"
+             * That last one has the assumption that each group will have the same number
+             */
+
+            List<Criteria> output = new List<Criteria>();
+
+            // Clear brackets and remove spaces around dashes
+            query = query.Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "").Replace(" -", "-").Replace("- ", "-");
 
             // A blank query returns everything
             if (query == "")
                 return subjects.Values.Cast<Criteria>().ToList();
 
-            if (query.Contains("units") || query.Contains("level"))
+            // Split at spaces
+            string[] words = query.Split(' ');
+
+            // Prepare filter conditions
+            int lower = 1000;
+            int upper = 9999;
+            List<string> textFilters = null;
+            bool filter = false;
+
+            // Iterate over each word
+            foreach (string word in words)
             {
-                // A query with words
+                // If the word is a keyword, don't process it
+                if (word == "from" || word == "of" || word == "at" || word == "in" || word == "or" || word == "OR" || word == "units" || word == "level" || word == "either" || word == "")
+                    continue;
 
-                // Figure out how to filter the data
-                int lower = 1000;
-                int upper = 9999;
-                string[] textFilters = null;
-
-                string FindText(string left, string right)
+                // Any subject gets added straight to the list of outputs.
+                if (CouldBeCode(word))
                 {
-                    int leftIndex = query.IndexOf(left) + left.Length;
-                    int rightIndex = query.IndexOf(right);
-                    if (rightIndex == -1)
-                        rightIndex = query.Length;
-                    return query.Substring(leftIndex, rightIndex - leftIndex);
-                }
-
-                // Specify text part
-                if (query.Contains("in"))
-                    textFilters = FindText("in ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
-                if (query.Contains("of"))
-                    textFilters = FindText("of ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
-                if (query.Contains("from") && !query.Contains("from units"))
-                    textFilters = FindText("from ", " units").Split(new string[] { " or " }, StringSplitOptions.None);
-
-                // Specify number part
-                if (query.Contains("at"))
-                {
-                    lower = int.Parse(FindText("at ", " level").Substring(0, 4));
-                    upper = lower + 999;
-
-                    if (query.Contains("above"))
+                    if (TryGetSubject(word, out Subject s))
                     {
-                        upper = 9999;
+                        output.Add(s);
                     }
+                    continue;
                 }
 
-                return subjects.Values.ToList().FindAll(subject =>
-                    (textFilters == null || textFilters.Any(unit => subject.ID.StartsWith(unit))) &&
-                    lower <= subject.GetNumber() &&
-                    subject.GetNumber() <= upper)
-                    .Cast<Criteria>().ToList();
+                // Get short ranges of subjects
+                if (word.Contains('-'))
+                {
+                    string left = word.Split('-')[0].Trim();
+                    string right = word.Split('-')[1].Trim();
+
+                    if (!(left.Length == 8 && int.TryParse(left.Substring(4), out int localLower)))
+                    {
+                        // Maybe this subject is from the old codes? In that case we should neatly return nothing instead of yeeting an exception
+                        if (CouldBeCode(left))
+                            continue;
+                        throw new Exception("left does not match");
+                    }
+
+                    if (!((right.Length == 8 && int.TryParse(right.Substring(4), out int localUpper)) || (right.Length == 4 && int.TryParse(right, out localUpper))))
+                    {
+                        // Who the fuck says "yeet an exception"?
+                        if (CouldBeCode(right) || right.Length == 3)
+                            continue;
+                        throw new Exception("right does not match");
+                    }
+
+                    string unit = left.Substring(0, 4);
+
+                    if (right.Length == 8 && right.Substring(0, 4) != unit)
+                        throw new Exception("units don't match");
+
+                    output.AddRange(subjects.Values.ToList().FindAll(subject =>
+                        subject.ID.StartsWith(unit) &&
+                        localLower <= subject.GetNumber() &&
+                        subject.GetNumber() <= localUpper)
+                        .Cast<Criteria>().ToList());
+
+                    continue;
+                }
+
+                // Check if the word is a number
+                if (int.TryParse(word, out int number))
+                {
+                    filter = true;
+                    lower = number;
+                    upper = number + 999;
+                    continue;
+                }
+
+                // Check if there is a limit for the number
+                if (word == "orabove")
+                {
+                    upper = 9999;
+                    continue;
+                }
+
+                // Check if it is a subject without a number
+                if (word.Length == 4)
+                {
+                    filter = true;
+                    if (textFilters == null) textFilters = new List<string>();
+                    textFilters.Add(word);
+                    continue;
+                }
+
+                // Check if it is an old subject without a number
+                if (word.Length == 3)
+                {
+                    // ACCG3020 asks about `40cp in LAW units at 2000 level`, so this needs to be impossible to meet
+                    filter = true;
+                    if (textFilters == null) textFilters = new List<string>();
+                    continue;
+                }
+
+                // Sometimes the course specifies a mark for the subject
+                if (word == "P" || word == "CR" || word == "D" || word == "HD")
+                    continue;
+
+                // Something unusual is found.
+                throw new Exception("wtf is this: " + word);
             }
-            else
-            {
-                string[] queriedSubjects = query.Replace("from", "").Replace("in", "").Split(new string[] { "or", "OR" }, StringSplitOptions.RemoveEmptyEntries);
 
-                Criteria[] translateQuery(string subQuery)
-                {
-                    if (subQuery.Contains('-'))
-                    {
-                        string left = subQuery.Split('-')[0].Trim();
-                        string right = subQuery.Split('-')[1].Trim();
+            // Add the subjects that match the filters
+            if (filter)
+                output.AddRange(subjects.Values.ToList().FindAll(subject =>
+                        (textFilters == null || textFilters.Any(unit => subject.ID.StartsWith(unit))) &&
+                        lower <= subject.GetNumber() &&
+                        subject.GetNumber() <= upper)
+                        .Cast<Criteria>().ToList());
 
-                        if (!(left.Length == 8 && int.TryParse(left.Substring(4), out int lower)))
-                        {
-                            // Maybe this subject is from the old codes? In that case we should neatly return nothing instead of yeeting an exception
-                            if (CouldBeCode(left))
-                                return new Criteria[0];
-                            throw new Exception("left does not match");
-                        }
-
-                        if (!((right.Length == 8 && int.TryParse(right.Substring(4), out int upper)) || (right.Length == 4 && int.TryParse(right, out upper))))
-                        {
-                            // Who the fuck says "yeet an exception"?
-                            if (CouldBeCode(right) || right.Length == 3)
-                                return new Criteria[0];
-                            throw new Exception("right does not match");
-                        }
-
-                        string unit = left.Substring(0, 4);
-
-                        if (right.Length == 8 && right.Substring(0, 4) != unit)
-                            throw new Exception("units don't match");
-
-                        return subjects.Values.ToList().FindAll(subject =>
-                            subject.ID.StartsWith(unit) &&
-                            lower <= subject.GetNumber() &&
-                            subject.GetNumber() <= upper)
-                            .Cast<Criteria>().ToArray();
-                    }
-                    else
-                    {
-                        // Return a single subject
-                        if (TryGetSubject(subQuery, out Subject subject))
-                            return new Criteria[] { GetSubject(subQuery) };
-                        // Return all subjects with a name
-                        if (subQuery.Length == 4)
-                            return subjects.Values.ToList().FindAll(s => s.ID.StartsWith(subQuery)).Cast<Criteria>().ToArray();
-                        // Old codes
-                        if (CouldBeCode(subQuery))
-                            return new Criteria[0];
-                        throw new Exception("\'" + subQuery + "\' is not a subject");
-                    }
-                }
-
-                return queriedSubjects.SelectMany(q => translateQuery(q.Trim())).ToList();
-            }
+            return output;
         }
 
         public static bool CouldBeCode(string id)
         {
-            return id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
+            return id.Length >= 6 && id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
         }
 
         public static int GetNumber(this Subject subject)
@@ -279,6 +311,9 @@ namespace Subject_Selection
             
             // Load the cached result
             if (options != null) return options;
+
+            if (criteria == "(ANTH150 or ANTH1050) or (40cp at 1000 level or above")
+                Console.WriteLine("alright boiky");
 
             // Create a list of options and prepare to translate the text description
             options = new List<Criteria>();
@@ -455,6 +490,13 @@ namespace Subject_Selection
                         i++;
                         brackets = 0;
                     }
+                }
+
+                // If the description contains an opening bracket without a closing bracket, add a closing bracket (looking at you, ANTH2003)
+                while (brackets > 0)
+                {
+                    source += ')';
+                    brackets--;
                 }
 
                 // If the entire text is in backets, remove the brackets
