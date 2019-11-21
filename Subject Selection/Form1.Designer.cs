@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.LBXdecisions = new System.Windows.Forms.ListBox();
-            this.LBXchoose = new System.Windows.Forms.ListBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -65,16 +64,6 @@
             this.LBXdecisions.Size = new System.Drawing.Size(365, 287);
             this.LBXdecisions.TabIndex = 4;
             this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
-            // 
-            // LBXchoose
-            // 
-            this.LBXchoose.FormattingEnabled = true;
-            this.LBXchoose.IntegralHeight = false;
-            this.LBXchoose.Location = new System.Drawing.Point(0, 0);
-            this.LBXchoose.Name = "LBXchoose";
-            this.LBXchoose.Size = new System.Drawing.Size(341, 216);
-            this.LBXchoose.TabIndex = 7;
-            this.LBXchoose.SelectedIndexChanged += new System.EventHandler(this.LBXchoose_SelectedIndexChanged);
             // 
             // dataGridView1
             // 
@@ -138,7 +127,6 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.FLPchoose);
-            this.splitContainer1.Panel2.Controls.Add(this.LBXchoose);
             this.splitContainer1.Size = new System.Drawing.Size(799, 522);
             this.splitContainer1.SplitterDistance = 287;
             this.splitContainer1.TabIndex = 10;
@@ -226,7 +214,6 @@
 
         #endregion
         private System.Windows.Forms.ListBox LBXdecisions;
-        private System.Windows.Forms.ListBox LBXchoose;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;

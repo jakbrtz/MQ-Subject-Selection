@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace Subject_Selection
 {
@@ -25,9 +26,6 @@ namespace Subject_Selection
 
             foreach (Subject course in Parser.AllCourses())
                 AddCriteriaToFLP(course);
-
-            //UpdateDecisionList();
-            //UpdatePlanGUI();
         }
 
         readonly Plan plan = new Plan();
@@ -68,10 +66,14 @@ namespace Subject_Selection
 
         void LoadCurrentDecision()
         {
+            Stopwatch timer4 = new Stopwatch();
+            timer4.Start();
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
                 foreach (Criteria criteria in currentDecision.GetOptions())
                     AddCriteriaToFLP(criteria);
+            timer4.Stop();
+            Console.WriteLine("Adding buttons: " + timer4.ElapsedMilliseconds + "ms");
         }
 
         void UpdatePlanGUI()
@@ -115,10 +117,16 @@ namespace Subject_Selection
 
         void AddCriteriaToFLP(Criteria criteria)
         {
-            OptionView optionView = new OptionView(criteria);
+            if (!optionViews.TryGetValue(criteria, out OptionView optionView))
+            {
+                optionView = new OptionView(criteria);
+                optionViews.Add(criteria, optionView);
+            }
             optionView.Click += OptionView_Click;
             FLPchoose.Controls.Add(optionView);
         }
+
+        Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
 
         private void OptionView_Click(object sender, EventArgs e)
         {
@@ -144,11 +152,6 @@ namespace Subject_Selection
                 currentDecision = selected as Prerequisite;
                 LoadCurrentDecision();
             }
-        }
-
-        private void LBXchoose_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            
         }
     }
 }
