@@ -337,138 +337,6 @@ namespace Subject_Selection
 
     public partial class Prerequisite
     {
-        public List<Criteria> GetOptions()
-        {
-            /* The process of translating criteria into options can only happen once `subjects` has been fully populated
-             * That is why I put the translation process in this function
-             */
-            
-            // Load the cached result
-            if (options != null) return options;
-
-            if (criteria == "(ANTH150 or ANTH1050) or (40cp at 1000 level or above")
-                Console.WriteLine("alright boiky");
-
-            // Create a list of options and prepare to translate the text description
-            options = new List<Criteria>();
-
-            DealWithBrackets(ref criteria);
-
-            // Get rid of words that make this difficult
-            criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
-
-            // Check if the criteria is a single subject
-            if (Parser.TryGetCriteria(criteria, out Criteria subject))
-            {
-                options.Add(subject);
-                selectionType = Selection.AND;
-                return options;
-            }
-
-            // Splits the criteria accounting for brackets, and putting the output in `tokens`
-            List<string> tokens;
-            bool TrySplit(string search, string without = "", bool firstWord = false)
-            {
-                return SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
-            }
-
-            void AddAllTokens()
-            {
-                foreach (string token in tokens)
-                {
-                    if (Parser.CouldBeCode(token))
-                    {
-                        if (Parser.TryGetCriteria(token, out subject))
-                            options.Add(subject);
-                    }
-                    else
-                        options.Add(new Prerequisite(this, token));
-                }
-            }
-
-            void AddFirstTokenOnly()
-            {
-                selectionType = Selection.AND;
-                string remaining = tokens[0];
-                if (remaining.EndsWith(" or "))
-                    remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisite(this, remaining));
-            }
-
-            // Check if the criteria contains specific key words
-
-            if (TrySplit(" INCLUDING "))
-            {
-                selectionType = Selection.AND;
-                AddAllTokens();
-            }
-
-            else if (TrySplit("POST HSC"))
-            {
-                AddFirstTokenOnly();
-            }
-
-            else if (TrySplit("HSC"))
-            {
-                AddFirstTokenOnly();
-            }
-
-            else if (TrySplit(" AND "))
-            {
-                selectionType = Selection.AND;
-                AddAllTokens();
-            }
-
-            else if (TrySplit("ADMISSION TO"))
-            {
-                AddFirstTokenOnly();
-            }
-
-            else if (TrySplit("PERMISSION"))
-            {
-                AddFirstTokenOnly();
-            }
-
-            else if (TrySplit("A GPA OF"))
-            {
-                AddFirstTokenOnly();
-            }
-
-            else if (TrySplit("CP", without: "CP OR", firstWord: true)) //Includes `CP AT`, 'CP IN`, and `CP FROM`
-            {
-                selectionType = Selection.CP;
-                pick = int.Parse(tokens[0]) / 10; // 10 is a magic number equal to the amount of credit points per subject
-                options = Parser.GetSubjectsFromQuery(tokens[1]);
-            }
-
-            else if (TrySplit(" OR "))
-            {
-                selectionType = Selection.OR;
-                pick = 1;
-                AddAllTokens();
-            }
-
-            else if (criteria == "")
-            {
-                selectionType = Selection.AND;
-                pick = 0;
-            }
-
-            // Unknown edge cases
-            else if (
-                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out _)) &&
-                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out _)))
-            {
-                Console.WriteLine(reasons[0]);
-                throw new Exception("idk how to parse this:\n" + criteria);
-            }
-
-            // If the selection type is AND then everything must be picked
-            if (selectionType == Selection.AND) pick = options.Count;
-
-            return options;
-        }
-
         public bool IsElective()
         {
             return selectionType == Selection.CP && (!criteria.Contains("units") || GetSubjects().Intersect(GetReasons()).Any());
@@ -583,6 +451,126 @@ namespace Subject_Selection
             }
             result.Add(source.Substring(startOfSubstring, source.Length - startOfSubstring));
             return result.Count > 1;
+        }
+
+        public void LoadFromCriteria()
+        {
+            // Create a list of options and prepare to translate the text description
+            options = new List<Criteria>();
+
+            DealWithBrackets(ref criteria);
+
+            // Get rid of words that make this difficult
+            criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
+
+            // Check if the criteria is a single subject
+            if (Parser.TryGetCriteria(criteria, out Criteria subject))
+            {
+                options.Add(subject);
+                selectionType = Selection.AND;
+                return;
+            }
+
+            // Splits the criteria accounting for brackets, and putting the output in `tokens`
+            List<string> tokens;
+            bool TrySplit(string search, string without = "", bool firstWord = false)
+            {
+                return SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
+            }
+
+            void AddAllTokens()
+            {
+                foreach (string token in tokens)
+                {
+                    if (Parser.CouldBeCode(token))
+                    {
+                        if (Parser.TryGetCriteria(token, out subject))
+                            options.Add(subject);
+                    }
+                    else
+                        options.Add(new Prerequisite(this, token));
+                }
+            }
+
+            void AddFirstTokenOnly()
+            {
+                selectionType = Selection.AND;
+                string remaining = tokens[0];
+                if (remaining.EndsWith(" or "))
+                    remaining = remaining.Substring(0, remaining.Length - 4);
+                options.Add(new Prerequisite(this, remaining));
+            }
+
+            // Check if the criteria contains specific key words
+
+            if (TrySplit(" INCLUDING "))
+            {
+                selectionType = Selection.AND;
+                AddAllTokens();
+            }
+
+            else if (TrySplit("POST HSC"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("HSC"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit(" AND "))
+            {
+                selectionType = Selection.AND;
+                AddAllTokens();
+            }
+
+            else if (TrySplit("ADMISSION TO"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("PERMISSION"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("A GPA OF"))
+            {
+                AddFirstTokenOnly();
+            }
+
+            else if (TrySplit("CP", without: "CP OR", firstWord: true)) //Includes `CP AT`, 'CP IN`, and `CP FROM`
+            {
+                selectionType = Selection.CP;
+                pick = int.Parse(tokens[0]) / 10; // 10 is a magic number equal to the amount of credit points per subject
+                options = Parser.GetSubjectsFromQuery(tokens[1]);
+            }
+
+            else if (TrySplit(" OR "))
+            {
+                selectionType = Selection.OR;
+                pick = 1;
+                AddAllTokens();
+            }
+
+            else if (criteria == "")
+            {
+                selectionType = Selection.AND;
+                pick = 0;
+            }
+
+            // Unknown edge cases
+            else if (
+                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out _)) &&
+                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out _)))
+            {
+                Console.WriteLine(reasons[0]);
+                throw new Exception("idk how to parse this:\n" + criteria);
+            }
+
+            // If the selection type is AND then everything must be picked
+            if (selectionType == Selection.AND) pick = options.Count;
         }
 
         public void LoadFromDocument(string document, out string Name, out string Code)

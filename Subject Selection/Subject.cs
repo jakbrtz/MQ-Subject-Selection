@@ -132,15 +132,24 @@ namespace Subject_Selection
             ToString();
         }
 
+        public List<Criteria> GetOptions()
+        {
+            if (options == null)
+                LoadFromCriteria();
+            return options;
+        }
+
         public int GetPick()
         {
-            if (options == null) GetOptions();
+            if (options == null)
+                LoadFromCriteria();
             return pick;
         }
 
         public Selection GetSelectionType()
         {
-            if (options == null) GetOptions();
+            if (options == null)
+                LoadFromCriteria();
             return selectionType;
         }
 
