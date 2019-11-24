@@ -61,7 +61,6 @@ namespace Subject_Selection
             if (currentDecision == null)
                 PickNextDecision(plan);
             LBXdecisions.SelectedItem = currentDecision;
-            LoadCurrentDecision();
         }
 
         public void PickNextDecision(Plan plan, Subject selectedSubject = null) //TODO: suggest subjects in a more useful way
