@@ -75,12 +75,20 @@ namespace Subject_Selection
         private bool checkingForBan = false;
         public override bool HasBeenBanned(Plan plan)
         {
+            /* TODO: the `checkingForBan` flag only worked when results didn't get remembered
+             * It's purpose was for the subject to ignore itself in the prerequisites of other subjects in it's prerequisite
+             * However, the result of those prerequisites get saved, which can cause the incorrect result to be loaded
+             */ 
             if (checkingForBan)
                 return true;
             checkingForBan = true;
-            bool output = plan.BannedSubjects.Contains(this) || Prerequisites.HasBeenBanned(plan);
+            if (!plan.SubjectIsBanned.TryGetValue(this, out bool result))
+            {
+                result = Prerequisites.HasBeenBanned(plan);
+                plan.SubjectIsBanned[this] = result;
+            }
             checkingForBan = false;
-            return output;
+            return result;
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)

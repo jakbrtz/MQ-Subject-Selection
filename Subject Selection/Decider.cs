@@ -64,13 +64,22 @@ namespace Subject_Selection
                 //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
                 plan.RemoveDecision(decision);
 
+                // GetRemainingDecision is computationally expensive, so I'm repeating this loop before and after that method
+                if (decision.MustPickAll() && decision.GetOptions().All(criteria => criteria is Prerequisite))
+                {
+                    //If everything must be selected, select everything. Add the new prerequisites to the list
+                    foreach (Criteria option in decision.GetOptions())
+                        toAnalyze.Enqueue(option as Prerequisite);
+                    continue;
+                }
+
                 //Replace the decision with only the part that still needs to be decided on
                 decision = decision.GetRemainingDecision(plan);
 
                 // TODO: if decision didn't change, skip to the next iteration
 
                 /* TODO:
-                 * the following heuristic works better if it's done before GetRemainingDecision
+                 * the following heuristic works better if it's done first
                  * however, if decision is still the same object as decision.reasons[n].prerequisites, then it messes with the database and causes errors later
                  * I've got to find a way of putting this earlier in the code
                  */

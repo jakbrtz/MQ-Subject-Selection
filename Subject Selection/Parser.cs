@@ -28,6 +28,9 @@ namespace Subject_Selection
                 }
             }
 
+            foreach (Subject subject in subjects.Values)
+                subject.Prerequisites.LoadFromCriteria();
+
             string descriptionBuilder;
 
             void MakeMinor(string description)

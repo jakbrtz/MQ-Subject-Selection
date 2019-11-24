@@ -16,7 +16,8 @@ namespace Subject_Selection
 
         readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
-        public HashSet<Subject> BannedSubjects { get; }
+        // Remember results for Subject.HasBeenBanned
+        public Dictionary<Subject, bool> SubjectIsBanned { get; }
 
         public Plan()
         {
@@ -25,9 +26,9 @@ namespace Subject_Selection
             SelectedSubjects = new List<Subject>();
             SelectedCourses = new List<Subject>();
             MaxSubjects = new List<int>();
-            BannedSubjects = new HashSet<Subject>();
+            SubjectIsBanned = new Dictionary<Subject, bool>();
         }
-        
+
         public Plan(Plan other)
         {
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
@@ -35,7 +36,7 @@ namespace Subject_Selection
             SelectedSubjects = new List<Subject>(other.SelectedSubjects);
             SelectedCourses = new List<Subject>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
-            BannedSubjects = new HashSet<Subject>(other.BannedSubjects);
+            SubjectIsBanned = new Dictionary<Subject, bool>(other.SubjectIsBanned);
         }
 
         public void AddSubject(Subject subject)
@@ -50,7 +51,7 @@ namespace Subject_Selection
             }
             //TODO: don't reorder entire thing every time a subject is added
             Order();
-            FindBannedSubjects();
+            RefreshBannedSubjectsList();
         }
 
         public List<Subject> SelectedStuff()
@@ -61,19 +62,19 @@ namespace Subject_Selection
         public void AddDecision(Prerequisite decision)
         {
             Decisions.Add(decision);
-            FindBannedSubjects();
+            RefreshBannedSubjectsList();
         }
 
         public void RemoveDecision(Prerequisite decision)
         {
             if (Decisions.Remove(decision))
-                FindBannedSubjects();
+                RefreshBannedSubjectsList();
         }
 
         public void ClearDecisions()
         {
             Decisions.Clear();
-            FindBannedSubjects();
+            RefreshBannedSubjectsList();
         }
 
         public void ForceTime(Subject subject, int time)
@@ -136,7 +137,7 @@ namespace Subject_Selection
 
             if (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
                 Console.WriteLine("ERROR: Couldn't fit in all your subjects");
-            
+
             timer3.Stop();
             Console.WriteLine("Ordering Subjects:   " + timer3.ElapsedMilliseconds + "ms");
         }
@@ -150,7 +151,7 @@ namespace Subject_Selection
             if (prerequisite.HasBeenMet(this, time))
                 return true;
             //If the prerequisit is an elective and the recommended year has passed, count this as a leaf
-            if (prerequisite.IsElective() && subject.GetLevel() <= time/3 + 1)
+            if (prerequisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
                 return true;
             //Consider each option
             foreach (Criteria criteria in prerequisite.GetOptions())
@@ -159,7 +160,7 @@ namespace Subject_Selection
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
                 else if (criteria is Prerequisite && !IsLeaf(subject, time, criteria as Prerequisite))
-                    return false; 
+                    return false;
             return true;
         }
 
@@ -180,20 +181,20 @@ namespace Subject_Selection
             return false;
         }
 
-        // Helper method for Subject.HasBeenBanned
-        public void FindBannedSubjects()
+        void RefreshBannedSubjectsList()
         {
-            BannedSubjects.Clear();
+            SubjectIsBanned.Clear();
             // Get all selected subjects and check them for NCCWs
             foreach (Subject subject in SelectedSubjects)
                 foreach (string id in subject.NCCWs)
-                    BannedSubjects.Add(Parser.GetSubject(id));
+                    if (Parser.TryGetSubject(id, out Subject nccw))
+                        SubjectIsBanned[nccw] = true;
             // TODO: make sure that all NCCW relations are undirected (looking at you, BIOL2610 - STAT2170)
-            
+
             // Check which decisions force a banned subject
             foreach (Prerequisite decision in Decisions)
                 foreach (Subject subject in decision.ForcedBans())
-                    BannedSubjects.Add(subject);
+                    SubjectIsBanned[subject] = true;
         }
     }
 }
