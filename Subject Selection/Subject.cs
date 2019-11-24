@@ -174,10 +174,21 @@ namespace Subject_Selection
 
         public override bool HasBeenMet(Plan plan, int time)
         {
-            //Start by checking the study plan for the earliest subject that requires this decision
+            // Start by checking the study plan for the earliest subject that requires this decision
             if (time == -1) time = plan.SubjectsInOrder.FindIndex(semester => semester.Intersect(reasons).Any());
-            //Recursively count the number of options that have been met
-            return GetPick() <= GetOptions().Count(criteria => criteria.HasBeenMet(plan, time));
+            // Recursively count the number of options that have been met
+            // This could be done in one line of LINQ, but this version of the code excecutes faster
+            int countMetCriteria = 0;
+            foreach (Criteria criteria in GetOptions())
+            {
+                if (criteria.HasBeenMet(plan, time))
+                {
+                    countMetCriteria++;
+                    if (countMetCriteria >= GetPick())
+                        return true;
+                }
+            }
+            return false;
         }
 
         public override bool HasBeenBanned(Plan plan)
