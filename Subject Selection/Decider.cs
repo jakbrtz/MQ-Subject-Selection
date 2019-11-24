@@ -9,6 +9,14 @@ namespace Subject_Selection
 {
     public static class Decider
     {
+        public static void AnalyzeAll(Plan plan)
+        {
+            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>();
+            foreach (Subject selection in plan.SelectedStuff())
+                toAnalyze.Enqueue(selection.Prerequisites);
+            AnalyzeDecisions(toAnalyze, plan);
+        }
+
         public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
         {
             //Add the subject to the list
@@ -24,7 +32,7 @@ namespace Subject_Selection
                 toAnalyze.Enqueue(decision);
             // If AnalyzeDecision isn't already running, run it
             if (createNewQueue)
-                AnalyzeDecision(toAnalyze, plan);
+                AnalyzeDecisions(toAnalyze, plan);
         }
 
         public static void MoveSubject(Subject subject, Plan plan, int time)
@@ -38,10 +46,10 @@ namespace Subject_Selection
             foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisites.GetSubjects().Contains(subject)))
                 toAnalyze.Enqueue(sub.Prerequisites);
             toAnalyze.Enqueue(subject.Prerequisites);
-            AnalyzeDecision(toAnalyze, plan);
+            AnalyzeDecisions(toAnalyze, plan);
         }
 
-        static void AnalyzeDecision(Queue<Prerequisite> toAnalyze, Plan plan)
+        static void AnalyzeDecisions(Queue<Prerequisite> toAnalyze, Plan plan)
         {
             Stopwatch timer1 = new Stopwatch();
             Stopwatch timer2 = new Stopwatch();
