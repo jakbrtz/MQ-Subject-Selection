@@ -126,7 +126,7 @@ namespace Subject_Selection
             FLPchoose.Controls.Add(optionView);
         }
 
-        Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
+        readonly Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
 
         private void OptionView_Click(object sender, EventArgs e)
         {
