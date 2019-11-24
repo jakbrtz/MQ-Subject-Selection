@@ -43,7 +43,7 @@ namespace Subject_Selection
             Console.WriteLine();
             Console.WriteLine("Subject:        " + currentSubject.ID);
 
-            currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
+            PickNextDecision(plan, currentSubject);
 
             Console.WriteLine("Decision:       " + currentDecision??currentDecision.ToString());
             UpdateDecisionList();
@@ -59,9 +59,20 @@ namespace Subject_Selection
             foreach (Prerequisite decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
             if (currentDecision == null)
-                currentDecision = plan.PickNextDecision();
+                PickNextDecision(plan);
             LBXdecisions.SelectedItem = currentDecision;
             LoadCurrentDecision();
+        }
+
+        public void PickNextDecision(Plan plan, Subject selectedSubject = null) //TODO: suggest subjects in a more useful way
+        {
+            if (plan.Decisions.Count == 0)
+                return;
+            if (selectedSubject != null)
+                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(selectedSubject));
+            if (currentDecision != null)
+                return;
+            currentDecision = plan.Decisions.First();
         }
 
         void LoadCurrentDecision()
@@ -121,8 +132,8 @@ namespace Subject_Selection
             {
                 optionView = new OptionView(criteria);
                 optionViews.Add(criteria, optionView);
+                optionView.Click += OptionView_Click;
             }
-            optionView.Click += OptionView_Click;
             FLPchoose.Controls.Add(optionView);
         }
 
@@ -139,13 +150,7 @@ namespace Subject_Selection
             {
                 currentSubject = selected as Subject;
                 Decider.AddSubject(currentSubject, plan);
-                Prerequisite nextDecision = plan.PickNextDecision();
                 UpdatePlanGUI();
-                if (nextDecision != null)
-                {
-                    currentDecision = nextDecision;
-                    UpdateDecisionList();
-                }
             }
             else if (selected is Prerequisite)
             {

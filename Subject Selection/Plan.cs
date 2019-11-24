@@ -94,13 +94,6 @@ namespace Subject_Selection
             return output;
         }
 
-        public Prerequisite PickNextDecision() //TODO
-        {
-            if (Decisions.Count == 0)
-                return null;
-            return Decisions[0];
-        }
-
         public List<Subject> SelectedSubjectsSoFar(int time = -1)
         {
             if (time == -1) time = SubjectsInOrder.Count;
