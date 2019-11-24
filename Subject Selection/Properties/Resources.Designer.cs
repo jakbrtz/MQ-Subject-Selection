@@ -115,6 +115,32 @@ namespace Subject_Selection.Properties {
         ///   Looks up a localized string similar to 
         ///Faculty of Arts
         ///
+        ///Ancient Egypt and the Near East	T000438
+        ///
+        ///Faculty:	Faculty of Arts
+        ///Department:	 
+        ///
+        ///This minor must be completed as part of an award. The general requirements for the award must be satisfied in order to graduate.
+        ///
+        ///Requirements:
+        ///
+        ///
+        ///Elective units	Credit Points
+        ///Option set	20cp from 	AHIS1240		Ancient Israel and the Near East (10)	
+        ///		AHIS1250		Ancient Egyptian Archaeology (10)	
+        ///		AHIS2000		Sources and Methodology in Ancient History (10)	
+        ///		AHIS2050		Biblical and Near Eastern Lite [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _2020_ScheduleOfMinors {
+            get {
+                return ResourceManager.GetString("_2020_ScheduleOfMinors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///Faculty of Arts
+        ///
         ///Chinese International Studies	Q000230
         ///
         ///Faculty:	Faculty of Arts

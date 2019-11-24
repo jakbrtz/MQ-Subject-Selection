@@ -28,6 +28,29 @@ namespace Subject_Selection
                 }
             }
 
+            string descriptionBuilder;
+
+            void MakeMinor(string description)
+            {
+                if (description == "") return;
+                Subject minor = new Subject(description);
+                if (minor.ID == null) return;
+                minors[minor.ID] = minor;
+            }
+
+            descriptionBuilder = "";
+            foreach (string line in Properties.Resources._2020_ScheduleOfMinors.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            {
+                if (line.Contains("T000") || line.Contains("P000"))
+                {
+                    MakeMinor(descriptionBuilder);
+                    descriptionBuilder = "";
+                }
+
+                descriptionBuilder += line + "\r\n";
+            }
+            MakeMinor(descriptionBuilder);
+
             void MakeMajor(string description)
             {
                 if (description == "") return;
@@ -36,7 +59,7 @@ namespace Subject_Selection
                 majors[major.ID] = major;
             }
 
-            string descriptionBuilder = "";
+            descriptionBuilder = "";
             foreach (string line in Properties.Resources._2020_ScheduleOfMajors.Split(new string[] { "\r\n" }, StringSplitOptions.None))
             {
                 if (line.Contains("N000"))
@@ -78,6 +101,7 @@ namespace Subject_Selection
         }
 
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Subject> minors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> specialisations = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
@@ -101,6 +125,13 @@ namespace Subject_Selection
         {
             subject = GetSubject(id);
             return subject != null;
+        }
+
+        public static Subject GetMinor(string id)
+        {
+            if (minors.TryGetValue(id, out Subject minor))
+                return minor;
+            return null;
         }
 
         public static Subject GetMajor(string id)
@@ -127,6 +158,9 @@ namespace Subject_Selection
         public static bool TryGetCriteria(string id, out Criteria criteria)
         {
             criteria = GetSubject(id);
+            if (criteria != null)
+                return true;
+            criteria = GetMinor(id);
             if (criteria != null)
                 return true;
             criteria = GetMajor(id);
@@ -589,6 +623,20 @@ namespace Subject_Selection
                 {
                     Name = cells[0];
                     Code = cells[1];
+                    continue;
+                }
+
+                if (line.StartsWith("Minors"))
+                {
+                    previousFirstCell = "Minors";
+                    criteriaBuilder = "(";
+                    continue;
+                }
+
+                if (previousFirstCell == "Minors")
+                {
+                    if (cells[0].StartsWith("P000") || cells[0].StartsWith("T000"))
+                        criteriaBuilder += cells[0] + " or ";
                     continue;
                 }
 
