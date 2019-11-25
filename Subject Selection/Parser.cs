@@ -568,7 +568,7 @@ namespace Subject_Selection
                 !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out _)) &&
                 !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out _)))
             {
-                Console.WriteLine(reasons[0]);
+                Console.WriteLine(GetReasons().First());
                 throw new Exception("idk how to parse this:\n" + criteria);
             }
 

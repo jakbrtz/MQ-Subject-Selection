@@ -76,14 +76,7 @@ namespace Subject_Selection
 
                 //Replace the decision with only the part that still needs to be decided on
                 decision = decision.GetRemainingDecision(plan);
-
-                // TODO: if decision didn't change, skip to the next iteration
-
-                /* TODO:
-                 * the following heuristic works better if it's done first
-                 * however, if decision is still the same object as decision.reasons[n].prerequisites, then it messes with the database and causes errors later
-                 * I've got to find a way of putting this earlier in the code
-                 */
+                
                 //Remove all reasons that have been met
                 decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
                 //If there are no more reasons to make a decision, don't analyze the decision

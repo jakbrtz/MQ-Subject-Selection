@@ -131,7 +131,7 @@ namespace Subject_Selection
             if (reason is Subject)
                 reasons.Add(reason as Subject);
             else if (reason is Prerequisite)
-                reasons.AddRange((reason as Prerequisite).reasons);
+                reasons.AddRange((reason as Prerequisite).GetReasons());
             this.criteria = criteria;
             this.options = options;
             this.pick = pick;
