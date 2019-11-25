@@ -404,7 +404,7 @@ namespace Subject_Selection
                     brackets--;
                 }
 
-                // If the entire text is in backets, remove the brackets
+                // If the entire text is in brackets, remove the brackets
                 bool shouldRemoveBrackets = true;
                 while (shouldRemoveBrackets)
                 {
