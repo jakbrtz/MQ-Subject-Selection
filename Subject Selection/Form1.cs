@@ -71,6 +71,9 @@ namespace Subject_Selection
                 currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(selectedSubject));
             if (currentDecision != null)
                 return;
+            currentDecision = plan.Decisions.Find(decision => decision.GetSubjects().Any(subject => !subject.IsSubject));
+            if (currentDecision != null)
+                return;
             currentDecision = plan.Decisions.First();
         }
 
