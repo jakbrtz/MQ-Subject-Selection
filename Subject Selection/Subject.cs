@@ -66,7 +66,7 @@ namespace Subject_Selection
 
         public override bool HasBeenMet(Plan plan, int time)
         {
-            if (!plan.SelectedStuff().Contains(this)) return false;
+            if (!plan.Contains(this)) return false;
             if (IsSubject)
                 return plan.SelectedSubjectsSoFar(time).Contains(this);
             return true;

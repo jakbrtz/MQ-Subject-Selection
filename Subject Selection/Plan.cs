@@ -11,8 +11,8 @@ namespace Subject_Selection
     {
         public List<List<Subject>> SubjectsInOrder { get; }
         public List<Prerequisite> Decisions { get; }
-        public List<Subject> SelectedSubjects { get; }
-        public List<Subject> SelectedCourses { get; }
+        public HashSet<Subject> SelectedSubjects { get; }
+        public HashSet<Subject> SelectedCourses { get; }
 
         readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
@@ -23,8 +23,8 @@ namespace Subject_Selection
         {
             SubjectsInOrder = new List<List<Subject>>();
             Decisions = new List<Prerequisite>();
-            SelectedSubjects = new List<Subject>();
-            SelectedCourses = new List<Subject>();
+            SelectedSubjects = new HashSet<Subject>();
+            SelectedCourses = new HashSet<Subject>();
             MaxSubjects = new List<int>();
             SubjectIsBanned = new Dictionary<Subject, bool>();
         }
@@ -33,8 +33,8 @@ namespace Subject_Selection
         {
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
             Decisions = new List<Prerequisite>(other.Decisions);
-            SelectedSubjects = new List<Subject>(other.SelectedSubjects);
-            SelectedCourses = new List<Subject>(other.SelectedCourses);
+            SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
+            SelectedCourses = new HashSet<Subject>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
             SubjectIsBanned = new Dictionary<Subject, bool>(other.SubjectIsBanned);
         }
@@ -54,9 +54,14 @@ namespace Subject_Selection
             RefreshBannedSubjectsList();
         }
 
-        public List<Subject> SelectedStuff()
+        public IEnumerable<Subject> SelectedStuff()
         {
-            return SelectedSubjects.Union(SelectedCourses).ToList();
+            return SelectedSubjects.Concat(SelectedCourses);
+        }
+
+        public bool Contains(Subject option)
+        {
+            return SelectedSubjects.Contains(option) || SelectedCourses.Contains(option);
         }
 
         public void AddDecision(Prerequisite decision)
