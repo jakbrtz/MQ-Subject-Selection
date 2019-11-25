@@ -169,7 +169,8 @@ namespace Subject_Selection
 
         public int GetRemainingPick(Plan plan)
         {
-            return GetPick() - GetOptions().Count(criteria => criteria.HasBeenMet(plan, RequiredCompletionTime(plan)));
+            int requiredCompletionTime = RequiredCompletionTime(plan);
+            return GetPick() - GetOptions().Count(criteria => criteria.HasBeenMet(plan, requiredCompletionTime));
         }
 
         public override bool HasBeenMet(Plan plan, int time)
