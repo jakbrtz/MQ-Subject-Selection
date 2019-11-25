@@ -193,12 +193,12 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
+            // Assume electives cannot be banned
+            if (IsElective()) return false;
             // If there is nothing to pick from, it cannot be banned
             int remainingPick = GetRemainingPick(plan);
             if (remainingPick == 0)
                 return false;
-            // Assume electives cannot be banned
-            if (IsElective()) return false;
             // This is a simple catch to check for bans without checking recursively
             if (remainingPick > GetOptions().Count)
                 return true;
