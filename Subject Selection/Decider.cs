@@ -113,7 +113,7 @@ namespace Subject_Selection
                 if (decision.CoveredBy(plan))
                     plan.RemoveDecision(decision);
 
-            //Sort decisions by the complexity of the decision (this only affects covercheck)
+            //Sort decisions by the complexity of the decision
             plan.Decisions.Sort(delegate (Prerequisite p1, Prerequisite p2)
             {
                 int compare = 0;
