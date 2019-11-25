@@ -194,6 +194,9 @@ namespace Subject_Selection
 
         public override bool HasBeenBanned(Plan plan)
         {
+            // This function could be determined in a single line, but it would be inefficient:
+            // return GetOptions().Count(option => option.CanBePicked(plan, RequiredCompletionTime(plan))) < GetRemainingPick(plan);
+            
             // Assume electives cannot be banned
             if (IsElective()) return false;
             // If there is nothing to pick from, it cannot be banned
@@ -294,6 +297,8 @@ namespace Subject_Selection
                 if (lastOption is Prerequisite)
                     return (lastOption as Prerequisite).GetRemainingDecision(plan);
             }
+            // Figure out how many options still need to be picked
+            int remainingPick = GetRemainingPick(plan);
             //Create a new list to store the remaining prerequisites
             List<Criteria> remainingOptions = new List<Criteria>();
             foreach (Criteria option in remainingCriteria)
@@ -303,7 +308,7 @@ namespace Subject_Selection
                 else if (option is Prerequisite)
                 {
                     Prerequisite remainingDecision = (option as Prerequisite).GetRemainingDecision(plan);
-                    if (this.GetRemainingPick(plan) == 1 && remainingDecision.GetPick() == 1)
+                    if (remainingPick == 1 && remainingDecision.GetPick() == 1)
                         remainingOptions.AddRange(remainingDecision.GetOptions());
                     else
                         remainingOptions.Add(remainingDecision);
@@ -311,8 +316,8 @@ namespace Subject_Selection
             }
             string newcriteria = "";
             if (selectionType == Selection.CP)
-                newcriteria = CopyCriteria(GetRemainingPick(plan));
-            return new Prerequisite(this, newcriteria, remainingOptions, GetRemainingPick(plan), selectionType);
+                newcriteria = CopyCriteria(remainingPick);
+            return new Prerequisite(this, newcriteria, remainingOptions, remainingPick, selectionType);
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
