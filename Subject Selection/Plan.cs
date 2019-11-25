@@ -54,9 +54,17 @@ namespace Subject_Selection
             RefreshBannedSubjectsList();
         }
 
-        public IEnumerable<Subject> SelectedStuff()
+        public void AddSubjects(IEnumerable<Subject> subjects)
         {
-            return SelectedSubjects.Concat(SelectedCourses);
+            if (!subjects.Any())
+                return;
+            foreach (Subject subject in subjects)
+                if (subject.IsSubject)
+                    SelectedSubjects.Add(subject);
+                else
+                    SelectedCourses.Add(subject);
+            Order();
+            RefreshBannedSubjectsList();
         }
 
         public bool Contains(Subject option)

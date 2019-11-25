@@ -9,30 +9,31 @@ namespace Subject_Selection
 {
     public static class Decider
     {
-        public static void AnalyzeAll(Plan plan)
-        {
-            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>();
-            foreach (Subject selection in plan.SelectedStuff())
-                toAnalyze.Enqueue(selection.Prerequisites);
-            AnalyzeDecisions(toAnalyze, plan);
-        }
-
-        public static void AddSubject(Subject subject, Plan plan, Queue<Prerequisite> toAnalyze = null)
+        public static void AddSubject(Subject subject, Plan plan)
         {
             //Add the subject to the list
             plan.AddSubject(subject);
             // Create an empty queue of things to consider
-            bool createNewQueue = toAnalyze == null;
-            if (createNewQueue)
-                toAnalyze = new Queue<Prerequisite>();
+            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>();
             // Consider the new subject's prerequisites
             toAnalyze.Enqueue(subject.Prerequisites);
             // Reconsider all existing decisions
             foreach (Prerequisite decision in plan.Decisions.Except(toAnalyze))
                 toAnalyze.Enqueue(decision);
-            // If AnalyzeDecision isn't already running, run it
-            if (createNewQueue)
-                AnalyzeDecisions(toAnalyze, plan);
+            // Analyze every decision in toAnalyze
+            AnalyzeDecisions(toAnalyze, plan);
+        }
+
+        static void AddSubjects(IEnumerable<Subject> subjects, Plan plan, Queue<Prerequisite> toAnalyze)
+        {
+            //Add the subject to the list
+            plan.AddSubjects(subjects);
+            // Consider the new subject's prerequisites
+            foreach (Subject subject in subjects)
+                toAnalyze.Enqueue(subject.Prerequisites);
+            // Reconsider all existing decisions
+            foreach (Prerequisite decision in plan.Decisions.Except(toAnalyze))
+                toAnalyze.Enqueue(decision);
         }
 
         public static void MoveSubject(Subject subject, Plan plan, int time)
@@ -91,12 +92,12 @@ namespace Subject_Selection
 
                 if (decision.MustPickAll())
                 {
-                    //If everything must be selected, select everything. Add the new prerequisites to the list
-                    foreach (Criteria option in decision.GetOptions())
-                        if (option is Subject)
-                            AddSubject(option as Subject, plan, toAnalyze);
-                        else if (option is Prerequisite)
-                            toAnalyze.Enqueue(option as Prerequisite);
+                    // Add all the subjects from the decision
+                    AddSubjects(decision.GetOptions().Cast<Subject>(), plan, toAnalyze);
+                    // Put any prerequisites back into toAnalyze
+                    foreach (Criteria option in decision.GetOptions().Where(option => option is Prerequisite))
+                        toAnalyze.Enqueue(option as Prerequisite);
+                    //  Skip to the next iteration
                     continue;
                 }
 
