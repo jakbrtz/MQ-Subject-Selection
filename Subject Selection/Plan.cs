@@ -39,21 +39,6 @@ namespace Subject_Selection
             SubjectIsBanned = new Dictionary<Subject, bool>(other.SubjectIsBanned);
         }
 
-        public void AddSubject(Subject subject)
-        {
-            if (subject.IsSubject)
-            {
-                SelectedSubjects.Add(subject);
-            }
-            else
-            {
-                SelectedCourses.Add(subject);
-            }
-            //TODO: don't reorder entire thing every time a subject is added
-            Order();
-            RefreshBannedSubjectsList();
-        }
-
         public void AddSubjects(IEnumerable<Subject> subjects)
         {
             if (!subjects.Any())

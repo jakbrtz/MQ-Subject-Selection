@@ -12,7 +12,7 @@ namespace Subject_Selection
         public static void AddSubject(Subject subject, Plan plan)
         {
             //Add the subject to the list
-            plan.AddSubject(subject);
+            plan.AddSubjects(new[] { subject });
             // Create an empty queue of things to consider
             Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>();
             // Consider the new subject's prerequisites
