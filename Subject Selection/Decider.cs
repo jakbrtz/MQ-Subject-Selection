@@ -105,11 +105,11 @@ namespace Subject_Selection
             plan.Decisions.Sort(delegate (Prerequisite p1, Prerequisite p2)
             {
                 int compare = 0;
-                //if (compare == 0) compare = p1.RequiredCompletionTime(plan) - p2.RequiredCompletionTime(plan);
+                if (compare == 0) compare = p2.GetSubjects()[0].GetLevel() - p1.GetSubjects()[0].GetLevel();
                 if (compare == 0) compare = p1.GetOptions().Count          - p2.GetOptions().Count;
                 if (compare == 0) compare = p1.GetSubjects().Count         - p2.GetSubjects().Count;
                 if (compare == 0) compare = p1.GetPick()                   - p2.GetPick();
-                if (compare == 0) compare = p1.GetSubjects()[0].GetLevel() - p2.GetSubjects()[0].GetLevel();
+                if (compare == 0) compare = p1.RequiredCompletionTime(plan) - p2.RequiredCompletionTime(plan);
                 if (compare == 0) compare = p1.ToString().CompareTo(p2.ToString());
                 return compare;
             });
