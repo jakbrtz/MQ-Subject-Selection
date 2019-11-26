@@ -7394,8 +7394,8 @@ Total Required for Core Zone	160
 Flexible Zone
 
 
-Essential units	Credit Points
-Essential		80cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete a second major from this course or a minor(s).	80
+Elective units	Credit Points
+Electives		80cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete a second major from this course or a minor(s).	80
 
 Total Required for Flexible Zone	80
 
@@ -10841,7 +10841,7 @@ Flexible Zone
 
 
 Elective units	Credit Points
-Essential		40cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete a minor.	40
+Electives		40cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete a minor.	40
 
 Total Required for Flexible Zone	40
 
@@ -11783,8 +11783,8 @@ Total Required for Core Zone	160
 Flexible Zone
 
 
-Essential units	Credit Points
-Essential		80cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete second major from this course or minor(s).	80
+Elective units	Credit Points
+Electives		80cp of elective units. You can use your flexible zone to enrol in any Undergraduate unit for which you meet the requisites. You may also use your flexible zone to complete second major from this course or minor(s).	80
 
 Total Required for Flexible Zone	80
 
