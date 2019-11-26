@@ -16,8 +16,7 @@ namespace Subject_Selection
 
         readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
-        // Remember results for Subject.HasBeenBanned
-        public Dictionary<Subject, bool> SubjectIsBanned { get; }
+        public HashSet<Subject> BannedSubjects { get; }
 
         public Plan()
         {
@@ -26,7 +25,7 @@ namespace Subject_Selection
             SelectedSubjects = new HashSet<Subject>();
             SelectedCourses = new HashSet<Subject>();
             MaxSubjects = new List<int>();
-            SubjectIsBanned = new Dictionary<Subject, bool>();
+            BannedSubjects = new HashSet<Subject>();
         }
 
         public Plan(Plan other)
@@ -36,7 +35,7 @@ namespace Subject_Selection
             SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
             SelectedCourses = new HashSet<Subject>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
-            SubjectIsBanned = new Dictionary<Subject, bool>(other.SubjectIsBanned);
+            BannedSubjects = new HashSet<Subject>(other.BannedSubjects);
         }
 
         public void AddSubjects(IEnumerable<Subject> subjects)
@@ -174,12 +173,12 @@ namespace Subject_Selection
 
         void RefreshBannedSubjectsList()
         {
-            SubjectIsBanned.Clear();
+            BannedSubjects.Clear();
             // Get all selected subjects and check them for NCCWs
             foreach (Subject subject in SelectedSubjects)
                 foreach (string id in subject.NCCWs)
                     if (Parser.TryGetSubject(id, out Subject nccw))
-                        SubjectIsBanned[nccw] = true;
+                        BannedSubjects.Add(nccw);
             /* TODO: fix assumptions
              * This code assumes that when subject X is on subject Y's nccw list, then subject Y is on subject X's nccw list
              * I have found 45 exceptions to this assumption. Does that have a special meaning, or is it an incorrect data entry?
@@ -187,7 +186,7 @@ namespace Subject_Selection
             // Check which decisions force a banned subject
             foreach (Prerequisite decision in Decisions)
                 foreach (Subject subject in decision.ForcedBans())
-                    SubjectIsBanned[subject] = true;
+                    BannedSubjects.Add(subject);
         }
     }
 }
