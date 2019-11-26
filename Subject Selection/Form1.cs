@@ -16,11 +16,16 @@ namespace Subject_Selection
         public Form1()
         {
             InitializeComponent();
-            Parser.Load();
         }
+
+        readonly Plan plan = new Plan();
+        Prerequisite currentDecision;
+        Subject currentSubject;
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Parser.LoadData();
+
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
@@ -28,137 +33,132 @@ namespace Subject_Selection
                 AddCriteriaToFLP(course);
         }
 
-        readonly Plan plan = new Plan();
-        Prerequisite currentDecision;
-        Subject currentSubject;
-
-        private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedCells.Count == 0) return;
+            currentDecision = LBXdecisions.SelectedItem as Prerequisite;
 
-            var selected = dataGridView1.SelectedCells[0].Value;
+            Console.WriteLine("Current Decision:    " + currentDecision.ToString());
+            Console.Write("Reasons:             ");
+            foreach (Subject reason in currentDecision.GetReasons())
+                Console.Write(reason + " ");
+            Console.WriteLine();
+
+            DisplayCurrentDecision();
+        }
+
+        private void DGVplanTable_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Make sure that something has been selected
+            if (DGVplanTable.SelectedCells.Count == 0) return;
+
+            // Detect what has been selected
+            var selected = DGVplanTable.SelectedCells[0].Value;
             if (selected == null) return;
             currentSubject = selected as Subject;
 
-            Console.WriteLine();
-            Console.WriteLine("Subject:        " + currentSubject.ID);
+            Console.WriteLine("Subject:             " + currentSubject.ID);
+            Console.WriteLine("Prerequisites:       " + currentSubject.Prerequisites);
 
-            PickNextDecision(plan, currentSubject);
+            // Show the user a decision according to what subject has been selected
+            PickNextDecision(plan);
 
-            Console.WriteLine("Decision:       " + currentDecision??currentDecision.ToString());
-            UpdateDecisionList();
-            LoadPossibleTimes(currentSubject);
-
-            Console.WriteLine("Prerequisites:  " + currentSubject.Prerequisites);
-            Console.WriteLine();
+            // Show the user a list of times that the subject can be slotted into
+            LBXtime.Items.Clear();
+            foreach (int time in currentSubject.GetPossibleTimes(plan))
+                LBXtime.Items.Add(time);
         }
 
-        void UpdateDecisionList()
+        public void PickNextDecision(Plan plan) //TODO: suggest subjects in a more useful way
         {
-            LBXdecisions.Items.Clear();
-            foreach (Prerequisite decision in plan.Decisions)
-                LBXdecisions.Items.Add(decision);
-            if (currentDecision == null)
-                PickNextDecision(plan);
-            LBXdecisions.SelectedItem = currentDecision;
-        }
-
-        public void PickNextDecision(Plan plan, Subject selectedSubject = null) //TODO: suggest subjects in a more useful way
-        {
+            // Check if there are any decisions left
             if (plan.Decisions.Count == 0)
                 return;
-            if (selectedSubject != null)
-                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(selectedSubject));
+            // Check if the currently selected subject has a prerequisite that needs deciding
+            if (currentSubject != null)
+                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
             if (currentDecision != null)
                 return;
+            // Check if there are any decisions about courses
             currentDecision = plan.Decisions.Find(decision => decision.GetSubjects().Any(subject => !subject.IsSubject));
             if (currentDecision != null)
                 return;
+            // Pick the first one
             currentDecision = plan.Decisions.First();
         }
 
-        void LoadCurrentDecision()
+        void DisplayCurrentDecision()
         {
-            Stopwatch timer4 = new Stopwatch();
-            timer4.Start();
+            Stopwatch timerButtons = new Stopwatch();
+            timerButtons.Start();
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
                 foreach (Criteria criteria in currentDecision.GetOptions())
                     AddCriteriaToFLP(criteria);
-            timer4.Stop();
-            Console.WriteLine("Adding buttons: " + timer4.ElapsedMilliseconds + "ms");
+            timerButtons.Stop();
+            Console.WriteLine("Adding buttons:      " + timerButtons.ElapsedMilliseconds + "ms");
         }
 
-        void UpdatePlanGUI()
-        {
-            dataGridView1.Rows.Clear();
-            foreach (List<Subject> semester in plan.SubjectsInOrder)
-                dataGridView1.Rows.Add(semester.ToArray());
-            if (currentSubject != null)
-                foreach (DataGridViewRow row in dataGridView1.Rows)
-                    foreach (DataGridViewCell cell in row.Cells)
-                        if (cell.Value is Subject && cell.Value == currentSubject)
-                            dataGridView1.CurrentCell = cell;
-            DataGridView1_CellClick(null, null);
-        }
-
-        void LoadPossibleTimes(Subject selected)
-        {
-            LBXtime.Items.Clear();
-            foreach (int time in selected.GetPossibleTimes(plan))
-                LBXtime.Items.Add(time);
-        }
-
-        private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            currentDecision = LBXdecisions.SelectedItem as Prerequisite;
-            LoadCurrentDecision();
-            if (currentDecision == null) return;
-
-            Console.Write("Reasons:        ");
-            foreach (Subject reason in currentDecision.GetReasons())
-                Console.Write(reason + " ");
-            Console.WriteLine();
-        }
-
-        private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            int time = int.Parse(LBXtime.SelectedItem.ToString());
-            Decider.MoveSubject(currentSubject, plan, time);
-            UpdatePlanGUI();
-        }
+        readonly Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
 
         void AddCriteriaToFLP(Criteria criteria)
         {
             if (!optionViews.TryGetValue(criteria, out OptionView optionView))
             {
                 optionView = new OptionView(criteria);
-                optionViews.Add(criteria, optionView);
                 optionView.Click += OptionView_Click;
+                optionViews.Add(criteria, optionView);
             }
             FLPchoose.Controls.Add(optionView);
         }
 
-        readonly Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
-
         private void OptionView_Click(object sender, EventArgs e)
         {
+            // Get to the OptionView parent control
             while (!(sender is OptionView))
                 sender = (sender as Control).Parent;
-
+            // Find the criteria associated with that control
             Criteria selected = (sender as OptionView).Criteria;
 
             if (selected is Subject)
             {
+                // Add the subject to the plan
                 currentSubject = selected as Subject;
                 Decider.AddSubject(currentSubject, plan);
-                UpdatePlanGUI();
+                UpdatePlanTable();
             }
             else if (selected is Prerequisite)
             {
+                // Display the prerequisite as the current decision
                 currentDecision = selected as Prerequisite;
-                LoadCurrentDecision();
+                DisplayCurrentDecision();
+                // TODO: process the decision (in case it is an AND selection)
             }
+
+            // Refresh the list of decisions that need to be made
+            LBXdecisions.Items.Clear();
+            foreach (Prerequisite decision in plan.Decisions)
+                LBXdecisions.Items.Add(decision);
+            LBXdecisions.SelectedItem = currentDecision;
+        }
+
+        private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int time = int.Parse(LBXtime.SelectedItem.ToString());
+            Decider.MoveSubject(currentSubject, plan, time);
+            UpdatePlanTable();
+        }
+
+        void UpdatePlanTable()
+        {
+            DGVplanTable.Rows.Clear();
+            foreach (List<Subject> semester in plan.SubjectsInOrder)
+                DGVplanTable.Rows.Add(semester.ToArray());
+            if (currentSubject != null)
+                foreach (DataGridViewRow row in DGVplanTable.Rows)
+                    foreach (DataGridViewCell cell in row.Cells)
+                        if (cell.Value is Subject && cell.Value == currentSubject)
+                            DGVplanTable.CurrentCell = cell;
+            DGVplanTable_CellClick(null, null);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Subject_Selection
     // This class deals with everything related to parsing from databases
     public static class Parser
     {
-        public static void Load()
+        public static void LoadData()
         {
             using (var reader = new StringReader(Properties.Resources.ScheduleOfUndergraduateUnits))
             using (var csv = new CsvReader(reader))

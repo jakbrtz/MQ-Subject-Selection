@@ -129,7 +129,7 @@ namespace Subject_Selection
                 Console.WriteLine("ERROR: Couldn't fit in all your subjects");
 
             timer3.Stop();
-            Console.WriteLine("Ordering Subjects:   " + timer3.ElapsedMilliseconds + "ms");
+            Console.WriteLine("Ordering Plan:       " + timer3.ElapsedMilliseconds + "ms");
         }
 
         //IsLeaf and IsAbove are helper functions for Order()

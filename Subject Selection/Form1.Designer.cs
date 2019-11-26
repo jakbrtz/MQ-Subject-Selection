@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.LBXdecisions = new System.Windows.Forms.ListBox();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.DGVplanTable = new System.Windows.Forms.DataGridView();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -39,7 +39,7 @@
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.LBXtime = new System.Windows.Forms.ListBox();
             this.FLPchoose = new System.Windows.Forms.FlowLayoutPanel();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -65,23 +65,23 @@
             this.LBXdecisions.TabIndex = 4;
             this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
             // 
-            // dataGridView1
+            // DGVplanTable
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.DGVplanTable.AllowUserToAddRows = false;
+            this.DGVplanTable.AllowUserToDeleteRows = false;
+            this.DGVplanTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.DGVplanTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Column1,
             this.Column2,
             this.Column3,
             this.Column4});
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(380, 287);
-            this.dataGridView1.TabIndex = 9;
-            this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridView1_CellClick);
+            this.DGVplanTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DGVplanTable.Location = new System.Drawing.Point(0, 0);
+            this.DGVplanTable.Name = "DGVplanTable";
+            this.DGVplanTable.ReadOnly = true;
+            this.DGVplanTable.Size = new System.Drawing.Size(380, 287);
+            this.DGVplanTable.TabIndex = 9;
+            this.DGVplanTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DGVplanTable_CellClick);
             // 
             // Column1
             // 
@@ -157,7 +157,7 @@
             // 
             // splitContainer3.Panel1
             // 
-            this.splitContainer3.Panel1.Controls.Add(this.dataGridView1);
+            this.splitContainer3.Panel1.Controls.Add(this.DGVplanTable);
             // 
             // splitContainer3.Panel2
             // 
@@ -195,7 +195,7 @@
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -214,7 +214,7 @@
 
         #endregion
         private System.Windows.Forms.ListBox LBXdecisions;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView DGVplanTable;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.SplitContainer splitContainer3;
