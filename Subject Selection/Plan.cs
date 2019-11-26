@@ -180,8 +180,10 @@ namespace Subject_Selection
                 foreach (string id in subject.NCCWs)
                     if (Parser.TryGetSubject(id, out Subject nccw))
                         SubjectIsBanned[nccw] = true;
-            // TODO: make sure that all NCCW relations are undirected (looking at you, BIOL2610 - STAT2170)
-
+            /* TODO: fix assumptions
+             * This code assumes that when subject X is on subject Y's nccw list, then subject Y is on subject X's nccw list
+             * I have found 45 exceptions to this assumption. Does that have a special meaning, or is it an incorrect data entry?
+             */ 
             // Check which decisions force a banned subject
             foreach (Prerequisite decision in Decisions)
                 foreach (Subject subject in decision.ForcedBans())
