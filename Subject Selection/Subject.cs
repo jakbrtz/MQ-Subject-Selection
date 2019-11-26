@@ -202,8 +202,7 @@ namespace Subject_Selection
             // This is a simple catch to check for bans without checking recursively
             if (remainingPick > GetOptions().Count)
                 return true;
-            // This compares the number of options that still need to be picked with the number of options that can be picked
-            // It can be done in one line of LINQ but I wrote it like this so it excecutes faster
+            // This compares the number of options that can be picked with the number of options that need to be picked
             int requiredCompletionTime = RequiredCompletionTime(plan);
             int countRemainingOptions = 0;
             foreach (Criteria option in GetOptions())
@@ -336,14 +335,13 @@ namespace Subject_Selection
                 }
                 return earliestCompletionTime = time;
             }
-            //cache the result // todo: use lazy values to cache results
+            //cache the result
             return earliestCompletionTime =
                 //Get a list of all the option's earliest completion times
                 GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime(MaxSubjects))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
-        //TODO: cache result
         public int RequiredCompletionTime(Plan plan)
         {
             return reasons.Min(reason => reason.GetChosenTime(plan));

@@ -326,10 +326,10 @@ namespace Subject_Selection
 
         public static int GetNumber(this Subject subject)
         {
+            if (!subject.IsSubject)
+                return 1000;
             //Assumes all IDs are made of 4 letters then 4 digits
-            if(int.TryParse(subject.ID.Substring(4), out int value)) //TODO: remove this by no longer treating COURSES and majors as subjects
-                return value;
-            return 1000;
+            return int.Parse(subject.ID.Substring(4));
         }
 
         public static int GetLevel(this Subject subject)
@@ -698,6 +698,8 @@ namespace Subject_Selection
                     case "Requirements:":
                     case "Essential units":
                     case "TOTAL CREDIT POINTS REQUIRED TO SATISFY THIS MAJOR":
+                    case "This minor must be completed as part of an award. The general requirements for the award must be satisfied in order to graduate.":
+                    case "TOTAL CREDIT POINTS REQUIRED TO SATISFY THIS MINOR":
                         break;
                     default:
                         break; //throw new NotImplementedException();
