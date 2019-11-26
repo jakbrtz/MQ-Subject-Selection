@@ -24,18 +24,6 @@ namespace Subject_Selection
             AnalyzeDecisions(toAnalyze, plan);
         }
 
-        static void AddSubjects(IEnumerable<Subject> subjects, Plan plan, Queue<Prerequisite> toAnalyze)
-        {
-            //Add the subject to the list
-            plan.AddSubjects(subjects);
-            // Consider the new subject's prerequisites
-            foreach (Subject subject in subjects)
-                toAnalyze.Enqueue(subject.Prerequisites);
-            // Reconsider all existing decisions
-            foreach (Prerequisite decision in plan.Decisions.Except(toAnalyze))
-                toAnalyze.Enqueue(decision);
-        }
-
         public static void MoveSubject(Subject subject, Plan plan, int time)
         {
             //Record whether the subject is being pushed backwards or forwards
@@ -85,11 +73,18 @@ namespace Subject_Selection
 
                 if (decision.MustPickAll())
                 {
-                    // Add all the subjects from the decision
-                    AddSubjects(decision.GetOptions().Cast<Subject>(), plan, toAnalyze);
-                    // Put any prerequisites back into toAnalyze
+                    // Add all subjects from this decision
+                    IEnumerable<Subject> subjects = decision.GetOptions().Cast<Subject>();
+                    plan.AddSubjects(subjects);
+                    // Add each subject's prerequisites to toAnalzye
+                    foreach (Subject subject in subjects)
+                        toAnalyze.Enqueue(subject.Prerequisites);
+                    // Add all other decisions from this decision
                     foreach (Criteria option in decision.GetOptions().Where(option => option is Prerequisite))
                         toAnalyze.Enqueue(option as Prerequisite);
+                    // Reconsider all existing decisions
+                    foreach (Prerequisite redoDecision in plan.Decisions.Except(toAnalyze))
+                        toAnalyze.Enqueue(redoDecision);
                     //  Skip to the next iteration
                     continue;
                 }
