@@ -96,18 +96,19 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="ScheduleOfUndergraduateUnits.csv" />
+    <None Include="Properties\ScheduleOfUndergraduateUnits.csv" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="2020-ScheduleOfCoursesUG.txt" />
-    <None Include="2020-ScheduleOfMajors.txt" />
-    <None Include="2020-ScheduleOfUGSpecialisations.txt" />
+    <None Include="Properties\2020-ScheduleOfCoursesUG.txt" />
+    <None Include="Properties\2020-ScheduleOfMajors.txt" />
+    <None Include="Properties\2020-ScheduleOfUGSpecialisations.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="2020-ScheduleOfMinors.txt" />
+    <None Include="Properties\2020-ScheduleOfMinors.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
