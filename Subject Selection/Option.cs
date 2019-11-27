@@ -176,8 +176,9 @@ namespace Subject_Selection
                 return true;
             // Check the study plan for the earliest subject that requires this decision
             if (time == -1) time = plan.SubjectsInOrder.FindIndex(semester => semester.Intersect(reasons).Any());
-            // Recursively count the number of options that have been met
+            // Recursively count the number of options that have been met, compare it to the number of options that need to be met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
+            // return GetPick() <= GetOptions().Count(option => option.HasBeenMet(plan, time));
             int countMetOptions = 0;
             foreach (Option option in GetOptions())
             {
