@@ -301,7 +301,7 @@ namespace Subject_Selection
                 }
 
                 // Sometimes the course specifies a mark for the subject
-                if (word == "P" || word == "CR" || word == "D" || word == "HD")
+                if (word == "P" || word == "Cr" || word == "D" || word == "HD")
                     continue;
 
                 // Something unusual is found.
@@ -321,6 +321,8 @@ namespace Subject_Selection
 
         public static bool CouldBeCode(string id)
         {
+            if (id.EndsWith("(P)") || id.EndsWith("(Cr)") || id.EndsWith("(D)") || id.EndsWith("(HD)"))
+                id = id.Split('(')[0];
             return id.Length >= 6 && id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
         }
 
