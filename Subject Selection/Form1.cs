@@ -90,10 +90,25 @@ namespace Subject_Selection
         {
             Stopwatch timerButtons = new Stopwatch();
             timerButtons.Start();
+            bool suspendedLayout = false;
+            if (FLPchoose.Controls.Count > 100)
+            {
+                suspendedLayout = true;
+                FLPchoose.SuspendLayout();
+            }
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
+            {
+                if (!suspendedLayout && currentDecision.GetOptions().Count > 100)
+                {
+                    suspendedLayout = true;
+                    FLPchoose.SuspendLayout();
+                }
                 foreach (Criteria criteria in currentDecision.GetOptions())
                     AddCriteriaToFLP(criteria);
+            }
+            if (suspendedLayout)
+                FLPchoose.ResumeLayout();
             timerButtons.Stop();
             Console.WriteLine("Adding buttons:      " + timerButtons.ElapsedMilliseconds + "ms");
         }
