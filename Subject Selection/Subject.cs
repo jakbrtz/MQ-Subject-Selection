@@ -318,7 +318,10 @@ namespace Subject_Selection
         public override int EarliestCompletionTime(List<int> MaxSubjects)
         {
             if (earliestCompletionTime > -1) return earliestCompletionTime;
-            //If there are no prerequisites, then the subject can be done straight away
+            // Some prerequisites have been parsed incorrectly so they are automatically banned
+            if (GetOptions().Count < GetPick())
+                return 100;
+            // If there are no prerequisites, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
             //Lock the value to avoid infinite loops
