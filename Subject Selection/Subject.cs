@@ -8,7 +8,7 @@ namespace Subject_Selection
 {
     abstract public class Criteria
     {
-        //I have made this superclass to allow prerequisites so be made of other prerequisites
+        //I have made this superclass to allow decisions to be made of other decisions
         public abstract bool HasBeenMet(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects);
@@ -20,7 +20,7 @@ namespace Subject_Selection
         public string ID { get; }
         public string Name { get; }
         public List<int> Semesters { get; }
-        public Prerequisite Prerequisites { get; }
+        public Decision Prerequisites { get; }
         public string[] NCCWs { get; }
         public bool IsSubject { get; }
 
@@ -42,7 +42,7 @@ namespace Subject_Selection
                 Semesters.Add(1);
             }
 
-            Prerequisites = new Prerequisite(this, prerequisites);
+            Prerequisites = new Decision(this, prerequisites);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
 
             IsSubject = true;
@@ -50,7 +50,7 @@ namespace Subject_Selection
 
         public Subject(string document)
         {
-            Prerequisites = new Prerequisite(this);
+            Prerequisites = new Decision(this);
             Prerequisites.LoadFromDocument(document, out string name, out string code);
             ID = code;
             Name = name;
@@ -113,7 +113,7 @@ namespace Subject_Selection
         
     }
 
-    public partial class Prerequisite : Criteria
+    public partial class Decision : Criteria
     {
         List<Subject> reasons = new List<Subject>();
         string criteria;
@@ -122,12 +122,12 @@ namespace Subject_Selection
         Selection selectionType;
         int earliestCompletionTime = -1;
 
-        public Prerequisite(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
+        public Decision(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
-            else if (reason is Prerequisite)
-                reasons.AddRange((reason as Prerequisite).GetReasons());
+            else if (reason is Decision)
+                reasons.AddRange((reason as Decision).GetReasons());
             this.criteria = criteria;
             this.options = options;
             this.pick = pick;
@@ -223,7 +223,7 @@ namespace Subject_Selection
         {
             // For each criteria, check if it forces a subject to be banned
             // Count how often a subject is banned by a criteria
-            // If it gets banned by too many criteria, then it gets banned by the entire prerequisite
+            // If it gets banned by too many criteria, then it gets banned by the entire decision
 
             Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
             foreach (Criteria criteria in GetOptions())
@@ -239,9 +239,9 @@ namespace Subject_Selection
                         counts[subject]++;
                     }
                 }
-                else if (criteria is Prerequisite)
+                else if (criteria is Decision)
                 {
-                    foreach (Subject subject in (criteria as Prerequisite).ForcedBans())
+                    foreach (Subject subject in (criteria as Decision).ForcedBans())
                     {
                         if (!counts.ContainsKey(subject))
                             counts[subject] = 0;
@@ -259,8 +259,8 @@ namespace Subject_Selection
             foreach (Criteria option in GetOptions())
                 if (option is Subject)
                     output.Add(option as Subject);
-                else if (option is Prerequisite)
-                    output.AddRange((option as Prerequisite).GetSubjects());
+                else if (option is Decision)
+                    output.AddRange((option as Decision).GetSubjects());
             return output;
         }
 
@@ -270,8 +270,8 @@ namespace Subject_Selection
             foreach (Criteria option in GetRemainingOptions(plan))
                 if (option is Subject)
                     output.Add(option as Subject);
-                else if (option is Prerequisite)
-                    output.AddRange((option as Prerequisite).GetRemainingSubjects(plan));
+                else if (option is Decision)
+                    output.AddRange((option as Decision).GetRemainingSubjects(plan));
             return output;
         }
 
@@ -280,29 +280,29 @@ namespace Subject_Selection
             return GetPick() == GetOptions().Count;
         }
 
-        public Prerequisite GetRemainingDecision(Plan plan)
+        public Decision GetRemainingDecision(Plan plan)
         {
-            //If the prerequisite is met then there should be nothing to return
-            if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Prerequisite(this);
+            //If the decision is met then there should be nothing to return
+            if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Decision(this);
             //If there is only one option to pick from then pick it
             List<Criteria> remainingCriteria = GetRemainingOptions(plan);
             if (remainingCriteria.Count == 1)
             {
                 Criteria lastOption = remainingCriteria[0];
-                if (lastOption is Prerequisite)
-                    return (lastOption as Prerequisite).GetRemainingDecision(plan);
+                if (lastOption is Decision)
+                    return (lastOption as Decision).GetRemainingDecision(plan);
             }
             // Figure out how many options still need to be picked
             int remainingPick = GetRemainingPick(plan);
-            //Create a new list to store the remaining prerequisites
+            // Create a new list to store the remaining options
             List<Criteria> remainingOptions = new List<Criteria>();
             foreach (Criteria option in remainingCriteria)
             {
                 if (option is Subject)
                     remainingOptions.Add(option);
-                else if (option is Prerequisite)
+                else if (option is Decision)
                 {
-                    Prerequisite remainingDecision = (option as Prerequisite).GetRemainingDecision(plan);
+                    Decision remainingDecision = (option as Decision).GetRemainingDecision(plan);
                     if (remainingPick == 1 && remainingDecision.GetPick() == 1)
                         remainingOptions.AddRange(remainingDecision.GetOptions());
                     else
@@ -312,7 +312,7 @@ namespace Subject_Selection
             string newcriteria = "";
             if (selectionType == Selection.CP)
                 newcriteria = CopyCriteria(remainingPick);
-            return new Prerequisite(this, newcriteria, remainingOptions, remainingPick, selectionType);
+            return new Decision(this, newcriteria, remainingOptions, remainingPick, selectionType);
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
@@ -321,7 +321,7 @@ namespace Subject_Selection
             // Some prerequisites have been parsed incorrectly so they are automatically banned
             if (GetOptions().Count < GetPick())
                 return 100;
-            // If there are no prerequisites, then the subject can be done straight away
+            // If there are no options, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
             //Lock the value to avoid infinite loops
@@ -350,9 +350,9 @@ namespace Subject_Selection
             return reasons.Min(reason => reason.GetChosenTime(plan));
         }
 
-        public void AddReasons(Prerequisite prerequisite)
+        public void AddReasons(Decision decision)
         {
-            reasons = reasons.Union(prerequisite.reasons).ToList();
+            reasons = reasons.Union(decision.reasons).ToList();
         }
 
         public List<Subject> GetReasons()
@@ -360,9 +360,9 @@ namespace Subject_Selection
             return reasons;
         }
 
-        public bool HasElectivePrerequisite()
+        public bool HasElectiveDecision()
         {
-            return IsElective() || GetOptions().Exists(criteria => criteria is Prerequisite && (criteria as Prerequisite).HasElectivePrerequisite());
+            return IsElective() || GetOptions().Exists(criteria => criteria is Decision && (criteria as Decision).HasElectiveDecision());
         }
     }
 

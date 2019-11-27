@@ -14,11 +14,11 @@ namespace Subject_Selection
             //Add the subject to the list
             plan.AddSubjects(new[] { subject });
             // Create an empty queue of things to consider
-            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>();
+            Queue<Decision> toAnalyze = new Queue<Decision>();
             // Consider the new subject's prerequisites
             toAnalyze.Enqueue(subject.Prerequisites);
             // Reconsider all existing decisions
-            foreach (Prerequisite decision in plan.Decisions.Except(toAnalyze))
+            foreach (Decision decision in plan.Decisions.Except(toAnalyze))
                 toAnalyze.Enqueue(decision);
             // Analyze every decision in toAnalyze
             AnalyzeDecisions(toAnalyze, plan);
@@ -31,14 +31,14 @@ namespace Subject_Selection
             //Move the subject to the relevant time slot
             plan.ForceTime(subject, time);
             //Analyze all decisions that might've changed due to the move
-            Queue<Prerequisite> toAnalyze = new Queue<Prerequisite>(plan.Decisions);
+            Queue<Decision> toAnalyze = new Queue<Decision>(plan.Decisions);
             foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisites.GetSubjects().Contains(subject)))
                 toAnalyze.Enqueue(sub.Prerequisites);
             toAnalyze.Enqueue(subject.Prerequisites);
             AnalyzeDecisions(toAnalyze, plan);
         }
 
-        static void AnalyzeDecisions(Queue<Prerequisite> toAnalyze, Plan plan)
+        static void AnalyzeDecisions(Queue<Decision> toAnalyze, Plan plan)
         {
             Stopwatch timer1 = new Stopwatch();
             Stopwatch timer2 = new Stopwatch();
@@ -48,17 +48,17 @@ namespace Subject_Selection
             while (toAnalyze.Any())
             {
                 //Consider the next decision in the queue
-                Prerequisite decision = toAnalyze.Dequeue();
+                Decision decision = toAnalyze.Dequeue();
 
                 //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
                 plan.RemoveDecision(decision);
 
                 // GetRemainingDecision is computationally expensive, so I'm repeating this loop before and after that method
-                if (decision.MustPickAll() && decision.GetOptions().All(criteria => criteria is Prerequisite))
+                if (decision.MustPickAll() && decision.GetOptions().All(criteria => criteria is Decision))
                 {
-                    //If everything must be selected, select everything. Add the new prerequisites to the list
+                    //If everything must be selected, select everything. Add the new decisions to the list
                     foreach (Criteria option in decision.GetOptions())
-                        toAnalyze.Enqueue(option as Prerequisite);
+                        toAnalyze.Enqueue(option as Decision);
                     continue;
                 }
 
@@ -80,10 +80,10 @@ namespace Subject_Selection
                     foreach (Subject subject in subjects)
                         toAnalyze.Enqueue(subject.Prerequisites);
                     // Add all other decisions from this decision
-                    foreach (Criteria option in decision.GetOptions().Where(option => option is Prerequisite))
-                        toAnalyze.Enqueue(option as Prerequisite);
+                    foreach (Criteria option in decision.GetOptions().Where(option => option is Decision))
+                        toAnalyze.Enqueue(option as Decision);
                     // Reconsider all existing decisions
-                    foreach (Prerequisite redoDecision in plan.Decisions.Except(toAnalyze))
+                    foreach (Decision redoDecision in plan.Decisions.Except(toAnalyze))
                         toAnalyze.Enqueue(redoDecision);
                     //  Skip to the next iteration
                     continue;
@@ -97,12 +97,12 @@ namespace Subject_Selection
             timer1.Stop();
             timer2.Start();
 
-            foreach (Prerequisite decision in new List<Prerequisite>(plan.Decisions))
+            foreach (Decision decision in new List<Decision>(plan.Decisions))
                 if (decision.CoveredBy(plan))
                     plan.RemoveDecision(decision);
 
             //Sort decisions by the complexity of the decision
-            plan.Decisions.Sort(delegate (Prerequisite p1, Prerequisite p2)
+            plan.Decisions.Sort(delegate (Decision p1, Decision p2)
             {
                 int compare = 0;
                 if (compare == 0) compare = p2.GetSubjects()[0].GetLevel() - p1.GetSubjects()[0].GetLevel();
@@ -119,35 +119,36 @@ namespace Subject_Selection
             Console.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
         }
 
-        public static bool IsSubset(this Prerequisite smaller, Prerequisite larger)
+        public static bool IsSubset(this Decision smaller, Decision larger)
         {
             return smaller.GetPick() >= larger.GetPick() && smaller.GetOptions().All(option => larger.GetOptions().Contains(option))
-                // || other.GetOptions().Exists(criteria => criteria is Prerequisite && prerequisite.IsSubset(criteria as Prerequisite))
+                // || other.GetOptions().Exists(criteria => criteria is Decision && smaller.IsSubset(criteria as Decision))
                 ;
 
-            // TODO: account for when prerequisites are made up of other prerequisites (such as COGS2000)
+            // TODO: account for when decisions are made up of other decisions (such as COGS2000)
             // TODO: account for when electives aren't detected because they are missing like one subject in one of the lists
         }
 
-        public static bool CoveredBy(this Prerequisite prerequisite, Plan plan)
+        public static bool CoveredBy(this Decision decision, Plan plan)
         {
-            //Make sure that the main prerequisite isn't in the list of decisions
-            List<Prerequisite> decisions = plan.Decisions.Where(decision => decision != prerequisite).ToList();
+            //Make sure that the main decision isn't in the list of decisions
+            List<Decision> decisions = new List<Decision>(plan.Decisions);
+            decisions.Remove(decision);
 
-            //Remove all prerequisites that don't have any overlap with the main prerequisite 
-            //decisions = decisions.Where(decision => decision.GetSubjects().Intersect(prerequisite.GetSubjects()).Any()).ToList();
+            //Remove all decisions that don't have any overlap with the main decision 
+            //decisions = decisions.Where(other => other.GetSubjects().Intersect(decision.GetSubjects()).Any()).ToList();
             //if (decisions.Count == 0)
             //    return false;
 
-            //Check if the sum of the prerequisites' pick is more than the main prerequisite's pick
-            //if (decisions.Sum(decision => decision.GetPick()) < prerequisite.GetPick())
+            //Check if the sum of the decisions' pick is more than the main decision's pick
+            //if (decisions.Sum(other => other.GetPick()) < decision.GetPick())
             //    return false;
 
             //Check if any of the prerequisists are an obvious subset of the main prequisit
             bool subsetFound = false;
-            foreach (Prerequisite decision in decisions.Where(decision => decision.IsSubset(prerequisite)))
+            foreach (Decision other in decisions.Where(other => other.IsSubset(decision)))
             {
-                decision.AddReasons(prerequisite);
+                other.AddReasons(decision);
                 subsetFound = true;
             }
             if (subsetFound)

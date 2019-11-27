@@ -340,7 +340,7 @@ namespace Subject_Selection
         }
     }
 
-    public partial class Prerequisite
+    public partial class Decision
     {
         public bool IsElective()
         {
@@ -493,7 +493,7 @@ namespace Subject_Selection
                             options.Add(subject);
                     }
                     else
-                        options.Add(new Prerequisite(this, token));
+                        options.Add(new Decision(this, token));
                 }
             }
 
@@ -503,7 +503,7 @@ namespace Subject_Selection
                 string remaining = tokens[0];
                 if (remaining.EndsWith(" or "))
                     remaining = remaining.Substring(0, remaining.Length - 4);
-                options.Add(new Prerequisite(this, remaining));
+                options.Add(new Decision(this, remaining));
             }
 
             // Check if the criteria contains specific key words
@@ -601,9 +601,9 @@ namespace Subject_Selection
                         criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 4) + ") and ";
                     // Remove " and " from the end of the option
                     criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 5);
-                    // Create a prerequisite using the criteria
+                    // Create a decision using the criteria
                     // Add that criteria to the list of stuff to do
-                    options.Add(new Prerequisite(this, criteriaBuilder));
+                    options.Add(new Decision(this, criteriaBuilder));
                     // Reset the builder
                     criteriaBuilder = "";
                     previousFirstCell = "";
@@ -679,7 +679,7 @@ namespace Subject_Selection
                             criteriaBuilder += cells[2] + " or ";
                         break;
                     case "TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE":
-                        options.Add(new Prerequisite(this, cells[1] + "cp"));
+                        options.Add(new Decision(this, cells[1] + "cp"));
                         break;
                     case "Note:":
                         // TODO: "Students may count a maximum of 100cp at 1000 level towards their course requirements."

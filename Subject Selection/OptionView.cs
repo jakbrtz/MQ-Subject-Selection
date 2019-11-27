@@ -26,8 +26,8 @@ namespace Subject_Selection
                     LBLcode.Text = subject.ID;
                     LBLname.Text = subject.Name;
                     break;
-                case Prerequisite prerequisite:
-                    LBLname.Text = prerequisite.ToString();
+                case Decision decision:
+                    LBLname.Text = decision.ToString();
                     break;
             }
         }

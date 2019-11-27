@@ -19,7 +19,7 @@ namespace Subject_Selection
         }
 
         readonly Plan plan = new Plan();
-        Prerequisite currentDecision;
+        Decision currentDecision;
         Subject currentSubject;
 
         private void Form1_Load(object sender, EventArgs e)
@@ -35,7 +35,7 @@ namespace Subject_Selection
 
         private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
         {
-            currentDecision = LBXdecisions.SelectedItem as Prerequisite;
+            currentDecision = LBXdecisions.SelectedItem as Decision;
 
             Console.WriteLine("Current Decision:    " + currentDecision.ToString());
             Console.Write("Reasons:             ");
@@ -141,17 +141,17 @@ namespace Subject_Selection
                 Decider.AddSubject(currentSubject, plan);
                 UpdatePlanTable();
             }
-            else if (selected is Prerequisite)
+            else if (selected is Decision)
             {
                 // Display the prerequisite as the current decision
-                currentDecision = selected as Prerequisite;
+                currentDecision = selected as Decision;
                 DisplayCurrentDecision();
                 // TODO: process the decision (in case it is an AND selection)
             }
 
             // Refresh the list of decisions that need to be made
             LBXdecisions.Items.Clear();
-            foreach (Prerequisite decision in plan.Decisions)
+            foreach (Decision decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
             LBXdecisions.SelectedItem = currentDecision;
         }

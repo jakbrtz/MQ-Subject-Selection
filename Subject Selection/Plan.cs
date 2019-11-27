@@ -10,7 +10,7 @@ namespace Subject_Selection
     public class Plan
     {
         public List<List<Subject>> SubjectsInOrder { get; }
-        public List<Prerequisite> Decisions { get; }
+        public List<Decision> Decisions { get; }
         public HashSet<Subject> SelectedSubjects { get; }
         public HashSet<Subject> SelectedCourses { get; }
 
@@ -21,7 +21,7 @@ namespace Subject_Selection
         public Plan()
         {
             SubjectsInOrder = new List<List<Subject>>();
-            Decisions = new List<Prerequisite>();
+            Decisions = new List<Decision>();
             SelectedSubjects = new HashSet<Subject>();
             SelectedCourses = new HashSet<Subject>();
             MaxSubjects = new List<int>();
@@ -31,7 +31,7 @@ namespace Subject_Selection
         public Plan(Plan other)
         {
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
-            Decisions = new List<Prerequisite>(other.Decisions);
+            Decisions = new List<Decision>(other.Decisions);
             SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
             SelectedCourses = new HashSet<Subject>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
@@ -56,13 +56,13 @@ namespace Subject_Selection
             return SelectedSubjects.Contains(option) || SelectedCourses.Contains(option);
         }
 
-        public void AddDecision(Prerequisite decision)
+        public void AddDecision(Decision decision)
         {
             Decisions.Add(decision);
             RefreshBannedSubjectsList();
         }
 
-        public void RemoveDecision(Prerequisite decision)
+        public void RemoveDecision(Decision decision)
         {
             if (Decisions.Remove(decision))
                 RefreshBannedSubjectsList();
@@ -133,7 +133,7 @@ namespace Subject_Selection
         }
 
         //IsLeaf and IsAbove are helper functions for Order()
-        private bool IsLeaf(Subject subject, int time, Prerequisite prerequisite = null)
+        private bool IsLeaf(Subject subject, int time, Decision prerequisite = null)
         {
             //Look at the subject's prerequisites
             if (prerequisite == null) prerequisite = subject.Prerequisites;
@@ -149,7 +149,7 @@ namespace Subject_Selection
                 if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
-                else if (criteria is Prerequisite && !IsLeaf(subject, time, criteria as Prerequisite))
+                else if (criteria is Decision && !IsLeaf(subject, time, criteria as Decision))
                     return false;
             return true;
         }
@@ -184,7 +184,7 @@ namespace Subject_Selection
              * I have found 45 exceptions to this assumption. Does that have a special meaning, or is it an incorrect data entry?
              */ 
             // Check which decisions force a banned subject
-            foreach (Prerequisite decision in Decisions)
+            foreach (Decision decision in Decisions)
                 foreach (Subject subject in decision.ForcedBans())
                     BannedSubjects.Add(subject);
         }
