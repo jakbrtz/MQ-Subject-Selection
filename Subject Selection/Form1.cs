@@ -30,7 +30,7 @@ namespace Subject_Selection
                 plan.MaxSubjects.Add(i);
 
             foreach (Subject course in Parser.AllCourses())
-                AddCriteriaToFLP(course);
+                AddOptionToFLP(course);
         }
 
         private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
@@ -104,8 +104,8 @@ namespace Subject_Selection
                     suspendedLayout = true;
                     FLPchoose.SuspendLayout();
                 }
-                foreach (Criteria criteria in currentDecision.GetOptions())
-                    AddCriteriaToFLP(criteria);
+                foreach (Option option in currentDecision.GetOptions())
+                    AddOptionToFLP(option);
             }
             if (suspendedLayout)
                 FLPchoose.ResumeLayout();
@@ -113,15 +113,15 @@ namespace Subject_Selection
             Console.WriteLine("Adding buttons:      " + timerButtons.ElapsedMilliseconds + "ms");
         }
 
-        readonly Dictionary<Criteria, OptionView> optionViews = new Dictionary<Criteria, OptionView>();
+        readonly Dictionary<Option, OptionView> optionViews = new Dictionary<Option, OptionView>();
 
-        void AddCriteriaToFLP(Criteria criteria)
+        void AddOptionToFLP(Option option)
         {
-            if (!optionViews.TryGetValue(criteria, out OptionView optionView))
+            if (!optionViews.TryGetValue(option, out OptionView optionView))
             {
-                optionView = new OptionView(criteria);
+                optionView = new OptionView(option);
                 optionView.Click += OptionView_Click;
-                optionViews.Add(criteria, optionView);
+                optionViews.Add(option, optionView);
             }
             FLPchoose.Controls.Add(optionView);
         }
@@ -131,8 +131,8 @@ namespace Subject_Selection
             // Get to the OptionView parent control
             while (!(sender is OptionView))
                 sender = (sender as Control).Parent;
-            // Find the criteria associated with that control
-            Criteria selected = (sender as OptionView).Criteria;
+            // Find the option associated with that control
+            Option selected = (sender as OptionView).Option;
 
             if (selected is Subject)
             {

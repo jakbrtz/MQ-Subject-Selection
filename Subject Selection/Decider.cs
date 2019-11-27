@@ -54,10 +54,10 @@ namespace Subject_Selection
                 plan.RemoveDecision(decision);
 
                 // GetRemainingDecision is computationally expensive, so I'm repeating this loop before and after that method
-                if (decision.MustPickAll() && decision.GetOptions().All(criteria => criteria is Decision))
+                if (decision.MustPickAll() && decision.GetOptions().All(option => option is Decision))
                 {
                     //If everything must be selected, select everything. Add the new decisions to the list
-                    foreach (Criteria option in decision.GetOptions())
+                    foreach (Option option in decision.GetOptions())
                         toAnalyze.Enqueue(option as Decision);
                     continue;
                 }
@@ -80,7 +80,7 @@ namespace Subject_Selection
                     foreach (Subject subject in subjects)
                         toAnalyze.Enqueue(subject.Prerequisites);
                     // Add all other decisions from this decision
-                    foreach (Criteria option in decision.GetOptions().Where(option => option is Decision))
+                    foreach (Option option in decision.GetOptions().Where(option => option is Decision))
                         toAnalyze.Enqueue(option as Decision);
                     // Reconsider all existing decisions
                     foreach (Decision redoDecision in plan.Decisions.Except(toAnalyze))
@@ -122,7 +122,7 @@ namespace Subject_Selection
         public static bool IsSubset(this Decision smaller, Decision larger)
         {
             return smaller.GetPick() >= larger.GetPick() && smaller.GetOptions().All(option => larger.GetOptions().Contains(option))
-                // || other.GetOptions().Exists(criteria => criteria is Decision && smaller.IsSubset(criteria as Decision))
+                // || other.GetOptions().Exists(option => option is Decision && smaller.IsSubset(option as Decision))
                 ;
 
             // TODO: account for when decisions are made up of other decisions (such as COGS2000)

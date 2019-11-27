@@ -144,12 +144,12 @@ namespace Subject_Selection
             if (prerequisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
                 return true;
             //Consider each option
-            foreach (Criteria criteria in prerequisite.GetOptions())
+            foreach (Option option in prerequisite.GetOptions())
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (criteria is Subject && SelectedSubjects.Contains(criteria) && !SelectedSubjectsSoFar().Contains(criteria) && !IsAbove(criteria as Subject, subject))
+                if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject))
                     return false;
                 //If the option is a prerequisit that is not a leaf then the subject is not a leaf
-                else if (criteria is Decision && !IsLeaf(subject, time, criteria as Decision))
+                else if (option is Decision && !IsLeaf(subject, time, option as Decision))
                     return false;
             return true;
         }

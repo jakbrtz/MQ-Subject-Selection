@@ -29,7 +29,7 @@ namespace Subject_Selection
             }
 
             foreach (Subject subject in subjects.Values)
-                subject.Prerequisites.LoadFromCriteria();
+                subject.Prerequisites.LoadFromDescription();
 
             string descriptionBuilder;
 
@@ -158,27 +158,27 @@ namespace Subject_Selection
             return null;
         }
 
-        public static bool TryGetCriteria(string id, out Criteria criteria)
+        public static bool TryGetOption(string id, out Option option)
         {
-            criteria = GetSubject(id);
-            if (criteria != null)
+            option = GetSubject(id);
+            if (option != null)
                 return true;
-            criteria = GetMinor(id);
-            if (criteria != null)
+            option = GetMinor(id);
+            if (option != null)
                 return true;
-            criteria = GetMajor(id);
-            if (criteria != null)
+            option = GetMajor(id);
+            if (option != null)
                 return true;
-            criteria = GetSpecialisation(id);
-            if (criteria != null)
+            option = GetSpecialisation(id);
+            if (option != null)
                 return true;
-            criteria = GetCourse(id);
-            if (criteria != null)
+            option = GetCourse(id);
+            if (option != null)
                 return true;
             return false;
         }
 
-        public static List<Criteria> GetSubjectsFromQuery(string query)
+        public static List<Option> GetSubjectsFromQuery(string query)
         {
             /* Aight now here me out
              * This doesn't properly parse a query, but it succeeds in parsing every query at Macquarie
@@ -195,14 +195,14 @@ namespace Subject_Selection
              * That last one has the assumption that each group will have the same number
              */
 
-            List<Criteria> output = new List<Criteria>();
+            List<Option> output = new List<Option>();
 
             // Clear brackets and remove spaces around dashes
             query = query.Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "").Replace(" -", "-").Replace("- ", "-");
 
             // A blank query returns everything
             if (query == "")
-                return subjects.Values.Cast<Criteria>().ToList();
+                return subjects.Values.Cast<Option>().ToList();
 
             // Split at spaces
             string[] words = query.Split(' ');
@@ -261,7 +261,7 @@ namespace Subject_Selection
                         subject.ID.StartsWith(unit) &&
                         localLower <= subject.GetNumber() &&
                         subject.GetNumber() <= localUpper)
-                        .Cast<Criteria>().ToList());
+                        .Cast<Option>().ToList());
 
                     continue;
                 }
@@ -314,7 +314,7 @@ namespace Subject_Selection
                         (textFilters == null || textFilters.Any(unit => subject.ID.StartsWith(unit))) &&
                         lower <= subject.GetNumber() &&
                         subject.GetNumber() <= upper)
-                        .Cast<Criteria>().ToList());
+                        .Cast<Option>().ToList());
 
             return output;
         }
@@ -344,36 +344,36 @@ namespace Subject_Selection
     {
         public bool IsElective()
         {
-            return selectionType == Selection.CP && (!criteria.Contains("units") || GetSubjects().Intersect(GetReasons()).Any());
+            return selectionType == Selection.CP && (!description.Contains("units") || GetSubjects().Intersect(GetReasons()).Any());
         }
 
-        string CopyCriteria(int remainingPick)
+        string CopyDescription(int remainingPick)
         {
-            if (criteria.Contains("cp ") && !criteria.Contains("units") && !criteria.Contains("level"))
+            if (description.Contains("cp ") && !description.Contains("units") && !description.Contains("level"))
                 return "";
 
             string output = (remainingPick * 10) + "cp";
-            if (criteria.Contains("cp "))
-                output += " " + criteria.Substring(criteria.IndexOf(' ') + 1);
+            if (description.Contains("cp "))
+                output += " " + description.Substring(description.IndexOf(' ') + 1);
             return output;
         }
 
         public override string ToString()
         {
-            if (criteria != "" && criteria != null)
-                return criteria;
+            if (description != "" && description != null)
+                return description;
             //This is used by the GetRemainingDecision method.
             if (selectionType == Selection.CP)
             {
-                criteria = (GetPick() * 10).ToString() + "cp from ";
-                criteria += string.Join(" or ", GetOptions());
+                description = (GetPick() * 10).ToString() + "cp from ";
+                description += string.Join(" or ", GetOptions());
             }
             else
             {
                 string separator = " " + selectionType + " ";
-                criteria = string.Join(separator, GetOptions());
+                description = string.Join(separator, GetOptions());
             }
-            return criteria;
+            return description;
         }
 
         private static string DealWithBrackets(ref string source)
@@ -458,29 +458,29 @@ namespace Subject_Selection
             return result.Count > 1;
         }
 
-        public void LoadFromCriteria()
+        public void LoadFromDescription()
         {
             // Create a list of options and prepare to translate the text description
-            options = new List<Criteria>();
+            options = new List<Option>();
 
-            DealWithBrackets(ref criteria);
+            DealWithBrackets(ref description);
 
             // Get rid of words that make this difficult
-            criteria = criteria.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
+            description = description.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
 
-            // Check if the criteria is a single subject
-            if (Parser.TryGetCriteria(criteria, out Criteria subject))
+            // Check if the option is a single subject
+            if (Parser.TryGetOption(description, out Option subject))
             {
                 options.Add(subject);
                 selectionType = Selection.AND;
                 return;
             }
 
-            // Splits the criteria accounting for brackets, and putting the output in `tokens`
+            // Splits the option accounting for brackets, and putting the output in `tokens`
             List<string> tokens;
             bool TrySplit(string search, string without = "", bool firstWord = false)
             {
-                return SplitAvoidingBrackets(criteria, search, out tokens, without, firstWord);
+                return SplitAvoidingBrackets(description, search, out tokens, without, firstWord);
             }
 
             void AddAllTokens()
@@ -489,7 +489,7 @@ namespace Subject_Selection
                 {
                     if (Parser.CouldBeCode(token))
                     {
-                        if (Parser.TryGetCriteria(token, out subject))
+                        if (Parser.TryGetOption(token, out subject))
                             options.Add(subject);
                     }
                     else
@@ -506,7 +506,7 @@ namespace Subject_Selection
                 options.Add(new Decision(this, remaining));
             }
 
-            // Check if the criteria contains specific key words
+            // Check if the description contains specific key words
 
             if (TrySplit(" INCLUDING "))
             {
@@ -559,7 +559,7 @@ namespace Subject_Selection
                 AddAllTokens();
             }
 
-            else if (criteria == "")
+            else if (description == "")
             {
                 selectionType = Selection.AND;
                 pick = 0;
@@ -567,11 +567,11 @@ namespace Subject_Selection
 
             // Unknown edge cases
             else if (
-                !(criteria.Split('(')[0].Length < 8 && int.TryParse(criteria.Split('(')[0].Substring(criteria.Split('(')[0].Length - 3), out _)) &&
-                !(criteria.Split('(')[0].Length == 8 && int.TryParse(criteria.Split('(')[0].Substring(4), out _)))
+                !(description.Split('(')[0].Length < 8 && int.TryParse(description.Split('(')[0].Substring(description.Split('(')[0].Length - 3), out _)) &&
+                !(description.Split('(')[0].Length == 8 && int.TryParse(description.Split('(')[0].Substring(4), out _)))
             {
                 Console.WriteLine(GetReasons().First());
-                throw new Exception("idk how to parse this:\n" + criteria);
+                throw new Exception("idk how to parse this:\n" + description);
             }
 
             // If the selection type is AND then everything must be picked
@@ -585,9 +585,9 @@ namespace Subject_Selection
 
             if (!document.Contains("0")) return;
 
-            options = new List<Criteria>();
+            options = new List<Option>();
 
-            string criteriaBuilder = "";
+            string decisionBuilder = "";
             string previousFirstCell = "";
 
             foreach (string line in document.Split(new string[] { "\r\n" }, StringSplitOptions.None))
@@ -595,17 +595,17 @@ namespace Subject_Selection
                 if (line.Trim() == "" || line.Trim() == "Major")
                 {
                     // If there is nothing to add, do nothing
-                    if (criteriaBuilder == "") continue;
+                    if (decisionBuilder == "") continue;
                     // Conclude previous Option set
-                    if (criteriaBuilder.EndsWith(" or "))
-                        criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 4) + ") and ";
+                    if (decisionBuilder.EndsWith(" or "))
+                        decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 4) + ") and ";
                     // Remove " and " from the end of the option
-                    criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 5);
-                    // Create a decision using the criteria
-                    // Add that criteria to the list of stuff to do
-                    options.Add(new Decision(this, criteriaBuilder));
+                    decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 5);
+                    // Create a decision from the decisionBuilder
+                    // Add that decision to the list of stuff to do
+                    options.Add(new Decision(this, decisionBuilder));
                     // Reset the builder
-                    criteriaBuilder = "";
+                    decisionBuilder = "";
                     previousFirstCell = "";
                     continue;
                 }
@@ -622,61 +622,61 @@ namespace Subject_Selection
                 if (line.StartsWith("Minors"))
                 {
                     previousFirstCell = "Minors";
-                    criteriaBuilder = "(";
+                    decisionBuilder = "(";
                     continue;
                 }
 
                 if (previousFirstCell == "Minors")
                 {
                     if (cells[0].StartsWith("P000") || cells[0].StartsWith("T000"))
-                        criteriaBuilder += cells[0] + " or ";
+                        decisionBuilder += cells[0] + " or ";
                     continue;
                 }
 
                 if (line.StartsWith("Majors"))
                 {
                     previousFirstCell = "Majors";
-                    criteriaBuilder = "(";
+                    decisionBuilder = "(";
                     continue;
                 }
 
                 if (previousFirstCell == "Majors")
                 {
                     if (cells[0].StartsWith("N000"))
-                        criteriaBuilder += cells[0] + " or ";
+                        decisionBuilder += cells[0] + " or ";
                     continue;
                 }
 
                 if (line.StartsWith("UG Specialisations"))
                 {
                     previousFirstCell = "UG Specialisations";
-                    criteriaBuilder = "(";
+                    decisionBuilder = "(";
                     continue;
                 }
 
                 if (previousFirstCell == "UG Specialisations")
                 {
                     if (cells[0].StartsWith("Q000"))
-                        criteriaBuilder += cells[0] + " or ";
+                        decisionBuilder += cells[0] + " or ";
                     continue;
                 }
 
                 switch (cells[0])
                 {
                     case "Essential":
-                        criteriaBuilder += cells[2] + " and ";
+                        decisionBuilder += cells[2] + " and ";
                         break;
                     case "Option set":
                         // Conclude previous Option set
-                        if (criteriaBuilder.EndsWith(" or "))
-                            criteriaBuilder = criteriaBuilder.Substring(0, criteriaBuilder.Length - 4) + ") and ";
+                        if (decisionBuilder.EndsWith(" or "))
+                            decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 4) + ") and ";
                         // TODO: confirm that cells[1] always ends in a space
-                        criteriaBuilder += "(" + cells[1];
-                        criteriaBuilder += cells[2] + " or ";
+                        decisionBuilder += "(" + cells[1];
+                        decisionBuilder += cells[2] + " or ";
                         break;
                     case "":
                         if (previousFirstCell == "Option set")
-                            criteriaBuilder += cells[2] + " or ";
+                            decisionBuilder += cells[2] + " or ";
                         break;
                     case "TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE":
                         options.Add(new Decision(this, cells[1] + "cp"));

@@ -12,15 +12,15 @@ namespace Subject_Selection
 {
     public partial class OptionView : UserControl
     {
-        public Criteria Criteria { get; }
+        public Option Option { get; }
 
-        public OptionView(Criteria criteria)
+        public OptionView(Option option)
         {
             InitializeComponent();
             
-            Criteria = criteria;
+            Option = option;
 
-            switch (Criteria)
+            switch (Option)
             {
                 case Subject subject:
                     LBLcode.Text = subject.ID;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Subject_Selection
 {
-    abstract public class Criteria
+    abstract public class Option
     {
         //I have made this superclass to allow decisions to be made of other decisions
         public abstract bool HasBeenMet(Plan plan, int time);
@@ -15,7 +15,7 @@ namespace Subject_Selection
         public bool CanBePicked(Plan plan, int time) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan); }
     }
 
-    public class Subject : Criteria
+    public class Subject : Option
     {
         public string ID { get; }
         public string Name { get; }
@@ -113,22 +113,22 @@ namespace Subject_Selection
         
     }
 
-    public partial class Decision : Criteria
+    public partial class Decision : Option
     {
         List<Subject> reasons = new List<Subject>();
-        string criteria;
-        List<Criteria> options;
+        string description;
+        List<Option> options;
         int pick;
         Selection selectionType;
         int earliestCompletionTime = -1;
 
-        public Decision(Criteria reason, string criteria = "", List<Criteria> options = null, int pick = 1, Selection selectionType = Selection.OR)
+        public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
             if (reason is Subject)
                 reasons.Add(reason as Subject);
             else if (reason is Decision)
                 reasons.AddRange((reason as Decision).GetReasons());
-            this.criteria = criteria;
+            this.description = description;
             this.options = options;
             this.pick = pick;
             this.selectionType = selectionType;
@@ -136,37 +136,37 @@ namespace Subject_Selection
             ToString();
         }
 
-        public List<Criteria> GetOptions()
+        public List<Option> GetOptions()
         {
             if (options == null)
-                LoadFromCriteria();
+                LoadFromDescription();
             return options;
         }
 
         public int GetPick()
         {
             if (options == null)
-                LoadFromCriteria();
+                LoadFromDescription();
             return pick;
         }
 
         public Selection GetSelectionType()
         {
             if (options == null)
-                LoadFromCriteria();
+                LoadFromDescription();
             return selectionType;
         }
 
-        public List<Criteria> GetRemainingOptions(Plan plan)
+        public List<Option> GetRemainingOptions(Plan plan)
         {
             int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetOptions().Where(criteria => criteria.CanBePicked(plan, requiredCompletionTime)).ToList();
+            return GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
         }
 
         public int GetRemainingPick(Plan plan)
         {
             int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetPick() - GetOptions().Count(criteria => criteria.HasBeenMet(plan, requiredCompletionTime));
+            return GetPick() - GetOptions().Count(option => option.HasBeenMet(plan, requiredCompletionTime));
         }
 
         public override bool HasBeenMet(Plan plan, int time)
@@ -175,13 +175,13 @@ namespace Subject_Selection
             if (time == -1) time = plan.SubjectsInOrder.FindIndex(semester => semester.Intersect(reasons).Any());
             // Recursively count the number of options that have been met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
-            int countMetCriteria = 0;
-            foreach (Criteria criteria in GetOptions())
+            int countMetOptions = 0;
+            foreach (Option option in GetOptions())
             {
-                if (criteria.HasBeenMet(plan, time))
+                if (option.HasBeenMet(plan, time))
                 {
-                    countMetCriteria++;
-                    if (countMetCriteria >= GetPick())
+                    countMetOptions++;
+                    if (countMetOptions >= GetPick())
                         return true;
                 }
             }
@@ -205,7 +205,7 @@ namespace Subject_Selection
             // This compares the number of options that can be picked with the number of options that need to be picked
             int requiredCompletionTime = RequiredCompletionTime(plan);
             int countRemainingOptions = 0;
-            foreach (Criteria option in GetOptions())
+            foreach (Option option in GetOptions())
             {
                 if (option.CanBePicked(plan, requiredCompletionTime))
                 {
@@ -221,16 +221,16 @@ namespace Subject_Selection
 
         public List<Subject> ForcedBans()
         {
-            // For each criteria, check if it forces a subject to be banned
-            // Count how often a subject is banned by a criteria
-            // If it gets banned by too many criteria, then it gets banned by the entire decision
+            // For each option, check if it forces a subject to be banned
+            // Count how often a subject is banned by an option
+            // If it gets banned by too many options, then it gets banned by the entire decision
 
             Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
-            foreach (Criteria criteria in GetOptions())
+            foreach (Option option in GetOptions())
             {
-                if (criteria is Subject)
+                if (option is Subject)
                 {
-                    foreach (string ID in (criteria as Subject).NCCWs)
+                    foreach (string ID in (option as Subject).NCCWs)
                     {
                         Subject subject = Parser.GetSubject(ID);
                         if (subject == null) continue;
@@ -239,9 +239,9 @@ namespace Subject_Selection
                         counts[subject]++;
                     }
                 }
-                else if (criteria is Decision)
+                else if (option is Decision)
                 {
-                    foreach (Subject subject in (criteria as Decision).ForcedBans())
+                    foreach (Subject subject in (option as Decision).ForcedBans())
                     {
                         if (!counts.ContainsKey(subject))
                             counts[subject] = 0;
@@ -256,7 +256,7 @@ namespace Subject_Selection
         public List<Subject> GetSubjects()
         {
             List<Subject> output = new List<Subject>();
-            foreach (Criteria option in GetOptions())
+            foreach (Option option in GetOptions())
                 if (option is Subject)
                     output.Add(option as Subject);
                 else if (option is Decision)
@@ -267,7 +267,7 @@ namespace Subject_Selection
         public List<Subject> GetRemainingSubjects(Plan plan)
         {
             List<Subject> output = new List<Subject>();
-            foreach (Criteria option in GetRemainingOptions(plan))
+            foreach (Option option in GetRemainingOptions(plan))
                 if (option is Subject)
                     output.Add(option as Subject);
                 else if (option is Decision)
@@ -285,34 +285,34 @@ namespace Subject_Selection
             //If the decision is met then there should be nothing to return
             if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Decision(this);
             //If there is only one option to pick from then pick it
-            List<Criteria> remainingCriteria = GetRemainingOptions(plan);
-            if (remainingCriteria.Count == 1)
+            List<Option> remainingOptions = GetRemainingOptions(plan);
+            if (remainingOptions.Count == 1)
             {
-                Criteria lastOption = remainingCriteria[0];
+                Option lastOption = remainingOptions[0];
                 if (lastOption is Decision)
                     return (lastOption as Decision).GetRemainingDecision(plan);
             }
             // Figure out how many options still need to be picked
             int remainingPick = GetRemainingPick(plan);
             // Create a new list to store the remaining options
-            List<Criteria> remainingOptions = new List<Criteria>();
-            foreach (Criteria option in remainingCriteria)
+            List<Option> optionBuilder = new List<Option>();
+            foreach (Option option in remainingOptions)
             {
                 if (option is Subject)
-                    remainingOptions.Add(option);
+                    optionBuilder.Add(option);
                 else if (option is Decision)
                 {
                     Decision remainingDecision = (option as Decision).GetRemainingDecision(plan);
                     if (remainingPick == 1 && remainingDecision.GetPick() == 1)
-                        remainingOptions.AddRange(remainingDecision.GetOptions());
+                        optionBuilder.AddRange(remainingDecision.GetOptions());
                     else
-                        remainingOptions.Add(remainingDecision);
+                        optionBuilder.Add(remainingDecision);
                 }
             }
-            string newcriteria = "";
+            string newDescription = "";
             if (selectionType == Selection.CP)
-                newcriteria = CopyCriteria(remainingPick);
-            return new Decision(this, newcriteria, remainingOptions, remainingPick, selectionType);
+                newDescription = CopyDescription(remainingPick);
+            return new Decision(this, newDescription, optionBuilder, remainingPick, selectionType);
         }
 
         public override int EarliestCompletionTime(List<int> MaxSubjects)
@@ -341,7 +341,7 @@ namespace Subject_Selection
             //cache the result
             return earliestCompletionTime =
                 //Get a list of all the option's earliest completion times
-                GetOptions().ConvertAll(criteria => criteria.EarliestCompletionTime(MaxSubjects))
+                GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
@@ -362,7 +362,7 @@ namespace Subject_Selection
 
         public bool HasElectiveDecision()
         {
-            return IsElective() || GetOptions().Exists(criteria => criteria is Decision && (criteria as Decision).HasElectiveDecision());
+            return IsElective() || GetOptions().Exists(option => option is Decision && (option as Decision).HasElectiveDecision());
         }
     }
 
