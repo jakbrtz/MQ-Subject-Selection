@@ -91,10 +91,10 @@ namespace Subject_Selection
             return output;
         }
 
-        public List<Subject> SelectedSubjectsSoFar(int time = -1)
+        public IEnumerable<Subject> SelectedSubjectsSoFar(int time = -1)
         {
             if (time == -1) time = SubjectsInOrder.Count;
-            return SubjectsInOrder.Take(time).SelectMany(x => x).ToList();
+            return SubjectsInOrder.Take(time).SelectMany(x => x);
         }
 
         public void Order()
@@ -105,24 +105,37 @@ namespace Subject_Selection
             SubjectsInOrder.Clear();
             for (int session = 0; session < MaxSubjects.Count; session++)
             {
-                //Only select subjects which have not been selected yet
-                SubjectsInOrder.Add(new List<Subject>(SelectedSubjects
-                    .Except(SelectedSubjectsSoFar()).Where(subject =>
-                    //Pick from subjects that are allowed during this semester
-                    subject.GetPossibleTimes(this).Contains(session) &&
-                    //Pick subjects that are forced into this spot
-                    (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == session ||
-                    //Pick from subjects that have no remaining prerequisites or corequisites
-                    IsLeaf(subject, session)))
-                    //Favour lower level subjects
-                    .OrderBy(subject => subject.GetLevel())
-                    .OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(parent => IsAbove(parent, subject)))
-                    //Favour subjects forced into this timeslot
-                    .Except(SelectedSubjects.Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session))
-                    .OrderBy(subject => forcedTimes.ContainsKey(subject) ? forcedTimes[subject] : MaxSubjects.Count)
-                    //Don't select more subjects than is allowed
-                    .Take(MaxSubjects[session])));
-                //TODO: include levels of how 'forced' a time is
+                // Create a new semester and add it to SubjectsInOrder
+                List<Subject> semester = new List<Subject>();
+                SubjectsInOrder.Add(semester);
+                // Fill the semester with subjects that can be chosen
+                for (int subjectNumber = 0; subjectNumber < MaxSubjects[session]; subjectNumber++)
+                {
+                    // Prepare a list of what subjects could be chosen
+                    IEnumerable<Subject> possibleSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar());
+                    // Do not pick subjects with forced times later than the current session
+                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session));
+                    // Pick from subjects that are allowed during this semester
+                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(this).Contains(session));
+                    // Pick from subjects that have satisfied requisites
+                    possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, session));
+                    // Favor lower level subjects
+                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel());
+                    // Favor subjects that have many other subjects relying on them
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(other => IsAbove(parent: other, child: subject)));
+                    // If any subjects are forced, filter them
+                    IEnumerable<Subject> forcedSubjects = possibleSubjects
+                        .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] <= session)
+                        .OrderBy(subject => forcedTimes[subject]);
+                    if (forcedSubjects.Any())
+                        possibleSubjects = forcedSubjects;
+                    // Pick the first item from that list
+                    Subject nextSubject = possibleSubjects.FirstOrDefault();
+                    // If no subject was chosen, go to the next semester
+                    if (nextSubject == null) break;
+                    // Add the selected subject to this semester
+                    semester.Add(nextSubject);
+                }
             }
 
             if (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
