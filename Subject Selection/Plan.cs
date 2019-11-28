@@ -133,18 +133,20 @@ namespace Subject_Selection
         }
 
         //IsLeaf and IsAbove are helper functions for Order()
-        private bool IsLeaf(Subject subject, int time, Decision prerequisite = null)
+        private bool IsLeaf(Subject subject, int time)
         {
-            //Look at the subject's prerequisites
-            if (prerequisite == null) prerequisite = subject.Prerequisites;
-            //If the prerequisit is met, return true
-            if (prerequisite.HasBeenMet(this, time))
+            return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
+        }
+        private bool IsLeaf(Subject subject, int time, Decision requisite)
+        {
+            //If the requisit is met, return true
+            if (requisite.HasBeenMet(this, time))
                 return true;
             //If the prerequisit is an elective and the recommended year has passed, count this as a leaf
-            if (prerequisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
+            if (requisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
                 return true;
             //Consider each option
-            foreach (Option option in prerequisite.GetOptions())
+            foreach (Option option in requisite.GetOptions())
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject))
                     return false;
@@ -166,6 +168,8 @@ namespace Subject_Selection
                 if (current == child) return true;
                 descendants.Add(current);
                 foreach (Subject subject in current.Prerequisites.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
+                    toAnalyze.Enqueue(subject);
+                foreach (Subject subject in current.Corequisites.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
                     toAnalyze.Enqueue(subject);
             }
             return false;

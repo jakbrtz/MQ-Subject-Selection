@@ -15,8 +15,9 @@ namespace Subject_Selection
             plan.AddSubjects(new[] { subject });
             // Create an empty queue of things to consider
             Queue<Decision> toAnalyze = new Queue<Decision>();
-            // Consider the new subject's prerequisites
+            // Consider the new subject's prerequisites and corequisites
             toAnalyze.Enqueue(subject.Prerequisites);
+            toAnalyze.Enqueue(subject.Corequisites);
             // Reconsider all existing decisions
             foreach (Decision decision in plan.Decisions.Except(toAnalyze))
                 toAnalyze.Enqueue(decision);
@@ -34,7 +35,10 @@ namespace Subject_Selection
             Queue<Decision> toAnalyze = new Queue<Decision>(plan.Decisions);
             foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisites.GetSubjects().Contains(subject)))
                 toAnalyze.Enqueue(sub.Prerequisites);
+            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Corequisites.GetSubjects().Contains(subject)))
+                toAnalyze.Enqueue(sub.Corequisites);
             toAnalyze.Enqueue(subject.Prerequisites);
+            toAnalyze.Enqueue(subject.Corequisites);
             AnalyzeDecisions(toAnalyze, plan);
         }
 
@@ -66,7 +70,7 @@ namespace Subject_Selection
                 decision = decision.GetRemainingDecision(plan);
                 
                 //Remove all reasons that have been met
-                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
+                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)) && reason.Corequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
                 //If there are no more reasons to make a decision, don't analyze the decision
                 if (!decision.GetReasons().Any())
                     continue;
@@ -74,11 +78,14 @@ namespace Subject_Selection
                 if (decision.MustPickAll())
                 {
                     // Add all subjects from this decision
-                    IEnumerable<Subject> subjects = decision.GetOptions().Cast<Subject>();
+                    IEnumerable<Subject> subjects = decision.GetOptions().Where(option => option is Subject).Cast<Subject>();
                     plan.AddSubjects(subjects);
-                    // Add each subject's prerequisites to toAnalzye
+                    // Add each subject's prerequisites and corequisites to toAnalzye
                     foreach (Subject subject in subjects)
+                    {
                         toAnalyze.Enqueue(subject.Prerequisites);
+                        toAnalyze.Enqueue(subject.Corequisites);
+                    }
                     // Add all other decisions from this decision
                     foreach (Option option in decision.GetOptions().Where(option => option is Decision))
                         toAnalyze.Enqueue(option as Decision);
@@ -144,7 +151,7 @@ namespace Subject_Selection
             //if (decisions.Sum(other => other.GetPick()) < decision.GetPick())
             //    return false;
 
-            //Check if any of the prerequisists are an obvious subset of the main prequisit
+            //Check if any of the decisions are an obvious subset of the main decision
             bool subsetFound = false;
             foreach (Decision other in decisions.Where(other => other.IsSubset(decision)))
             {

@@ -22,14 +22,17 @@ namespace Subject_Selection
                 var records = csv.EnumerateRecords(record);
                 foreach (var r in records)
                 {
-                    Subject subject = new Subject(r.Code, r.Name, r.Time, r.Prerequisites, r.NCCW);
+                    Subject subject = new Subject(r.Code, r.Name, r.Time, r.Prerequisites, r.Corequisites, r.NCCW);
                     if (subject.Semesters.Any()) // Some subjects aren't offered yet
                         subjects[r.Code] = subject; // Sometimes a subject appears twice in the csv.
                 }
             }
 
             foreach (Subject subject in subjects.Values)
+            {
                 subject.Prerequisites.LoadFromDescription();
+                subject.Corequisites.LoadFromDescription();
+            }
 
             string descriptionBuilder;
 
@@ -108,6 +111,11 @@ namespace Subject_Selection
         static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> specialisations = new Dictionary<string, Subject>();
         static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
+
+        public static List<Subject> AllSubjects()
+        {
+            return subjects.Values.ToList();
+        }
 
         public static List<Subject> AllCourses()
         {

@@ -10,9 +10,9 @@ namespace Subject_Selection
     {
         //I have made this superclass to allow decisions to be made of other decisions
         public abstract bool HasBeenMet(Plan plan, int time);
-        public abstract bool HasBeenBanned(Plan plan);
-        public abstract int EarliestCompletionTime(List<int> MaxSubjects);
-        public bool CanBePicked(Plan plan, int time) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan); }
+        public abstract bool HasBeenBanned(Plan plan, bool cyclesAreBanned);
+        public abstract int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesAreBanned = false);
+        public bool CanBePicked(Plan plan, int time, bool cyclesAreBanned = false) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan, cyclesAreBanned); }
     }
 
     public class Subject : Option
@@ -21,10 +21,11 @@ namespace Subject_Selection
         public string Name { get; }
         public List<int> Semesters { get; }
         public Decision Prerequisites { get; }
+        public Decision Corequisites { get; }
         public string[] NCCWs { get; }
         public bool IsSubject { get; }
 
-        public Subject(string id, string name, string times, string prerequisites, string nccws)
+        public Subject(string id, string name, string times, string prerequisites, string corequisites, string nccws)
         {
             ID = id;
             Name = name;
@@ -43,6 +44,7 @@ namespace Subject_Selection
             }
 
             Prerequisites = new Decision(this, prerequisites);
+            Corequisites = new Decision(this, corequisites);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
 
             IsSubject = true;
@@ -52,6 +54,7 @@ namespace Subject_Selection
         {
             Prerequisites = new Decision(this);
             Prerequisites.LoadFromDocument(document, out string name, out string code);
+            Corequisites = new Decision(this);
             ID = code;
             Name = name;
             Semesters = new List<int> { 2 };
@@ -73,25 +76,36 @@ namespace Subject_Selection
         }
 
         private bool checkingForBan = false;
-        public override bool HasBeenBanned(Plan plan)
+        public override bool HasBeenBanned(Plan plan, bool cyclesAreBanned)
         {
             if (plan.BannedSubjects.Contains(this))
                 return true;
-            // The `checkingForBan` flag is used to avoid problems with cyclic prerequisites (look at you, BIOL2220 and BIOL2230)
+            // The `checkingForBan` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites
             if (checkingForBan)
-                return true;
+                return cyclesAreBanned;
             checkingForBan = true;
-            // A subject can be banned if it's prerequisites are banned
-            bool result = Prerequisites.HasBeenBanned(plan);
+            // A subject can be banned if it's prerequisites or corequisites are banned
+            bool result = Prerequisites.HasBeenBanned(plan, true) || Corequisites.HasBeenBanned(plan, cyclesAreBanned);
             checkingForBan = false;
             return result;
         }
 
-        public override int EarliestCompletionTime(List<int> MaxSubjects)
+        bool checkingForTime = false;
+        public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesAreBanned = false)
         {
-            //Find the first time after the prerequisites has been satisfied which also allows for the semester
-            int time = Prerequisites.EarliestCompletionTime(MaxSubjects) + 1;
+            // The `checkingForTime` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites (EDST4040)
+            if (checkingForTime)
+                return cyclesAreBanned ? 100 : -1;
+            checkingForTime = true;
+            // Find the first time after the prerequisites has been satisfied
+            int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, true) + 1;
+            // Find the first time that the corequisites has been satisfied
+            int timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, cyclesAreBanned);
+            // Pick the later of these times
+            int time = timePrerequisites > timeCorequisites ? timePrerequisites : timeCorequisites;
+            // Find a semester that this subject could happen in
             while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
+            checkingForTime = false;
             return time;
         }
 
@@ -110,7 +124,6 @@ namespace Subject_Selection
                 return 100;
             return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
-        
     }
 
     public partial class Decision : Option
@@ -120,7 +133,7 @@ namespace Subject_Selection
         List<Option> options;
         int pick;
         Selection selectionType;
-        int earliestCompletionTime = -1;
+        //int earliestCompletionTime = -1;
 
         public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR)
         {
@@ -157,12 +170,6 @@ namespace Subject_Selection
             return selectionType;
         }
 
-        public List<Option> GetRemainingOptions(Plan plan)
-        {
-            int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
-        }
-
         public int GetRemainingPick(Plan plan)
         {
             int requiredCompletionTime = RequiredCompletionTime(plan);
@@ -192,7 +199,7 @@ namespace Subject_Selection
             return false;
         }
 
-        public override bool HasBeenBanned(Plan plan)
+        public override bool HasBeenBanned(Plan plan, bool cyclesAreBanned)
         {
             // This function could be determined in a single line, but it would be inefficient:
             // return GetOptions().Count(option => option.CanBePicked(plan, RequiredCompletionTime(plan))) < GetRemainingPick(plan);
@@ -211,7 +218,7 @@ namespace Subject_Selection
             int countRemainingOptions = 0;
             foreach (Option option in GetOptions())
             {
-                if (option.CanBePicked(plan, requiredCompletionTime))
+                if (option.CanBePicked(plan, requiredCompletionTime, cyclesAreBanned))
                 {
                     countRemainingOptions++;
                     if (countRemainingOptions == remainingPick)
@@ -268,17 +275,6 @@ namespace Subject_Selection
             return output;
         }
 
-        public List<Subject> GetRemainingSubjects(Plan plan)
-        {
-            List<Subject> output = new List<Subject>();
-            foreach (Option option in GetRemainingOptions(plan))
-                if (option is Subject)
-                    output.Add(option as Subject);
-                else if (option is Decision)
-                    output.AddRange((option as Decision).GetRemainingSubjects(plan));
-            return output;
-        }
-
         public bool MustPickAll()
         {
             return GetPick() == GetOptions().Count;
@@ -286,13 +282,15 @@ namespace Subject_Selection
 
         public Decision GetRemainingDecision(Plan plan)
         {
-            //If the decision is met then there should be nothing to return
-            if (HasBeenMet(plan, RequiredCompletionTime(plan))) return new Decision(this);
-            //If there is only one option to pick from then pick it
-            List<Option> remainingOptions = GetRemainingOptions(plan);
+            // Figure out when this decision must be completed
+            int requiredCompletionTime = RequiredCompletionTime(plan);
+            // If the decision is met then there should be nothing to return
+            if (HasBeenMet(plan, requiredCompletionTime)) return new Decision(this);
+            //If there is only one remaining option to pick from then pick it
+            List<Option> remainingOptions = GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
             if (remainingOptions.Count == 1)
             {
-                Option lastOption = remainingOptions[0];
+                Option lastOption = remainingOptions.First();
                 if (lastOption is Decision)
                     return (lastOption as Decision).GetRemainingDecision(plan);
             }
@@ -319,17 +317,14 @@ namespace Subject_Selection
             return new Decision(this, newDescription, optionBuilder, remainingPick, selectionType);
         }
 
-        public override int EarliestCompletionTime(List<int> MaxSubjects)
+        public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesAreBanned)
         {
-            if (earliestCompletionTime > -1) return earliestCompletionTime;
             // Some prerequisites have been parsed incorrectly so they are automatically banned
             if (GetOptions().Count < GetPick())
                 return 100;
             // If there are no options, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
-            //Lock the value to avoid infinite loops
-            earliestCompletionTime = 100;
             //This makes finding the time based on credit points a lot faster
             if (IsElective())
             {
@@ -340,12 +335,10 @@ namespace Subject_Selection
                     time++;
                     count += MaxSubjects[time];
                 }
-                return earliestCompletionTime = time;
+                return time;
             }
-            //cache the result
-            return earliestCompletionTime =
-                //Get a list of all the option's earliest completion times
-                GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects))
+            //Get a list of all the option's earliest completion times
+            return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects, cyclesAreBanned))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 

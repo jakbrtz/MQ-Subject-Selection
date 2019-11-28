@@ -26,6 +26,9 @@ namespace Subject_Selection
         {
             Parser.LoadData();
 
+            foreach (Subject subject in Parser.AllSubjects())
+                CreateOptionView(subject);
+
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
@@ -58,6 +61,7 @@ namespace Subject_Selection
 
             Console.WriteLine("Subject:             " + currentSubject.ID);
             Console.WriteLine("Prerequisites:       " + currentSubject.Prerequisites);
+            Console.WriteLine("Corequisites:        " + currentSubject.Corequisites);
 
             // Show the user a decision according to what subject has been selected
             PickNextDecision(plan);
@@ -90,39 +94,30 @@ namespace Subject_Selection
         {
             Stopwatch timerButtons = new Stopwatch();
             timerButtons.Start();
-            bool suspendedLayout = false;
-            if (FLPchoose.Controls.Count > 100)
-            {
-                suspendedLayout = true;
-                FLPchoose.SuspendLayout();
-            }
+            FLPchoose.SuspendLayout();
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
-            {
-                if (!suspendedLayout && currentDecision.GetOptions().Count > 100)
-                {
-                    suspendedLayout = true;
-                    FLPchoose.SuspendLayout();
-                }
                 foreach (Option option in currentDecision.GetOptions())
                     AddOptionToFLP(option);
-            }
-            if (suspendedLayout)
-                FLPchoose.ResumeLayout();
+            FLPchoose.ResumeLayout();
             timerButtons.Stop();
             Console.WriteLine("Adding buttons:      " + timerButtons.ElapsedMilliseconds + "ms");
         }
 
         readonly Dictionary<Option, OptionView> optionViews = new Dictionary<Option, OptionView>();
 
+        OptionView CreateOptionView(Option option)
+        {
+            OptionView optionView = new OptionView(option);
+            optionView.Click += OptionView_Click;
+            optionViews.Add(option, optionView);
+            return optionView;
+        }
+
         void AddOptionToFLP(Option option)
         {
             if (!optionViews.TryGetValue(option, out OptionView optionView))
-            {
-                optionView = new OptionView(option);
-                optionView.Click += OptionView_Click;
-                optionViews.Add(option, optionView);
-            }
+                optionView = CreateOptionView(option);
             FLPchoose.Controls.Add(optionView);
         }
 
