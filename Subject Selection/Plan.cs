@@ -141,7 +141,7 @@ namespace Subject_Selection
         private bool IsLeaf(Subject subject, int time, Decision requisite)
         {
             //If the requisit is met, return true
-            if (requisite.HasBeenMet(this, time))
+            if (requisite.HasBeenCompleted(this, time))
                 return true;
             //If the requisit is an elective and the recommended year has passed, count this as a leaf
             if (requisite.IsElective() && subject.GetLevel() <= time / 3 + 1)

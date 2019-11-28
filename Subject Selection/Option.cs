@@ -9,10 +9,10 @@ namespace Subject_Selection
     abstract public class Option
     {
         //I have made this superclass to allow decisions to be made of other decisions
-        public abstract bool HasBeenMet(Plan plan, int time);
+        public abstract bool HasBeenCompleted(Plan plan, int time);
         public abstract bool HasBeenBanned(Plan plan, bool cyclesAreBanned);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesAreBanned = false);
-        public bool CanBePicked(Plan plan, int time, bool cyclesAreBanned = false) { return !HasBeenMet(plan, time) && !HasBeenBanned(plan, cyclesAreBanned); }
+        public bool CanBePicked(Plan plan, int time, bool cyclesAreBanned = false) { return !HasBeenCompleted(plan, time) && !HasBeenBanned(plan, cyclesAreBanned); }
     }
 
     public class Subject : Option
@@ -67,7 +67,7 @@ namespace Subject_Selection
             return ID;
         }
 
-        public override bool HasBeenMet(Plan plan, int time)
+        public override bool HasBeenCompleted(Plan plan, int time)
         {
             if (!plan.Contains(this)) return false;
             if (IsSubject)
@@ -173,10 +173,10 @@ namespace Subject_Selection
         public int GetRemainingPick(Plan plan)
         {
             int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetPick() - GetOptions().Count(option => option.HasBeenMet(plan, requiredCompletionTime));
+            return GetPick() - GetOptions().Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
         }
 
-        public override bool HasBeenMet(Plan plan, int time)
+        public override bool HasBeenCompleted(Plan plan, int time)
         {
             // An "empty decision" (pick 0 from 0) is automatically met
             if (!GetOptions().Any() && GetPick() == 0)
@@ -189,7 +189,7 @@ namespace Subject_Selection
             int countMetOptions = 0;
             foreach (Option option in GetOptions())
             {
-                if (option.HasBeenMet(plan, time))
+                if (option.HasBeenCompleted(plan, time))
                 {
                     countMetOptions++;
                     if (countMetOptions >= GetPick())
@@ -285,7 +285,7 @@ namespace Subject_Selection
             // Figure out when this decision must be completed
             int requiredCompletionTime = RequiredCompletionTime(plan);
             // If the decision is met then there should be nothing to return
-            if (HasBeenMet(plan, requiredCompletionTime)) return new Decision(this);
+            if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
             //If there is only one remaining option to pick from then pick it
             List<Option> remainingOptions = GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
             if (remainingOptions.Count == 1)

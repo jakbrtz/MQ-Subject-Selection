@@ -70,7 +70,7 @@ namespace Subject_Selection
                 decision = decision.GetRemainingDecision(plan);
                 
                 //Remove all reasons that have been met
-                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenMet(plan, reason.GetChosenTime(plan)) && reason.Corequisites.HasBeenMet(plan, reason.GetChosenTime(plan)));
+                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)) && reason.Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
                 //If there are no more reasons to make a decision, don't analyze the decision
                 if (!decision.GetReasons().Any())
                     continue;
