@@ -112,7 +112,7 @@ namespace Subject_Selection
                     subject.GetPossibleTimes(this).Contains(session) &&
                     //Pick subjects that are forced into this spot
                     (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == session ||
-                    //Pick from subjects that have no remaining prerequisits
+                    //Pick from subjects that have no remaining prerequisites or corequisites
                     IsLeaf(subject, session)))
                     //Favour lower level subjects
                     .OrderBy(subject => subject.GetLevel())
@@ -132,17 +132,18 @@ namespace Subject_Selection
             Console.WriteLine("Ordering Plan:       " + timer3.ElapsedMilliseconds + "ms");
         }
 
-        //IsLeaf and IsAbove are helper functions for Order()
+        // IsLeaf and IsAbove are helper functions for Order()
         private bool IsLeaf(Subject subject, int time)
         {
             return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
         }
+
         private bool IsLeaf(Subject subject, int time, Decision requisite)
         {
             //If the requisit is met, return true
             if (requisite.HasBeenMet(this, time))
                 return true;
-            //If the prerequisit is an elective and the recommended year has passed, count this as a leaf
+            //If the requisit is an elective and the recommended year has passed, count this as a leaf
             if (requisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
                 return true;
             //Consider each option
@@ -150,7 +151,7 @@ namespace Subject_Selection
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject))
                     return false;
-                //If the option is a prerequisit that is not a leaf then the subject is not a leaf
+                //If the option is a decision that does not lead to a leaf then the subject is not a leaf
                 else if (option is Decision && !IsLeaf(subject, time, option as Decision))
                     return false;
             return true;
