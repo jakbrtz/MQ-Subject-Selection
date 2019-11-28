@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Subject_Selection
@@ -23,11 +16,10 @@ namespace Subject_Selection
             switch (Option)
             {
                 case Subject subject:
-                    LBLcode.Text = subject.ID;
-                    LBLname.Text = subject.Name;
+                    label1.Text = subject.ID + Environment.NewLine + subject.Name;
                     break;
                 case Decision decision:
-                    LBLname.Text = decision.ToString();
+                    label1.Text = decision.ToString();
                     break;
             }
         }

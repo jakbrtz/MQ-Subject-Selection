@@ -28,47 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.LBLcode = new System.Windows.Forms.Label();
-            this.LBLname = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // LBLcode
+            // label1
             // 
-            this.LBLcode.AutoSize = true;
-            this.LBLcode.Location = new System.Drawing.Point(3, 0);
-            this.LBLcode.Name = "LBLcode";
-            this.LBLcode.Size = new System.Drawing.Size(50, 13);
-            this.LBLcode.TabIndex = 0;
-            this.LBLcode.Text = "C000000";
-            // 
-            // LBLname
-            // 
-            this.LBLname.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.LBLname.Location = new System.Drawing.Point(3, 13);
-            this.LBLname.Name = "LBLname";
-            this.LBLname.Size = new System.Drawing.Size(144, 56);
-            this.LBLname.TabIndex = 1;
-            this.LBLname.Text = "Name which can get pretty long";
+            this.label1.Location = new System.Drawing.Point(3, 5);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(144, 64);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "Label which can get pretty long\r\nand have new lines";
             // 
             // OptionView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.Controls.Add(this.LBLname);
-            this.Controls.Add(this.LBLcode);
+            this.Controls.Add(this.label1);
             this.Name = "OptionView";
             this.Size = new System.Drawing.Size(150, 69);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Label LBLcode;
-        private System.Windows.Forms.Label LBLname;
+        private System.Windows.Forms.Label label1;
     }
 }
