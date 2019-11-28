@@ -16,9 +16,11 @@ There are also some mistakes in these files:
 * These subjects' prerequisites need extra extra brackets to get parsed correctly:
     * AFIN3052
     * COMP2800
+	* EDST4040
     * MGMT3904
 * These subjects' prerequisites are not written in the same pattern as the other prerequisites:
-    * CHIN1320
+    * BIOL3450
+	* CHIN1320
 	* GEOS2126
     * LAWS5060
 	* MECH4002
@@ -30,6 +32,10 @@ There are also some mistakes in these files:
     * BIOL2220
     * PSYU3349
     * PSYU3351
+* These subjects' corequisites are not written in the same pattern as the other corequisites:
+	* GEOS2111
+	* MMCC3150
+	* MMCC3160
 * Sometimes there are a pair of subjects with a NCCW relation that only goes one way? I'm not sure if this has a special meaning of if they're mistakes.
     * ACST2052 -> AFIN2053
     * AFIN3029 -> ACST3006
