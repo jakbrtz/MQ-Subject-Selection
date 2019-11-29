@@ -178,8 +178,8 @@ namespace Subject_Selection
 
         public override bool HasBeenCompleted(Plan plan, int time)
         {
-            // An "empty decision" (pick 0 from 0) is automatically met
-            if (!GetOptions().Any() && GetPick() == 0)
+            // An "empty decision" (pick 0) is automatically met
+            if (GetPick() == 0)
                 return true;
             // Check the study plan for the earliest subject that requires this decision
             if (time == -1) time = plan.SubjectsInOrder.FindIndex(semester => semester.Intersect(reasons).Any());
