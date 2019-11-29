@@ -32,7 +32,7 @@ namespace Subject_Selection
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            foreach (Subject course in Parser.AllCourses())
+            foreach (Subject course in Parser.AllCourses().Where(course => course.ID.StartsWith("C")))
                 AddOptionToFLP(course);
         }
 
