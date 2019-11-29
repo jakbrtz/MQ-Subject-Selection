@@ -15,6 +15,7 @@ namespace Subject_Selection
     {
         public static void LoadData()
         {
+            // Open csv to get subjects
             using (var reader = new StringReader(Properties.Resources.ScheduleOfUndergraduateUnits))
             using (var csv = new CsvReader(reader))
             {
@@ -28,6 +29,7 @@ namespace Subject_Selection
                 }
             }
 
+            // Figure out prerequisites and corequisites for subjects
             foreach (Subject subject in subjects.Values)
             {
                 subject.Prerequisites.LoadFromDescription();
@@ -35,6 +37,8 @@ namespace Subject_Selection
             }
 
             string descriptionBuilder;
+
+            // Load minors
 
             void MakeMinor(string description)
             {
@@ -57,6 +61,8 @@ namespace Subject_Selection
             }
             MakeMinor(descriptionBuilder);
 
+            // Load majors
+
             void MakeMajor(string description)
             {
                 if (description == "") return;
@@ -78,6 +84,22 @@ namespace Subject_Selection
             }
             MakeMajor(descriptionBuilder);
 
+            // Make NCCW links between matching majors and minors
+            foreach (Subject major in majors.Values)
+            {
+                Subject nccw = minors.Values.FirstOrDefault(minor => minor.Name == major.Name);
+                if (nccw != null)
+                    major.NCCWs[0] = nccw.ID;
+            }
+            foreach (Subject minor in minors.Values)
+            {
+                Subject nccw = majors.Values.FirstOrDefault(major => major.Name == minor.Name);
+                if (nccw != null)
+                    minor.NCCWs[0] = nccw.ID;
+            }
+
+            // Load specialisations
+
             void MakeSpecialisation(string description)
             {
                 if (description == "") return;
@@ -98,6 +120,8 @@ namespace Subject_Selection
                 descriptionBuilder += line + "\r\n";
             }
             MakeSpecialisation(descriptionBuilder);
+
+            // Load courses
 
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {

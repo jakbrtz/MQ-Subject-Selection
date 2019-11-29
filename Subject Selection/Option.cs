@@ -58,7 +58,7 @@ namespace Subject_Selection
             ID = code;
             Name = name;
             Semesters = new List<int> { 2 };
-            NCCWs = new string[0];
+            NCCWs = new string[1];
             IsSubject = false;
         }
 
