@@ -678,13 +678,33 @@ namespace Subject_Selection
                         // Conclude previous Option set
                         if (decisionBuilder.EndsWith(" or "))
                             decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 4) + ") and ";
-                        // TODO: confirm that cells[1] always ends in a space
-                        decisionBuilder += "(" + cells[1];
+                        /* Occasionally an option set is "either ARTS2000 or a minor" 
+                         * Rather than properly writing a parser, I'm going to cook up some spaghetti 
+                         * and hope that when this code is rewritten the document is easier to parse 
+                         */
+                        decisionBuilder += "(";
+                        if (cells[2] != "either")
+                            // Create an option set starting with "Xcp from "
+                            decisionBuilder += cells[1];
+                        // Make sure there is a space in the gap
+                        if (!cells[1].EndsWith(" "))
+                        {
+                            decisionBuilder += " ";
+                            if (cells[1] != "either")
+                                Console.WriteLine("missing space in " + line);
+                        }
+                        // Start listing the options
                         decisionBuilder += cells[2] + " or ";
                         break;
                     case "":
                         if (previousFirstCell == "Option set")
-                            decisionBuilder += cells[2] + " or ";
+                        {
+                            // Remember the spaghetti from 20 lines earlier? It continues here
+                            if (cells[1] == "or")
+                                decisionBuilder += "[minor] or ";
+                            else
+                                decisionBuilder += cells[2] + " or ";
+                        }
                         break;
                     case "TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE":
                         options.Add(new Decision(this, cells[1] + "cp"));
