@@ -286,8 +286,9 @@ namespace Subject_Selection
             int requiredCompletionTime = RequiredCompletionTime(plan);
             // If the decision is met then there should be nothing to return
             if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
-            //If there is only one remaining option to pick from then pick it
+            // Only select the options that can be picked
             List<Option> remainingOptions = GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
+            //If there is only one remaining option to pick from then pick it
             if (remainingOptions.Count == 1)
             {
                 Option lastOption = remainingOptions.First();
