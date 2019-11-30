@@ -9,10 +9,9 @@ namespace Subject_Selection
     abstract public class Option
     {
         //I have made this superclass to allow decisions to be made of other decisions
-        public abstract bool HasBeenCompleted(Plan plan, int time);
-        public abstract bool HasBeenBanned(Plan plan, bool cyclesNotAllowed);
+        public abstract bool HasBeenCompleted(Plan plan, int requiredCompletionTime);
+        public abstract bool HasBeenBanned(Plan plan, bool cyclesNotAllowed = false);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed = false);
-        public bool CanBePicked(Plan plan, int time, bool cyclesNotAllowed = false) { return !HasBeenCompleted(plan, time) && !HasBeenBanned(plan, cyclesNotAllowed); }
     }
 
     public class Subject : Option
@@ -67,11 +66,11 @@ namespace Subject_Selection
             return ID;
         }
 
-        public override bool HasBeenCompleted(Plan plan, int time)
+        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
         {
             if (!plan.Contains(this)) return false;
             if (IsSubject)
-                return plan.SelectedSubjectsSoFar(time).Contains(this);
+                return plan.SelectedSubjectsSoFar(requiredCompletionTime).Contains(this);
             return true;
         }
 
@@ -120,7 +119,7 @@ namespace Subject_Selection
 
         public int GetChosenTime(Plan plan)
         {
-            if (IsSubject)
+            if (!IsSubject)
                 return 100;
             return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
@@ -128,19 +127,28 @@ namespace Subject_Selection
 
     public partial class Decision : Option
     {
-        List<Subject> reasons = new List<Subject>();
+        List<Subject> reasonsPrerequisite = new List<Subject>();
+        List<Subject> reasonsCorequisite = new List<Subject>();
         string description;
         List<Option> options;
         int pick;
         Selection selectionType;
         //int earliestCompletionTime = -1;
 
-        public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR)
+        public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR, bool reasonIsCorequisite = false)
         {
             if (reason is Subject)
-                reasons.Add(reason as Subject);
+            {
+                if (reasonIsCorequisite)
+                    reasonsCorequisite.Add(reason as Subject);
+                else
+                    reasonsPrerequisite.Add(reason as Subject);
+            }
             else if (reason is Decision)
-                reasons.AddRange((reason as Decision).GetReasons());
+            {
+                reasonsPrerequisite.AddRange((reason as Decision).GetReasonsPrerequisite());
+                reasonsCorequisite.AddRange((reason as Decision).GetReasonsCorequisite());
+            }
             this.description = description;
             this.options = options;
             this.pick = pick;
@@ -176,20 +184,20 @@ namespace Subject_Selection
             return GetPick() - GetOptions().Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
         }
 
-        public override bool HasBeenCompleted(Plan plan, int time)
+        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
         {
             // An "empty decision" (pick 0) is automatically met
             if (GetPick() == 0)
                 return true;
             // Check the study plan for the earliest subject that requires this decision
-            if (time == -1) time = plan.SubjectsInOrder.FindIndex(semester => semester.Intersect(reasons).Any());
+            if (requiredCompletionTime == -1) requiredCompletionTime = RequiredCompletionTime(plan);
             // Recursively count the number of options that have been met, compare it to the number of options that need to be met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
             // return GetPick() <= GetOptions().Count(option => option.HasBeenMet(plan, time));
             int countMetOptions = 0;
             foreach (Option option in GetOptions())
             {
-                if (option.HasBeenCompleted(plan, time))
+                if (option.HasBeenCompleted(plan, requiredCompletionTime))
                 {
                     countMetOptions++;
                     if (countMetOptions >= GetPick())
@@ -202,26 +210,24 @@ namespace Subject_Selection
         public override bool HasBeenBanned(Plan plan, bool cyclesNotAllowed)
         {
             // This function could be determined in a single line, but it would be inefficient:
-            // return GetOptions().Count(option => option.CanBePicked(plan, RequiredCompletionTime(plan))) < GetRemainingPick(plan);
-            
+            // return GetOptions().Count(option => !option.HasBeenBanned(plan, cyclesNotAllowed)) < GetPick(plan);
+
             // Assume electives cannot be banned
             if (IsElective()) return false;
             // If there is nothing to pick from, it cannot be banned
-            int remainingPick = GetRemainingPick(plan);
-            if (remainingPick == 0)
+            if (GetPick() <= 0)
                 return false;
             // This is a simple catch to check for bans without checking recursively
-            if (remainingPick > GetOptions().Count)
+            if (GetPick() > GetOptions().Count)
                 return true;
             // This compares the number of options that can be picked with the number of options that need to be picked
-            int requiredCompletionTime = RequiredCompletionTime(plan);
             int countRemainingOptions = 0;
             foreach (Option option in GetOptions())
             {
-                if (option.CanBePicked(plan, requiredCompletionTime, cyclesNotAllowed))
+                if (!option.HasBeenBanned(plan, cyclesNotAllowed))
                 {
                     countRemainingOptions++;
-                    if (countRemainingOptions == remainingPick)
+                    if (countRemainingOptions == GetPick())
                     {
                         return false;
                     }
@@ -287,7 +293,7 @@ namespace Subject_Selection
             // If the decision is met then there should be nothing to return
             if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
             // Only select the options that can be picked
-            List<Option> remainingOptions = GetOptions().Where(option => option.CanBePicked(plan, requiredCompletionTime)).ToList();
+            List<Option> remainingOptions = GetOptions().Where(option => !option.HasBeenCompleted(plan, requiredCompletionTime) && !option.HasBeenBanned(plan)).ToList();
             //If there is only one remaining option to pick from then pick it
             if (remainingOptions.Count == 1)
             {
@@ -345,17 +351,32 @@ namespace Subject_Selection
 
         public int RequiredCompletionTime(Plan plan)
         {
-            return reasons.Min(reason => reason.GetChosenTime(plan));
+            int requiredByPrerequisites = reasonsPrerequisite.Any() ? reasonsPrerequisite.Min(reason => reason.GetChosenTime(plan)) - 1 : 100;
+            int requiredByCorequisites = reasonsCorequisite.Any() ? reasonsCorequisite.Min(reason => reason.GetChosenTime(plan)) : 100;
+            if (requiredByPrerequisites < requiredByCorequisites)
+                return requiredByPrerequisites;
+            return requiredByCorequisites;
         }
 
         public void AddReasons(Decision decision)
         {
-            reasons = reasons.Union(decision.reasons).ToList();
+            reasonsPrerequisite = reasonsPrerequisite.Union(decision.reasonsPrerequisite).ToList();
+            reasonsCorequisite = reasonsCorequisite.Union(decision.reasonsCorequisite).ToList();
         }
 
-        public List<Subject> GetReasons()
+        public List<Subject> GetReasonsPrerequisite()
         {
-            return reasons;
+            return reasonsPrerequisite;
+        }
+
+        public List<Subject> GetReasonsCorequisite()
+        {
+            return reasonsCorequisite;
+        }
+
+        public IEnumerable<Subject> GetReasons()
+        {
+            return reasonsPrerequisite.Concat(reasonsCorequisite);
         }
 
         public bool HasElectiveDecision()

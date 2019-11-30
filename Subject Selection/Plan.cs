@@ -91,10 +91,9 @@ namespace Subject_Selection
             return output;
         }
 
-        public IEnumerable<Subject> SelectedSubjectsSoFar(int time = -1)
+        public IEnumerable<Subject> SelectedSubjectsSoFar(int time = 100)
         {
-            if (time == -1) time = SubjectsInOrder.Count;
-            return SubjectsInOrder.Take(time).SelectMany(x => x);
+            return SubjectsInOrder.Take(time + 1).SelectMany(x => x);
         }
 
         public void Order()

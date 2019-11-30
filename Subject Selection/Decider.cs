@@ -68,13 +68,12 @@ namespace Subject_Selection
 
                 //Replace the decision with only the part that still needs to be decided on
                 decision = decision.GetRemainingDecision(plan);
-                
+
                 //Remove all reasons that have been met
-                decision.GetReasons().RemoveAll(reason => 
-                    reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)) && 
-                    reason. Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
+                decision.GetReasonsPrerequisite().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
+                decision.GetReasonsCorequisite().RemoveAll(reason => reason.Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
                 //If there are no more reasons to make a decision, don't analyze the decision
-                if (!decision.GetReasons().Any())
+                if (!(decision.GetReasonsPrerequisite().Any() || decision.GetReasonsCorequisite().Any()))
                     continue;
 
                 if (decision.MustPickAll())
@@ -145,7 +144,7 @@ namespace Subject_Selection
 
             //Check if any of the decisions are an obvious subset of the main decision
             bool subsetFound = false;
-            foreach (Decision other in decisions.Where(other => other.Covers(decision)))
+            foreach (Decision other in decisions.Where(other => Covers(other, decision)))
             {
                 other.AddReasons(decision);
                 subsetFound = true;
@@ -158,24 +157,24 @@ namespace Subject_Selection
             // TODO: account for when electives aren't detected because they are missing like one subject in one of the lists
 
             return false;
-        }
 
-        public static bool Covers(this Decision cover, Decision maybeRedundant)
-        {
-            // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
-            // Also, I do not want to think about NCCWs would interact with this function
+            bool Covers(Decision cover, Decision maybeRedundant)
+            {
+                // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
+                // Also, I do not want to think about NCCWs would interact with this function
 
-            // A quick check to speed up the time
-            if (cover.GetPick() >= maybeRedundant.GetPick())
-                // Use the pigeonhole principle to compare the `pick` from both decisions
-                if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
+                // A quick check to speed up the time
+                if (cover.GetPick() >= maybeRedundant.GetPick())
+                    // Use the pigeonhole principle to compare the `pick` from both decisions
+                    if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
+                        return true;
+
+                // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
+                if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && Covers(cover, option as Decision)) >= maybeRedundant.GetPick())
                     return true;
 
-            // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
-            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.GetPick())
-                return true;
-
-            return false;
+                return false;
+            }
         }
     }
 }

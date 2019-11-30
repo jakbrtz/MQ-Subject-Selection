@@ -376,7 +376,7 @@ namespace Subject_Selection
     {
         public bool IsElective()
         {
-            return selectionType == Selection.CP && (!description.Contains("units") || GetSubjects().Intersect(GetReasons()).Any());
+            return selectionType == Selection.CP && !description.Contains("units");
         }
 
         string CopyDescription(int remainingPick)
