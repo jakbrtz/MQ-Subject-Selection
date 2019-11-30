@@ -70,7 +70,9 @@ namespace Subject_Selection
                 decision = decision.GetRemainingDecision(plan);
                 
                 //Remove all reasons that have been met
-                decision.GetReasons().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)) && reason.Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
+                decision.GetReasons().RemoveAll(reason => 
+                    reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)) && 
+                    reason. Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
                 //If there are no more reasons to make a decision, don't analyze the decision
                 if (!decision.GetReasons().Any())
                     continue;
@@ -126,16 +128,6 @@ namespace Subject_Selection
             Console.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
         }
 
-        public static bool IsSubset(this Decision smaller, Decision larger)
-        {
-            return smaller.GetPick() >= larger.GetPick() && smaller.GetOptions().All(option => larger.GetOptions().Contains(option))
-                // || other.GetOptions().Exists(option => option is Decision && smaller.IsSubset(option as Decision))
-                ;
-
-            // TODO: account for when decisions are made up of other decisions (such as COGS2000)
-            // TODO: account for when electives aren't detected because they are missing like one subject in one of the lists
-        }
-
         public static bool CoveredBy(this Decision decision, Plan plan)
         {
             //Make sure that the main decision isn't in the list of decisions
@@ -153,7 +145,7 @@ namespace Subject_Selection
 
             //Check if any of the decisions are an obvious subset of the main decision
             bool subsetFound = false;
-            foreach (Decision other in decisions.Where(other => other.IsSubset(decision)))
+            foreach (Decision other in decisions.Where(other => other.Covers(decision)))
             {
                 other.AddReasons(decision);
                 subsetFound = true;
@@ -162,6 +154,26 @@ namespace Subject_Selection
                 return true;
 
             //TODO: other heuristic checks
+
+            // TODO: account for when electives aren't detected because they are missing like one subject in one of the lists
+
+            return false;
+        }
+
+        public static bool Covers(this Decision cover, Decision maybeRedundant)
+        {
+            // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
+            // Also, I do not want to think about NCCWs would interact with this function
+
+            // A quick check to speed up the time
+            if (cover.GetPick() >= maybeRedundant.GetPick())
+                // Use the pigeonhole principle to compare the `pick` from both decisions
+                if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
+                    return true;
+
+            // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
+            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.GetPick())
+                return true;
 
             return false;
         }
