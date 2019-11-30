@@ -74,12 +74,14 @@ namespace Subject_Selection
 
         public void PickNextDecision(Plan plan) //TODO: suggest subjects in a more useful way
         {
+            // TODO: check that the user wasn't currently deciding something
+            
             // Check if there are any decisions left
             if (plan.Decisions.Count == 0)
                 return;
             // Check if the currently selected subject has a prerequisite that needs deciding
             if (currentSubject != null)
-                currentDecision = plan.Decisions.Find(decision => decision.GetReasons().Contains(currentSubject));
+                currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
             if (currentDecision != null)
                 return;
             // Check if there are any decisions about courses
@@ -144,7 +146,11 @@ namespace Subject_Selection
                 // TODO: process the decision (in case it is an AND selection)
             }
 
-            // Refresh the list of decisions that need to be made
+            RefreshDecisionList();
+        }
+
+        void RefreshDecisionList()
+        {
             LBXdecisions.Items.Clear();
             foreach (Decision decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
@@ -156,6 +162,7 @@ namespace Subject_Selection
             int time = int.Parse(LBXtime.SelectedItem.ToString());
             Decider.MoveSubject(currentSubject, plan, time);
             UpdatePlanTable();
+            RefreshDecisionList();
         }
 
         void UpdatePlanTable()
