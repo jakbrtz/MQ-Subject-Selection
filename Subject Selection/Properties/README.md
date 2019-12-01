@@ -82,3 +82,4 @@ There are also some mistakes in these files:
     * STAT2371 -> BIOL2610
     * STAT2371 -> PSYU2248
     * TELE3001 -> STAT3494
+* ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
