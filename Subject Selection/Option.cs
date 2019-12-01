@@ -92,16 +92,9 @@ namespace Subject_Selection
         bool checkingForEarliestTime = false;
         public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed = false)
         {
-            if (ID == "BIOL3450")
-                Console.WriteLine("here");
-
             // The `checkingForTime` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites (EDST4040)
             if (checkingForEarliestTime)
-            {
-                if (ID == "BIOL3450")
-                    Console.WriteLine("here");
                 return cyclesNotAllowed ? 100 : -1;
-            }
             checkingForEarliestTime = true;
             // Find the first time after the prerequisites has been satisfied
             int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, true) + 1;
@@ -114,10 +107,6 @@ namespace Subject_Selection
             // Find a semester that this subject could happen in
             while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
             checkingForEarliestTime = false;
-
-            if (ID == "BIOL3450")
-                Console.WriteLine("here");
-
             return time;
         }
 
