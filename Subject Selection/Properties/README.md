@@ -7,7 +7,7 @@ The excel table was saved to a comma-separated vector (csv) file.
 
 The resulting files are translated from the code in **Parser.cs**
 
-There are also some mistakes in these files:
+There are some mistakes in these files:
 
 * These degrees use the word "essential" when they should say "elective":
     * C000095
@@ -83,3 +83,4 @@ There are also some mistakes in these files:
     * STAT2371 -> PSYU2248
     * TELE3001 -> STAT3494
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
+* It's impossible to satisfy Bachelor of Cyber Security and Bachelor of Applied Finance {D000070} because it says to do STAT1170 and (STAT1250 or STAT1371)
