@@ -193,12 +193,6 @@ namespace Subject_Selection
             return selectionType;
         }
 
-        public int GetRemainingPick(Plan plan)
-        {
-            int requiredCompletionTime = RequiredCompletionTime(plan);
-            return GetPick() - GetOptions().Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
-        }
-
         public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
         {
             // An "empty decision" (pick 0) is automatically met
@@ -312,7 +306,7 @@ namespace Subject_Selection
                     return (lastOption as Decision).GetRemainingDecision(plan);
             }
             // Figure out how many options still need to be picked
-            int remainingPick = GetRemainingPick(plan);
+            int remainingPick = GetPick() - GetOptions().Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
             // Create a new list to store the remaining options
             List<Option> optionBuilder = new List<Option>();
             foreach (Option option in remainingOptions)
