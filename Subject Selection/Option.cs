@@ -92,9 +92,16 @@ namespace Subject_Selection
         bool checkingForEarliestTime = false;
         public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed = false)
         {
+            if (ID == "BIOL3450")
+                Console.WriteLine("here");
+
             // The `checkingForTime` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites (EDST4040)
             if (checkingForEarliestTime)
+            {
+                if (ID == "BIOL3450")
+                    Console.WriteLine("here");
                 return cyclesNotAllowed ? 100 : -1;
+            }
             checkingForEarliestTime = true;
             // Find the first time after the prerequisites has been satisfied
             int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, true) + 1;
@@ -102,9 +109,15 @@ namespace Subject_Selection
             int timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed);
             // Pick the later of these times
             int time = timePrerequisites > timeCorequisites ? timePrerequisites : timeCorequisites;
+            // Make sure this value is not negative
+            if (time < 0) time = 0;
             // Find a semester that this subject could happen in
             while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
             checkingForEarliestTime = false;
+
+            if (ID == "BIOL3450")
+                Console.WriteLine("here");
+
             return time;
         }
 
@@ -332,7 +345,7 @@ namespace Subject_Selection
             // If there are no options, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
-            //This makes finding the time based on credit points a lot faster
+            // If the decision is an elective, don't bother looking at its options
             if (IsElective())
             {
                 int count = 0;
@@ -344,7 +357,32 @@ namespace Subject_Selection
                 }
                 return time;
             }
+
+            /* This algorithm is similar to "get the smallest number in an array", with some differences:
+             * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers. (k = pick)
+             * each value in the array needs to be calculated, and the calculation ends early if it will return a value larger than the kth smallest number
+             */
+
+            // Prepare an array to store the smallest values
+            int[] earliestTimes = new int[GetPick()];
+            for (int i = 0; i < earliestTimes.Length; i++)
+                earliestTimes[i] = 100;
+            // Iterate through the options to find their earliest times
+            foreach (Option option in GetOptions())
+            {
+                int time = option.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed);
+                int i = earliestTimes.Length;
+                for (i = earliestTimes.Length; i > 0 && earliestTimes[i - 1] > time; i--)
+                    if (i != earliestTimes.Length)
+                        earliestTimes[i] = earliestTimes[i - 1];
+                if (i != earliestTimes.Length)
+                    earliestTimes[i] = time;
+            }
+            // Select the last item from earliestTimes
+            return earliestTimes.Last();
+
             //Get a list of all the option's earliest completion times
+
             return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
