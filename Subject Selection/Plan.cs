@@ -121,7 +121,7 @@ namespace Subject_Selection
                     // Favor lower level subjects
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel());
                     // Favor subjects that have many other subjects relying on them
-                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(other => IsAbove(parent: other, child: subject)));
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(other => IsAbove(parent: other, child: subject, includeElectives: true)));
                     // If any subjects are forced, filter them
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
                         .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] <= session)
@@ -161,7 +161,7 @@ namespace Subject_Selection
             //Consider each option
             foreach (Option option in requisite.GetOptions())
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject))
+                if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject, false))
                     return false;
                 //If the option is a decision that does not lead to a leaf then the subject is not a leaf
                 else if (option is Decision && !IsLeaf(subject, time, option as Decision))
@@ -169,10 +169,10 @@ namespace Subject_Selection
             return true;
         }
 
-        private bool IsAbove(Subject parent, Subject child)
+        private bool IsAbove(Subject parent, Subject child, bool includeElectives)
         {
             //Creates a list of all subjects that are selected and are descendants of this subject
-            List<Subject> descendants = new List<Subject>();
+            HashSet<Subject> descendants = new HashSet<Subject>();
             Queue<Subject> toAnalyze = new Queue<Subject>();
             toAnalyze.Enqueue(parent);
             while (toAnalyze.Any())
@@ -180,9 +180,10 @@ namespace Subject_Selection
                 Subject current = toAnalyze.Dequeue();
                 if (current == child) return true;
                 descendants.Add(current);
-                foreach (Subject subject in current.Prerequisites.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
+                // TODO: what should the result be when it's an elective?
+                foreach (Subject subject in current.Prerequisites.GetSubjects(includeElectives).Intersect(SelectedSubjects).Except(descendants))
                     toAnalyze.Enqueue(subject);
-                foreach (Subject subject in current.Corequisites.GetSubjects().Intersect(SelectedSubjects).Except(descendants))
+                foreach (Subject subject in current.Corequisites.GetSubjects(includeElectives).Intersect(SelectedSubjects).Except(descendants))
                     toAnalyze.Enqueue(subject);
             }
             return false;

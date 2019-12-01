@@ -285,13 +285,13 @@ namespace Subject_Selection
             return counts.Where(kvp => GetOptions().Count - GetPick() < kvp.Value).Select(kvp => kvp.Key).ToList();
         }
 
-        public List<Subject> GetSubjects()
+        public List<Subject> GetSubjects(bool includeElectives = true)
         {
             List<Subject> output = new List<Subject>();
             foreach (Option option in GetOptions())
                 if (option is Subject)
                     output.Add(option as Subject);
-                else if (option is Decision)
+                else if (option is Decision && (includeElectives || !(option as Decision).IsElective()))
                     output.AddRange((option as Decision).GetSubjects());
             return output;
         }
