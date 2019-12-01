@@ -79,7 +79,7 @@ namespace Subject_Selection
                 plan.RemoveDecision(decision);
 
                 // GetRemainingDecision is computationally expensive, so I'm repeating this loop before and after that method
-                if (decision.MustPickAll() && decision.GetOptions().All(option => option is Decision))
+                if (decision.GetPick() == decision.GetOptions().Count && decision.GetOptions().All(option => option is Decision))
                 {
                     //If everything must be selected, select everything. Add the new decisions to the list
                     foreach (Option option in decision.GetOptions())
@@ -97,7 +97,7 @@ namespace Subject_Selection
                 if (!(decision.GetReasonsPrerequisite().Any() || decision.GetReasonsCorequisite().Any()))
                     continue;
 
-                if (decision.MustPickAll())
+                if (decision.GetPick() == decision.GetOptions().Count)
                 {
                     // Add all subjects from this decision
                     IEnumerable<Subject> subjects = decision.GetOptions().Where(option => option is Subject).Cast<Subject>();

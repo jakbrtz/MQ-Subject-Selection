@@ -296,11 +296,6 @@ namespace Subject_Selection
             return output;
         }
 
-        public bool MustPickAll()
-        {
-            return GetPick() == GetOptions().Count;
-        }
-
         public Decision GetRemainingDecision(Plan plan)
         {
             // Figure out when this decision must be completed
