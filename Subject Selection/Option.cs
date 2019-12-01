@@ -209,14 +209,14 @@ namespace Subject_Selection
             // This function could be determined in a single line, but it would be inefficient:
             // return GetOptions().Count(option => !option.HasBeenBanned(plan, cyclesNotAllowed)) < GetPick(plan);
 
+            // This is a simple catch to check for bans without checking recursively
+            if (GetPick() > GetOptions().Count)
+                return true;
             // Assume electives cannot be banned
             if (IsElective()) return false;
             // If there is nothing to pick from, it cannot be banned
             if (GetPick() <= 0)
                 return false;
-            // This is a simple catch to check for bans without checking recursively
-            if (GetPick() > GetOptions().Count)
-                return true;
             // This compares the number of options that can be picked with the number of options that need to be picked
             int countRemainingOptions = 0;
             foreach (Option option in GetOptions())
