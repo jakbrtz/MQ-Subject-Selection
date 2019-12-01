@@ -43,7 +43,7 @@ namespace Subject_Selection
             }
 
             Prerequisites = new Decision(this, prerequisites);
-            Corequisites = new Decision(this, corequisites);
+            Corequisites = new Decision(this, corequisites, reasonIsCorequisite: true);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
 
             IsSubject = true;
@@ -148,7 +148,6 @@ namespace Subject_Selection
         List<Option> options;
         int pick;
         Selection selectionType;
-        //int earliestCompletionTime = -1;
 
         public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR, bool reasonIsCorequisite = false)
         {
