@@ -115,7 +115,7 @@ namespace Subject_Selection
                     // Do not pick subjects with forced times later than the current session
                     possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session));
                     // Pick from subjects that are allowed during this semester
-                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(this).Contains(session));
+                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(MaxSubjects).Contains(session));
                     // Pick from subjects that have satisfied requisites
                     possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, session));
                     // Favor lower level subjects

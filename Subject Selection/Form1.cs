@@ -68,7 +68,7 @@ namespace Subject_Selection
 
             // Show the user a list of times that the subject can be slotted into
             LBXtime.Items.Clear();
-            foreach (int time in currentSubject.GetPossibleTimes(plan))
+            foreach (int time in currentSubject.GetPossibleTimes(plan.MaxSubjects))
                 LBXtime.Items.Add(time);
         }
 

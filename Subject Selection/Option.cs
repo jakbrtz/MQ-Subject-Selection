@@ -121,13 +121,15 @@ namespace Subject_Selection
             return time;
         }
 
-        public List<int> GetPossibleTimes(Plan plan)
+        private List<int> possibleTimes;
+        public List<int> GetPossibleTimes(List<int> MaxSubjects)
         {
-            List<int> output = new List<int>();
-            for (int time = EarliestCompletionTime(plan.MaxSubjects); time < plan.MaxSubjects.Count; time++)
+            if (possibleTimes != null) return possibleTimes;
+            possibleTimes = new List<int>();
+            for (int time = EarliestCompletionTime(MaxSubjects); time < MaxSubjects.Count; time++)
                 if (Semesters.Contains(time % 3))
-                    output.Add(time);
-            return output;
+                    possibleTimes.Add(time);
+            return possibleTimes;
         }
 
         public int GetChosenTime(Plan plan)
