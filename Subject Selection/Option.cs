@@ -413,11 +413,6 @@ namespace Subject_Selection
         {
             return reasonsPrerequisite.Concat(reasonsCorequisite);
         }
-
-        public bool HasElectiveDecision()
-        {
-            return IsElective() || GetOptions().Exists(option => option is Decision && (option as Decision).HasElectiveDecision());
-        }
     }
 
     public enum Selection { AND, OR, CP }
