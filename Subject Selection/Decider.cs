@@ -9,10 +9,31 @@ namespace Subject_Selection
 {
     public static class Decider
     {
+        static void AnalyzeAll(Plan plan)
+        {
+            Queue<Decision> toAnalyze = new Queue<Decision>();
+            foreach (Subject subject in plan.SelectedSubjects)
+            {
+                toAnalyze.Enqueue(subject.Prerequisites);
+                toAnalyze.Enqueue(subject.Corequisites);
+            }
+            foreach (Subject course in plan.SelectedCourses)
+            {
+                toAnalyze.Enqueue(course.Prerequisites);
+                toAnalyze.Enqueue(course.Corequisites);
+            }
+            plan.ClearDecisions();
+            AnalyzeDecisions(toAnalyze, plan);
+        }
+
         public static void AddSubject(Subject subject, Plan plan)
         {
             //Add the subject to the list
             plan.AddSubjects(new[] { subject });
+
+            AnalyzeAll(plan);
+            return;
+
             // Create an empty queue of things to consider
             Queue<Decision> toAnalyze = new Queue<Decision>();
             // Consider the new subject's prerequisites and corequisites
