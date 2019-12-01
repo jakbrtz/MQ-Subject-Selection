@@ -28,39 +28,14 @@ namespace Subject_Selection
 
         public static void AddSubject(Subject subject, Plan plan)
         {
-            //Add the subject to the list
             plan.AddSubjects(new[] { subject });
-
             AnalyzeAll(plan);
-            return;
-
-            // Create an empty queue of things to consider
-            Queue<Decision> toAnalyze = new Queue<Decision>();
-            // Consider the new subject's prerequisites and corequisites
-            toAnalyze.Enqueue(subject.Prerequisites);
-            toAnalyze.Enqueue(subject.Corequisites);
-            // Reconsider all existing decisions
-            foreach (Decision decision in plan.Decisions.Except(toAnalyze))
-                toAnalyze.Enqueue(decision);
-            // Analyze every decision in toAnalyze
-            AnalyzeDecisions(toAnalyze, plan);
         }
 
         public static void MoveSubject(Subject subject, Plan plan, int time)
         {
-            //Record whether the subject is being pushed backwards or forwards
-            int originalTime = plan.SubjectsInOrder.FindIndex(semester => semester.Contains(subject));
-            //Move the subject to the relevant time slot
             plan.ForceTime(subject, time);
-            //Analyze all decisions that might've changed due to the move
-            Queue<Decision> toAnalyze = new Queue<Decision>(plan.Decisions);
-            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Prerequisites.GetSubjects().Contains(subject)))
-                toAnalyze.Enqueue(sub.Prerequisites);
-            foreach (Subject sub in plan.SelectedSubjects.Where(sub => sub.Corequisites.GetSubjects().Contains(subject)))
-                toAnalyze.Enqueue(sub.Corequisites);
-            toAnalyze.Enqueue(subject.Prerequisites);
-            toAnalyze.Enqueue(subject.Corequisites);
-            AnalyzeDecisions(toAnalyze, plan);
+            AnalyzeAll(plan);
         }
 
         static void AnalyzeDecisions(Queue<Decision> toAnalyze, Plan plan)
@@ -134,10 +109,9 @@ namespace Subject_Selection
             plan.Decisions.Sort(delegate (Decision p1, Decision p2)
             {
                 int compare = 0;
-                if (compare == 0) compare = p2.GetSubjects()[0].GetLevel() - p1.GetSubjects()[0].GetLevel();
-                if (compare == 0) compare = p1.GetOptions().Count          - p2.GetOptions().Count;
-                if (compare == 0) compare = p1.GetSubjects().Count         - p2.GetSubjects().Count;
-                if (compare == 0) compare = p1.GetPick()                   - p2.GetPick();
+                if (compare == 0) compare = p2.GetLevel()                   - p1.GetLevel();
+                if (compare == 0) compare = p1.GetOptions().Count           - p2.GetOptions().Count;
+                if (compare == 0) compare = p1.GetPick()                    - p2.GetPick();
                 if (compare == 0) compare = p1.RequiredCompletionTime(plan) - p2.RequiredCompletionTime(plan);
                 if (compare == 0) compare = p1.ToString().CompareTo(p2.ToString());
                 return compare;

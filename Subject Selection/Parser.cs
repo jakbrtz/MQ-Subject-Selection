@@ -366,9 +366,12 @@ namespace Subject_Selection
             return int.Parse(subject.ID.Substring(4));
         }
 
-        public static int GetLevel(this Subject subject)
+        public static int GetLevel(this Option option)
         {
-            return subject.GetNumber() / 1000;
+            if (option is Subject)
+                return (option as Subject).GetNumber() / 1000;
+            else
+                return (option as Decision).GetOptions().First().GetLevel();
         }
     }
 

@@ -242,7 +242,7 @@ namespace Subject_Selection
             Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
             foreach (Option option in GetOptions())
             {
-                if (option is Subject)
+                if (option is Subject && (option as Subject).IsSubject)
                 {
                     foreach (string ID in (option as Subject).NCCWs)
                     {
@@ -265,17 +265,6 @@ namespace Subject_Selection
             }
 
             return counts.Where(kvp => GetOptions().Count - GetPick() < kvp.Value).Select(kvp => kvp.Key).ToList();
-        }
-
-        public List<Subject> GetSubjects(bool includeElectives = true)
-        {
-            List<Subject> output = new List<Subject>();
-            foreach (Option option in GetOptions())
-                if (option is Subject)
-                    output.Add(option as Subject);
-                else if (option is Decision && (includeElectives || !(option as Decision).IsElective()))
-                    output.AddRange((option as Decision).GetSubjects());
-            return output;
         }
 
         public Decision GetRemainingDecision(Plan plan)

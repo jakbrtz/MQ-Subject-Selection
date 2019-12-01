@@ -85,7 +85,7 @@ namespace Subject_Selection
             if (currentDecision != null)
                 return;
             // Check if there are any decisions about courses
-            currentDecision = plan.Decisions.Find(decision => decision.GetSubjects().Any(subject => !subject.IsSubject));
+            currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
             if (currentDecision != null)
                 return;
             // Pick the first one

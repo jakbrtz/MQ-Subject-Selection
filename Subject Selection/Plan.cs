@@ -173,18 +173,27 @@ namespace Subject_Selection
         {
             //Creates a list of all subjects that are selected and are descendants of this subject
             HashSet<Subject> descendants = new HashSet<Subject>();
-            Queue<Subject> toAnalyze = new Queue<Subject>();
-            toAnalyze.Enqueue(parent);
-            while (toAnalyze.Any())
+            Queue<Subject> subjectsToAnalyze = new Queue<Subject>();
+            subjectsToAnalyze.Enqueue(parent);
+            while (subjectsToAnalyze.Any())
             {
-                Subject current = toAnalyze.Dequeue();
-                if (current == child) return true;
-                descendants.Add(current);
+                Subject currentSubject = subjectsToAnalyze.Dequeue();
+                if (currentSubject == child) return true;
+                descendants.Add(currentSubject);
                 // TODO: what should the result be when it's an elective?
-                foreach (Subject subject in current.Prerequisites.GetSubjects(includeElectives).Intersect(SelectedSubjects).Except(descendants))
-                    toAnalyze.Enqueue(subject);
-                foreach (Subject subject in current.Corequisites.GetSubjects(includeElectives).Intersect(SelectedSubjects).Except(descendants))
-                    toAnalyze.Enqueue(subject);
+                
+                Queue<Decision> decisionsToAnalyze = new Queue<Decision>();
+                decisionsToAnalyze.Enqueue(currentSubject.Prerequisites);
+                decisionsToAnalyze.Enqueue(currentSubject.Corequisites);
+                while(decisionsToAnalyze.Any())
+                {
+                    Decision currentDecision = decisionsToAnalyze.Dequeue();
+                    foreach (Option option in currentDecision.GetOptions())
+                        if (option is Subject && SelectedSubjects.Contains(option as Subject) && !descendants.Contains(option as Subject))
+                            subjectsToAnalyze.Enqueue(option as Subject);
+                        else if (option is Decision && (includeElectives || !(option as Decision).IsElective()))
+                            decisionsToAnalyze.Enqueue(option as Decision);
+                }
             }
             return false;
         }
