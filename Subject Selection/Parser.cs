@@ -501,7 +501,7 @@ namespace Subject_Selection
             DealWithBrackets(ref description);
 
             // Get rid of words that make this difficult
-            description = description.Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
+            description = description.Replace(" at 1000 level or above", "").Replace("or above", "orabove").Replace("and above", "andabove").Replace(" only", "");
 
             // Check if the option is a single subject
             if (Parser.TryGetOption(description, out Option subject))

@@ -84,3 +84,4 @@ There are some mistakes in these files:
     * TELE3001 -> STAT3494
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
 * It's impossible to satisfy Bachelor of Cyber Security and Bachelor of Applied Finance {D000070} because it says to do STAT1170 and (STAT1250 or STAT1371)
+* Why do some prerequisites say " at 1000 level or above"? All subjects are 1000 level or above.
