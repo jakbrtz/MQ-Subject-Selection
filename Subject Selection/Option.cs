@@ -10,8 +10,8 @@ namespace Subject_Selection
     {
         //I have made this superclass to allow decisions to be made of other decisions
         public abstract bool HasBeenCompleted(Plan plan, int requiredCompletionTime);
-        public abstract bool HasBeenBanned(Plan plan, bool cyclesNotAllowed = false);
-        public abstract int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed = false);
+        public abstract bool HasBeenBanned(Plan plan, int countPrerequisites = 0);
+        public abstract int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0);
     }
 
     public class Subject : Option
@@ -74,39 +74,55 @@ namespace Subject_Selection
             return true;
         }
 
-        private bool checkingForBan = false;
-        public override bool HasBeenBanned(Plan plan, bool cyclesNotAllowed)
+        private int _countPrerequisites_HasBeenBanned = -1;
+        public override bool HasBeenBanned(Plan plan, int countPrerequisites)
         {
+            // If this subject has been listed as a banned subject by the plan, return true
             if (plan.BannedSubjects.Contains(this))
                 return true;
-            // The `checkingForBan` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites
-            if (checkingForBan)
-                return cyclesNotAllowed;
-            checkingForBan = true;
-            // A subject can be banned if it's prerequisites or corequisites are banned
-            bool result = Prerequisites.HasBeenBanned(plan, true) || Corequisites.HasBeenBanned(plan, cyclesNotAllowed);
-            checkingForBan = false;
+            /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, BIOL2220 and BIOL2230)
+             * When there are cyclic prerequisites then this should return true
+             * When there are cyclic corequisites then this should return false
+             * When there is a cylce containing both prerequisites and corequisites this should return true
+             * This flag needs to be an integer (not a bool) because sometimes there is a cycle of corequisites that are also a prequisite to another subject
+             */
+            if (_countPrerequisites_HasBeenBanned > -1)
+                return countPrerequisites > _countPrerequisites_HasBeenBanned;
+            // Set the flag
+            _countPrerequisites_HasBeenBanned = countPrerequisites;
+            // A subject is banned if it's prerequisites or corequisites are banned
+            bool result = Prerequisites.HasBeenBanned(plan, countPrerequisites + 1) || Corequisites.HasBeenBanned(plan, countPrerequisites);
+            // Unset the flag
+            _countPrerequisites_HasBeenBanned = -1;
             return result;
         }
 
-        bool checkingForEarliestTime = false;
-        public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed = false)
+        int _countPrerequisites_EarliestCompletionTime = -1;
+        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
         {
             // The `checkingForTime` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites (EDST4040)
-            if (checkingForEarliestTime)
-                return cyclesNotAllowed ? 100 : -1;
-            checkingForEarliestTime = true;
+            /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, BIOL2220 and BIOL2230)
+             * When there are cyclic prerequisites then this should return 100
+             * When there are cyclic corequisites then this should return -1
+             * When there is a cylce containing both prerequisites and corequisites this should return 100
+             * This flag needs to be an integer (not a bool) because sometimes there is a cycle of corequisites that are also a prequisite to another subject
+             */
+            if (_countPrerequisites_EarliestCompletionTime > -1)
+                return countPrerequisites > _countPrerequisites_EarliestCompletionTime ? 100 : -1;
+            // Set the flag
+            _countPrerequisites_EarliestCompletionTime = countPrerequisites;
             // Find the first time after the prerequisites has been satisfied
-            int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, true) + 1;
+            int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites + 1) + 1;
             // Find the first time that the corequisites has been satisfied
-            int timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed);
+            int timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites);
             // Pick the later of these times
             int time = timePrerequisites > timeCorequisites ? timePrerequisites : timeCorequisites;
             // Make sure this value is not negative
             if (time < 0) time = 0;
             // Find a semester that this subject could happen in
             while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
-            checkingForEarliestTime = false;
+            // Unset the flag
+            _countPrerequisites_EarliestCompletionTime = -1;
             return time;
         }
 
@@ -204,7 +220,7 @@ namespace Subject_Selection
             return false;
         }
 
-        public override bool HasBeenBanned(Plan plan, bool cyclesNotAllowed)
+        public override bool HasBeenBanned(Plan plan, int countPrerequisites)
         {
             // This function could be determined in a single line, but it would be inefficient:
             // return GetOptions().Count(option => !option.HasBeenBanned(plan, cyclesNotAllowed)) < GetPick(plan);
@@ -221,7 +237,7 @@ namespace Subject_Selection
             int countRemainingOptions = 0;
             foreach (Option option in GetOptions())
             {
-                if (!option.HasBeenBanned(plan, cyclesNotAllowed))
+                if (!option.HasBeenBanned(plan, countPrerequisites))
                 {
                     countRemainingOptions++;
                     if (countRemainingOptions == GetPick())
@@ -305,7 +321,7 @@ namespace Subject_Selection
             return new Decision(this, newDescription, optionBuilder, remainingPick, selectionType);
         }
 
-        public override int EarliestCompletionTime(List<int> MaxSubjects, bool cyclesNotAllowed)
+        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites)
         {
             // Some prerequisites have been parsed incorrectly so they are automatically banned
             if (GetOptions().Count < GetPick())
@@ -338,7 +354,7 @@ namespace Subject_Selection
             // Iterate through the options to find their earliest times
             foreach (Option option in GetOptions())
             {
-                int time = option.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed);
+                int time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
                 int i = earliestTimes.Length;
                 for (i = earliestTimes.Length; i > 0 && earliestTimes[i - 1] > time; i--)
                     if (i != earliestTimes.Length)
@@ -351,7 +367,7 @@ namespace Subject_Selection
 
             //Get a list of all the option's earliest completion times
 
-            return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects, cyclesNotAllowed))
+            return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects, countPrerequisites))
                 .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
