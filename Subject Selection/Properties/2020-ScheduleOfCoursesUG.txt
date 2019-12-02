@@ -2922,9 +2922,8 @@ Essential		LAWS3200		Civil and Criminal Procedure (10)	10
 Essential		LAWS3300		Administrative Law (10)	10
 Essential		LAWS3400		Evidence (10)	10
 Elective units	 
-Option set	40cp from 	ARTS2000		International Exchange Experience (40)	
-				OR	
-				Choose a minor from the course's minor schedule	40
+Option set	either	ARTS2000		International Exchange Experience (40)	
+	or			Choose a minor from the course's minor schedule	40
 Option set	10cp from 	AHIS3005		Cultural Heritage and Public History (10)	
 		ARTS3000		Integrating Knowledges, Embracing Cultures, Transforming Communities (10)	
 		ARTS3100		Governance and Resistance (10)	
@@ -3073,9 +3072,8 @@ Essential		MMCC2080		Network Cultures (10)	10
 Essential		MMCC3016		Media Ethics (10)	10
 
 Elective units	 
-Option set	40cp from 			Choose a minor from the course's minor schedule	
-				OR	
-		ARTS2000		International Exchange Experience (40)	40
+Option set	either	ARTS2000		International Exchange Experience (40)	
+	or			Choose a minor from the course's minor schedule	40
 Option set	10cp from 	AHIS3005		Cultural Heritage and Public History (10)	
 		ARTS3000		Integrating Knowledges, Embracing Cultures, Transforming Communities (10)	
 		ARTS3100		Governance and Resistance (10)	
@@ -9291,9 +9289,8 @@ Essential		PHIL1037		Critical Thinking (10)	10
 Essential		STAT1170		Introductory Statistics (10)	10
 
 Elective units	 
-Option set	40cp from 	ARTS2000		International Exchange Experience (40)	
-				OR	
-				Choose a minor from the Bachelor of Art's minor schedule	40
+Option set	either	ARTS2000		International Exchange Experience (40)	
+	or			Choose a minor from the course's minor schedule	40
 Option set	10cp from 	AHIS3005		Cultural Heritage and Public History (10)	
 		ARTS3000		Integrating Knowledges, Embracing Cultures, Transforming Communities (10)	
 		ARTS3100		Governance and Resistance (10)	
@@ -9404,9 +9401,8 @@ Elective units
 Option set	20cp from 	FOSE1005		Mathematical Concepts for Science (10)	
 		FOSE1015		Statistical Concepts for Science (10)	
 		FOSE1025		Scientific Computing (10)	20
-Option set	40cp from 	ARTS2000		International Exchange Experience (40)	
-				OR	
-				Choose a minor from the Bachelor of Art's minor schedule	40
+Option set	either	ARTS2000		International Exchange Experience (40)	
+	or			Choose a minor from the course's minor schedule	40
 Option set	10cp from 	ASTR3810		Frontiers of Astronomy and Astrophysics (10)	
 		BIOL3420		Biodiversity and Conservation (10)	
 		BIOL3610		Biology Special Interest Project (10)	

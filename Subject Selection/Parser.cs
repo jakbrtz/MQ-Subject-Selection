@@ -636,6 +636,8 @@ namespace Subject_Selection
                         decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 4) + ") and ";
                     // Remove " and " from the end of the option
                     decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 5);
+                    // Finish the speghetti from later in this code (the thing about [arts minor])
+                    decisionBuilder = decisionBuilder.Replace("[arts minor]", Properties.Resources.arts_minor);
                     // Create a decision from the decisionBuilder
                     // Add that decision to the list of stuff to do
                     options.Add(new Decision(this, decisionBuilder));
@@ -651,6 +653,10 @@ namespace Subject_Selection
                 {
                     Name = cells[0];
                     Code = cells[1];
+
+                    if (Code == "D000010")
+                        Console.WriteLine();
+
                     continue;
                 }
 
@@ -699,27 +705,21 @@ namespace Subject_Selection
                 switch (cells[0])
                 {
                     case "Essential":
-                        decisionBuilder += cells[2] + " and ";
+                        if (cells[2] != "")
+                            decisionBuilder += cells[2] + " and ";
                         break;
                     case "Option set":
                         // Conclude previous Option set
                         if (decisionBuilder.EndsWith(" or "))
                             decisionBuilder = decisionBuilder.Substring(0, decisionBuilder.Length - 4) + ") and ";
+                        decisionBuilder += "(";
                         /* Occasionally an option set is "either ARTS2000 or a minor" 
                          * Rather than properly writing a parser, I'm going to cook up some spaghetti 
                          * and hope that when this code is rewritten the document is easier to parse 
                          */
-                        decisionBuilder += "(";
-                        if (cells[2] != "either")
+                        if (cells[1] != "either")
                             // Create an option set starting with "Xcp from "
                             decisionBuilder += cells[1];
-                        // Make sure there is a space in the gap
-                        if (!cells[1].EndsWith(" "))
-                        {
-                            decisionBuilder += " ";
-                            if (cells[1] != "either")
-                                Console.WriteLine("missing space in " + line);
-                        }
                         // Start listing the options
                         decisionBuilder += cells[2] + " or ";
                         break;
@@ -728,7 +728,7 @@ namespace Subject_Selection
                         {
                             // Remember the spaghetti from 20 lines earlier? It continues here
                             if (cells[1] == "or")
-                                decisionBuilder += "[minor] or ";
+                                decisionBuilder += "[arts minor] or ";
                             else
                                 decisionBuilder += cells[2] + " or ";
                         }
@@ -763,6 +763,8 @@ namespace Subject_Selection
                 }
                 if (cells[0] != "") previousFirstCell = cells[0];
             }
+
+
 
             selectionType = Selection.AND;
             pick = options.Count;

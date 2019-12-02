@@ -166,6 +166,15 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to T000438 or T000243 or T000244 or T000245 or T000246 or P000205 or P000206 or P000247 or T000248 or T000249 or P000103 or P000168 or T000250 or T000251 or P000207 or T000252 or T000253 or T000373 or T000255 or T000374 or T000375 or P000165 or T000329 or T000258 or T000259 or P000260 or P000434 or P000222 or P000102 or T000261 or T000262 or T000263 or T000264 or T000377 or P000169 or T000265 or T000266 or T000267 or T000268 or T000379 or T000269 or T000270 or T000271 or T000272 or T000273 or T000274 or T00027 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string arts_minor {
+            get {
+                return ResourceManager.GetString("arts_minor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Scope,Code,Name,&quot;Credit
         ///Points&quot;,Unit Designation,Unit Type,Prerequisites,Corequisites,NCCW,When Offered,On Campus Attendance,Staff Contact,&quot;Offering
         ///Department&quot;,Offering Faculty,&quot;FOE -
