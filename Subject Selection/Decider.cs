@@ -152,24 +152,24 @@ namespace Subject_Selection
             // TODO: account for when electives aren't detected because they are missing like one subject in one of the lists
 
             return false;
+        }
 
-            bool Covers(Decision cover, Decision maybeRedundant)
-            {
-                // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
-                // Also, I do not want to think about NCCWs would interact with this function
+        static bool Covers(Decision cover, Decision maybeRedundant)
+        {
+            // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
+            // Also, I do not want to think about NCCWs would interact with this function
 
-                // A quick check to speed up the time
-                if (cover.GetPick() >= maybeRedundant.GetPick())
-                    // Use the pigeonhole principle to compare the `pick` from both decisions
-                    if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
-                        return true;
-
-                // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
-                if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && Covers(cover, option as Decision)) >= maybeRedundant.GetPick())
+            // A quick check to speed up the time
+            if (cover.GetPick() >= maybeRedundant.GetPick())
+                // Use the pigeonhole principle to compare the `pick` from both decisions
+                if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
                     return true;
 
-                return false;
-            }
+            // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
+            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && Covers(cover, option as Decision)) >= maybeRedundant.GetPick())
+                return true;
+
+            return false;
         }
     }
 }
