@@ -139,7 +139,7 @@ namespace Subject_Selection
 
             //Check if any of the decisions are an obvious subset of the main decision
             bool subsetFound = false;
-            foreach (Decision other in decisions.Where(other => Covers(other, decision)))
+            foreach (Decision other in decisions.Where(other => other.Covers(decision)))
             {
                 other.AddReasons(decision);
                 subsetFound = true;
@@ -154,10 +154,10 @@ namespace Subject_Selection
             return false;
         }
 
-        static bool Covers(Decision cover, Decision maybeRedundant)
+        static bool Covers(this Decision cover, Decision maybeRedundant)
         {
             // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
-            // Also, I do not want to think about NCCWs would interact with this function
+            // Also, I do not want to think about how NCCWs would interact with this function
 
             // A quick check to speed up the time
             if (cover.GetPick() >= maybeRedundant.GetPick())
@@ -166,7 +166,7 @@ namespace Subject_Selection
                     return true;
 
             // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
-            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && Covers(cover, option as Decision)) >= maybeRedundant.GetPick())
+            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.GetPick())
                 return true;
 
             return false;
