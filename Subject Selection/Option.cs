@@ -100,8 +100,7 @@ namespace Subject_Selection
         int _countPrerequisites_EarliestCompletionTime = -1;
         public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
         {
-            // The `checkingForTime` flag is used to avoid infinite loops from with cyclic prerequisites (looking at you, BIOL2220 and BIOL2230) and cyclic corequisites (EDST4040)
-            /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, BIOL2220 and BIOL2230)
+            /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, EDTE4040 and EDTE4560)
              * When there are cyclic prerequisites then this should return 100
              * When there are cyclic corequisites then this should return -1
              * When there is a cylce containing both prerequisites and corequisites this should return 100
@@ -323,6 +322,8 @@ namespace Subject_Selection
 
         public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites)
         {
+            // It is assumed that this method is only called by a Subject referring to it's requisites, or a Decision referring to it's options
+
             // Some prerequisites have been parsed incorrectly so they are automatically banned
             if (GetOptions().Count < GetPick())
                 return 100;
@@ -343,10 +344,17 @@ namespace Subject_Selection
             }
 
             /* This algorithm is similar to "get the smallest number in an array", with some differences:
-             * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers. (k = pick)
-             * each value in the array needs to be calculated, and the calculation ends early if it will return a value larger than the kth smallest number
+             * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers, where k equals GetPick()
+             * each value in the array needs to be calculated (this is a recursive function)
+             * it is known that the smallest possible answer is -1 or 0, so the calculation ends early when that answer has been found
              */
 
+            // Find the lower bound of the answer
+            int lowerBound = -1;
+            if (!GetReasonsPrerequisite().Any())
+                lowerBound = 0;
+            if (GetOptions().All(option => option is Subject))
+                lowerBound = 0;
             // Prepare an array to store the smallest values
             int[] earliestTimes = new int[GetPick()];
             for (int i = 0; i < earliestTimes.Length; i++)
@@ -355,20 +363,19 @@ namespace Subject_Selection
             foreach (Option option in GetOptions())
             {
                 int time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
+                // Insert the time into the array
                 int i = earliestTimes.Length;
                 for (i = earliestTimes.Length; i > 0 && earliestTimes[i - 1] > time; i--)
                     if (i != earliestTimes.Length)
                         earliestTimes[i] = earliestTimes[i - 1];
                 if (i != earliestTimes.Length)
                     earliestTimes[i] = time;
+                // If the calculated solution so far is the lower bound, stop looking for a solution
+                if (earliestTimes.Last() <= lowerBound)
+                    break;
             }
             // Select the last item from earliestTimes
             return earliestTimes.Last();
-
-            //Get a list of all the option's earliest completion times
-
-            return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects, countPrerequisites))
-                .OrderBy(x => x).ElementAt(GetPick() - 1);
         }
 
         public int RequiredCompletionTime(Plan plan)
