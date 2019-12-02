@@ -92,6 +92,8 @@ namespace Subject_Selection
             currentDecision = plan.Decisions.First();
         }
 
+        private int firstOption = 0;
+        readonly int maxOptionsPerPage = 80;
         void DisplayCurrentDecision()
         {
             Stopwatch timerButtons = new Stopwatch();
@@ -99,8 +101,15 @@ namespace Subject_Selection
             FLPchoose.SuspendLayout();
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
-                foreach (Option option in currentDecision.GetOptions())
+            {
+                if (firstOption > currentDecision.GetOptions().Count)
+                    firstOption = 0;
+                foreach (Option option in currentDecision.GetOptions().Skip(firstOption).Take(maxOptionsPerPage))
                     AddOptionToFLP(option);
+                firstOption += maxOptionsPerPage;
+                if (maxOptionsPerPage < currentDecision.GetOptions().Count)
+                    AddNextButton();
+            }
             FLPchoose.ResumeLayout();
             timerButtons.Stop();
             Console.WriteLine("Adding buttons:      " + timerButtons.ElapsedMilliseconds + "ms");
@@ -108,19 +117,19 @@ namespace Subject_Selection
 
         readonly Dictionary<Option, OptionView> optionViews = new Dictionary<Option, OptionView>();
 
+        void AddOptionToFLP(Option option)
+        {
+            if (!optionViews.TryGetValue(option, out OptionView optionView))
+                optionView = CreateOptionView(option);
+            FLPchoose.Controls.Add(optionView);
+        }
+
         OptionView CreateOptionView(Option option)
         {
             OptionView optionView = new OptionView(option);
             optionView.Click += OptionView_Click;
             optionViews.Add(option, optionView);
             return optionView;
-        }
-
-        void AddOptionToFLP(Option option)
-        {
-            if (!optionViews.TryGetValue(option, out OptionView optionView))
-                optionView = CreateOptionView(option);
-            FLPchoose.Controls.Add(optionView);
         }
 
         private void OptionView_Click(object sender, EventArgs e)
@@ -147,6 +156,21 @@ namespace Subject_Selection
             }
 
             RefreshDecisionList();
+        }
+
+        void AddNextButton()
+        {
+            Button nextPageButton = new Button
+            {
+                Text = "Next"
+            };
+            nextPageButton.Click += NextPageButton_Click;
+            FLPchoose.Controls.Add(nextPageButton);
+        }
+
+        private void NextPageButton_Click(object sender, EventArgs e)
+        {
+            DisplayCurrentDecision();
         }
 
         void RefreshDecisionList()
