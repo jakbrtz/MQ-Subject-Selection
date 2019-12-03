@@ -63,33 +63,30 @@ namespace Subject_Selection
             Console.WriteLine("Prerequisites:       " + currentSubject.Prerequisites);
             Console.WriteLine("Corequisites:        " + currentSubject.Corequisites);
 
-            // Show the user a decision according to what subject has been selected
-            PickNextDecision(plan);
-
             // Show the user a list of times that the subject can be slotted into
             LBXtime.Items.Clear();
             foreach (int time in currentSubject.GetPossibleTimes(plan.MaxSubjects))
                 LBXtime.Items.Add(time);
-        }
 
-        public void PickNextDecision(Plan plan) //TODO: suggest subjects in a more useful way
-        {
-            // TODO: check that the user wasn't currently deciding something
-            
+            // Show the user a decision according to what subject has been selected
+
             // Check if there are any decisions left
             if (plan.Decisions.Count == 0)
-                return;
+                currentDecision = null;
+            // Check if the current decision is still a thing
+            if (currentDecision != null)
+                currentDecision = plan.Decisions.Find(decision => currentDecision.Covers(decision));
             // Check if the currently selected subject has a prerequisite that needs deciding
-            if (currentSubject != null)
+            if (currentDecision == null || sender != null)
                 currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
-            if (currentDecision != null)
-                return;
             // Check if there are any decisions about courses
-            currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
-            if (currentDecision != null)
-                return;
+            if (currentDecision == null)
+                currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
             // Pick the first one
-            currentDecision = plan.Decisions.First();
+            if (currentDecision == null)
+                currentDecision = plan.Decisions.First();
+
+            LBXdecisions.SelectedItem = currentDecision;
         }
 
         private int firstOption = 0;

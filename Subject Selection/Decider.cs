@@ -154,7 +154,7 @@ namespace Subject_Selection
             return false;
         }
 
-        static bool Covers(this Decision cover, Decision maybeRedundant)
+        public static bool Covers(this Decision cover, Decision maybeRedundant)
         {
             // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
             // Also, I do not want to think about how NCCWs would interact with this function
