@@ -37,9 +37,10 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+            this.LBLcourse = new System.Windows.Forms.Label();
             this.LBXtime = new System.Windows.Forms.ListBox();
             this.FLPchoose = new System.Windows.Forms.FlowLayoutPanel();
-            this.LBLcourse = new System.Windows.Forms.Label();
+            this.BTNremove = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -80,7 +81,7 @@
             this.DGVplanTable.Location = new System.Drawing.Point(0, 0);
             this.DGVplanTable.Name = "DGVplanTable";
             this.DGVplanTable.ReadOnly = true;
-            this.DGVplanTable.Size = new System.Drawing.Size(380, 287);
+            this.DGVplanTable.Size = new System.Drawing.Size(371, 287);
             this.DGVplanTable.TabIndex = 9;
             this.DGVplanTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DGVplanTable_CellClick);
             // 
@@ -163,10 +164,22 @@
             // 
             // splitContainer3.Panel2
             // 
+            this.splitContainer3.Panel2.Controls.Add(this.BTNremove);
             this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
             this.splitContainer3.Size = new System.Drawing.Size(430, 287);
-            this.splitContainer3.SplitterDistance = 380;
+            this.splitContainer3.SplitterDistance = 371;
             this.splitContainer3.TabIndex = 0;
+            // 
+            // LBLcourse
+            // 
+            this.LBLcourse.BackColor = System.Drawing.SystemColors.Control;
+            this.LBLcourse.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.LBLcourse.Dock = System.Windows.Forms.DockStyle.Top;
+            this.LBLcourse.Location = new System.Drawing.Point(0, 0);
+            this.LBLcourse.Name = "LBLcourse";
+            this.LBLcourse.Size = new System.Drawing.Size(371, 22);
+            this.LBLcourse.TabIndex = 10;
+            this.LBLcourse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // LBXtime
             // 
@@ -175,7 +188,7 @@
             this.LBXtime.IntegralHeight = false;
             this.LBXtime.Location = new System.Drawing.Point(0, 0);
             this.LBXtime.Name = "LBXtime";
-            this.LBXtime.Size = new System.Drawing.Size(46, 287);
+            this.LBXtime.Size = new System.Drawing.Size(55, 287);
             this.LBXtime.TabIndex = 0;
             this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
             // 
@@ -188,16 +201,16 @@
             this.FLPchoose.Size = new System.Drawing.Size(799, 231);
             this.FLPchoose.TabIndex = 8;
             // 
-            // LBLcourse
+            // BTNremove
             // 
-            this.LBLcourse.BackColor = System.Drawing.SystemColors.Control;
-            this.LBLcourse.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.LBLcourse.Dock = System.Windows.Forms.DockStyle.Top;
-            this.LBLcourse.Location = new System.Drawing.Point(0, 0);
-            this.LBLcourse.Name = "LBLcourse";
-            this.LBLcourse.Size = new System.Drawing.Size(380, 22);
-            this.LBLcourse.TabIndex = 10;
-            this.LBLcourse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.BTNremove.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.BTNremove.Location = new System.Drawing.Point(0, 264);
+            this.BTNremove.Name = "BTNremove";
+            this.BTNremove.Size = new System.Drawing.Size(55, 23);
+            this.BTNremove.TabIndex = 1;
+            this.BTNremove.Text = "remove";
+            this.BTNremove.UseVisualStyleBackColor = true;
+            this.BTNremove.Click += new System.EventHandler(this.BTNremove_Click);
             // 
             // Form1
             // 
@@ -238,6 +251,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.FlowLayoutPanel FLPchoose;
         private System.Windows.Forms.Label LBLcourse;
+        private System.Windows.Forms.Button BTNremove;
     }
 }
 

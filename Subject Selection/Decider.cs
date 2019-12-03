@@ -38,6 +38,12 @@ namespace Subject_Selection
             AnalyzeAll(plan);
         }
 
+        public static void RemoveSubject(Subject subject, Plan plan)
+        {
+            plan.RemoveSubject(subject);
+            AnalyzeAll(plan);
+        }
+
         static void AnalyzeDecisions(Queue<Decision> toAnalyze, Plan plan)
         {
             Stopwatch timer1 = new Stopwatch();

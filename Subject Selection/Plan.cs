@@ -51,6 +51,16 @@ namespace Subject_Selection
             RefreshBannedSubjectsList();
         }
 
+        public void RemoveSubject(Subject subject)
+        {
+            if (subject.IsSubject)
+                SelectedSubjects.Remove(subject);
+            else
+                SelectedCourses.Remove(subject);
+            Order();
+            RefreshBannedSubjectsList();
+        }
+
         public bool Contains(Subject option)
         {
             return SelectedSubjects.Contains(option) || SelectedCourses.Contains(option);

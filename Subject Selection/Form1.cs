@@ -186,6 +186,16 @@ namespace Subject_Selection
             RefreshDecisionList();
         }
 
+        private void BTNremove_Click(object sender, EventArgs e)
+        {
+            if (currentSubject == null)
+                return;
+            Decider.RemoveSubject(currentSubject, plan);
+            currentSubject = null;
+            UpdatePlanTable();
+            RefreshDecisionList();
+        }
+
         void UpdatePlanTable()
         {
             LBLcourse.Text = string.Join(", ", plan.SelectedCourses.Select(course => course.Name));
