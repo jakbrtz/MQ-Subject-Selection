@@ -39,6 +39,7 @@
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.LBXtime = new System.Windows.Forms.ListBox();
             this.FLPchoose = new System.Windows.Forms.FlowLayoutPanel();
+            this.LBLcourse = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -157,6 +158,7 @@
             // 
             // splitContainer3.Panel1
             // 
+            this.splitContainer3.Panel1.Controls.Add(this.LBLcourse);
             this.splitContainer3.Panel1.Controls.Add(this.DGVplanTable);
             // 
             // splitContainer3.Panel2
@@ -185,6 +187,17 @@
             this.FLPchoose.Name = "FLPchoose";
             this.FLPchoose.Size = new System.Drawing.Size(799, 231);
             this.FLPchoose.TabIndex = 8;
+            // 
+            // LBLcourse
+            // 
+            this.LBLcourse.BackColor = System.Drawing.SystemColors.Control;
+            this.LBLcourse.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.LBLcourse.Dock = System.Windows.Forms.DockStyle.Top;
+            this.LBLcourse.Location = new System.Drawing.Point(0, 0);
+            this.LBLcourse.Name = "LBLcourse";
+            this.LBLcourse.Size = new System.Drawing.Size(380, 22);
+            this.LBLcourse.TabIndex = 10;
+            this.LBLcourse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // Form1
             // 
@@ -224,6 +237,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.FlowLayoutPanel FLPchoose;
+        private System.Windows.Forms.Label LBLcourse;
     }
 }
 

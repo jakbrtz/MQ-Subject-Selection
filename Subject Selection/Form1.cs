@@ -191,6 +191,7 @@ namespace Subject_Selection
 
         void UpdatePlanTable()
         {
+            LBLcourse.Text = string.Join(", ", plan.SelectedCourses.Select(course => course.Name));
             DGVplanTable.Rows.Clear();
             foreach (List<Subject> semester in plan.SubjectsInOrder)
                 DGVplanTable.Rows.Add(semester.ToArray());
