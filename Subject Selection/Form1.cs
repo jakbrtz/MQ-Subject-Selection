@@ -71,20 +71,21 @@ namespace Subject_Selection
             // Show the user a decision according to what subject has been selected
 
             // Check if there are any decisions left
-            if (plan.Decisions.Count == 0)
-                currentDecision = null;
-            // Check if the current decision is still a thing
-            if (currentDecision != null)
-                currentDecision = plan.Decisions.Find(decision => currentDecision.Covers(decision));
-            // Check if the currently selected subject has a prerequisite that needs deciding
-            if (currentDecision == null || sender != null)
-                currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
-            // Check if there are any decisions about courses
-            if (currentDecision == null)
-                currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
-            // Pick the first one
-            if (currentDecision == null)
-                currentDecision = plan.Decisions.First();
+            if (plan.Decisions.Count > 0)
+            {
+                // Check if the current decision is still a thing
+                if (currentDecision != null)
+                    currentDecision = plan.Decisions.Find(decision => currentDecision.Covers(decision));
+                // Check if the currently selected subject has a prerequisite that needs deciding
+                if (currentDecision == null || sender != null)
+                    currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
+                // Check if there are any decisions about courses
+                if (currentDecision == null)
+                    currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
+                // Pick the first one
+                if (currentDecision == null)
+                    currentDecision = plan.Decisions.First();
+            }
 
             LBXdecisions.SelectedItem = currentDecision;
         }
