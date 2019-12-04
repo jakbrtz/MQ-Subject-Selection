@@ -171,8 +171,12 @@ namespace Subject_Selection
                 if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
                     return true;
 
-            // If maybeRedundant is made of other decisions, recursively check if the smaller decision covers the larger decision's options
+            // If maybeRedundant is made of other decisions, recursively check if the those decisions are covered
             if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.GetPick())
+                return true;
+
+            // If cover is made of other decisions and everything must be picked, recursively check if any of the decisions work as a cover
+            if (cover.GetOptions().Count() == cover.GetPick() && cover.GetOptions().Any(option => option is Decision && (option as Decision).Covers(maybeRedundant)))
                 return true;
 
             return false;

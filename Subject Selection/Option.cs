@@ -330,31 +330,42 @@ namespace Subject_Selection
             // If there are no options, then the subject can be done straight away
             if (GetOptions().Count == 0)
                 return -1;
+
+            // Find the lowest useful result of this function
+            int lowerBound = -1;
+            // If this is a corequisite, then the lower bound can increase by 1
+            if (!GetReasonsPrerequisite().Any())
+                lowerBound++;
+            // Increase the lower bound according to the level of the subjects that is the reason
+            lowerBound += GetReasons().Max(reason => reason.GetLevel()) - 1;
+            if (GetOptions().All(option => option is Subject))
+            {
+                // If every option is a decision, then the EarliestCompletionTime cannot be negative
+                if (lowerBound < 0)
+                    lowerBound = 0;
+                // Find the lower bound by filling up the plan with random subjects (useful for electives)
+                int countSubjects = 0;
+                int otherLowerBound = -1;
+                while (countSubjects < GetPick())
+                {
+                    otherLowerBound++;
+                    countSubjects += MaxSubjects[otherLowerBound];
+                }
+                // Pick the larger of these lower bounds
+                if (lowerBound < otherLowerBound)
+                    lowerBound = otherLowerBound;
+            }
             // If the decision is an elective, don't bother looking at its options
             if (IsElective())
-            {
-                int count = 0;
-                int time = -1;
-                while (count < GetPick())
-                {
-                    time++;
-                    count += MaxSubjects[time];
-                }
-                return time;
-            }
+                return lowerBound;
 
             /* This algorithm is similar to "get the smallest number in an array", with some differences:
              * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers, where k equals GetPick()
              * each value in the array needs to be calculated (this is a recursive function)
+             * this checks if the recursive call is more complex than it should be
              * it is known that the smallest possible answer is -1 or 0, so the calculation ends early when that answer has been found
              */
 
-            // Find the lower bound of the answer
-            int lowerBound = -1;
-            if (!GetReasonsPrerequisite().Any())
-                lowerBound = 0;
-            if (GetOptions().All(option => option is Subject))
-                lowerBound = 0;
             // Prepare an array to store the smallest values
             int[] earliestTimes = new int[GetPick()];
             for (int i = 0; i < earliestTimes.Length; i++)
@@ -362,7 +373,10 @@ namespace Subject_Selection
             // Iterate through the options to find their earliest times
             foreach (Option option in GetOptions())
             {
-                int time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
+                int time = 100;
+                // If the option is a subject who's prerequisite is more complex then the current decision, then don't bother evaluating it
+                if (!(option is Subject && (option as Subject).Prerequisites.Covers(this)))
+                    time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
                 // Insert the time into the array
                 int i = earliestTimes.Length;
                 for (i = earliestTimes.Length; i > 0 && earliestTimes[i - 1] > time; i--)
