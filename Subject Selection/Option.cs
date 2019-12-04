@@ -322,6 +322,9 @@ namespace Subject_Selection
 
         public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites)
         {
+            // If it weren't for cyclic prerequisites and electives, this function could be done in a single line:
+            // return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects)).OrderBy(x => x).ElementAt(GetPick() - 1);
+
             // It is assumed that this method is only called by a Subject referring to it's requisites, or a Decision referring to it's options
 
             // Some prerequisites have been parsed incorrectly so they are automatically banned
