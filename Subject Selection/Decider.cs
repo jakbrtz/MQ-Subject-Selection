@@ -60,10 +60,10 @@ namespace Subject_Selection
                 plan.RemoveDecision(decision);
 
                 // GetRemainingDecision is computationally expensive, so I'm repeating this loop before and after that method
-                if (decision.GetPick() == decision.GetOptions().Count && decision.GetOptions().All(option => option is Decision))
+                if (decision.Pick == decision.Options.Count && decision.Options.All(option => option is Decision))
                 {
                     //If everything must be selected, select everything. Add the new decisions to the list
-                    foreach (Option option in decision.GetOptions())
+                    foreach (Option option in decision.Options)
                         toAnalyze.Enqueue(option as Decision);
                     continue;
                 }
@@ -78,10 +78,10 @@ namespace Subject_Selection
                 if (!(decision.GetReasonsPrerequisite().Any() || decision.GetReasonsCorequisite().Any()))
                     continue;
 
-                if (decision.GetPick() == decision.GetOptions().Count)
+                if (decision.Pick == decision.Options.Count)
                 {
                     // Add all subjects from this decision
-                    IEnumerable<Subject> subjects = decision.GetOptions().Where(option => option is Subject).Cast<Subject>();
+                    IEnumerable<Subject> subjects = decision.Options.Where(option => option is Subject).Cast<Subject>();
                     plan.AddSubjects(subjects);
                     // Add each subject's prerequisites and corequisites to toAnalzye
                     foreach (Subject subject in subjects)
@@ -90,7 +90,7 @@ namespace Subject_Selection
                         toAnalyze.Enqueue(subject.Corequisites);
                     }
                     // Add all other decisions from this decision
-                    foreach (Option option in decision.GetOptions().Where(option => option is Decision))
+                    foreach (Option option in decision.Options.Where(option => option is Decision))
                         toAnalyze.Enqueue(option as Decision);
                     // Reconsider all existing decisions
                     foreach (Decision redoDecision in plan.Decisions.Except(toAnalyze))
@@ -116,8 +116,8 @@ namespace Subject_Selection
             {
                 int compare = 0;
                 if (compare == 0) compare = p2.GetLevel()                   - p1.GetLevel();
-                if (compare == 0) compare = p1.GetOptions().Count           - p2.GetOptions().Count;
-                if (compare == 0) compare = p1.GetPick()                    - p2.GetPick();
+                if (compare == 0) compare = p1.Options.Count                - p2.Options.Count;
+                if (compare == 0) compare = p1.Pick                         - p2.Pick;
                 if (compare == 0) compare = p1.RequiredCompletionTime(plan) - p2.RequiredCompletionTime(plan);
                 if (compare == 0) compare = p1.ToString().CompareTo(p2.ToString());
                 return compare;
@@ -140,7 +140,7 @@ namespace Subject_Selection
             //    return false;
 
             //Check if the sum of the decisions' pick is more than the main decision's pick
-            //if (decisions.Sum(other => other.GetPick()) < decision.GetPick())
+            //if (decisions.Sum(other => other.Pick) < decision.Pick)
             //    return false;
 
             //Check if any of the decisions are an obvious subset of the main decision
@@ -166,17 +166,17 @@ namespace Subject_Selection
             // Also, I do not want to think about how NCCWs would interact with this function
 
             // A quick check to speed up the time
-            if (cover.GetPick() >= maybeRedundant.GetPick())
+            if (cover.Pick >= maybeRedundant.Pick)
                 // Use the pigeonhole principle to compare the `pick` from both decisions
-                if (cover.GetPick() - cover.GetOptions().Except(maybeRedundant.GetOptions()).Count() >= maybeRedundant.GetPick())
+                if (cover.Pick - cover.Options.Except(maybeRedundant.Options).Count() >= maybeRedundant.Pick)
                     return true;
 
             // If maybeRedundant is made of other decisions, recursively check if the those decisions are covered
-            if (!maybeRedundant.IsElective() && maybeRedundant.GetOptions().Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.GetPick())
+            if (!maybeRedundant.IsElective() && maybeRedundant.Options.Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.Pick)
                 return true;
 
             // If cover is made of other decisions and everything must be picked, recursively check if any of the decisions work as a cover
-            if (cover.GetOptions().Count() == cover.GetPick() && cover.GetOptions().Any(option => option is Decision && (option as Decision).Covers(maybeRedundant)))
+            if (cover.Options.Count() == cover.Pick && cover.Options.Any(option => option is Decision && (option as Decision).Covers(maybeRedundant)))
                 return true;
 
             return false;

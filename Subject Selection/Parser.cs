@@ -371,7 +371,7 @@ namespace Subject_Selection
             if (option is Subject)
                 return (option as Subject).GetNumber() / 1000;
             else
-                return (option as Decision).GetOptions().First().GetLevel();
+                return (option as Decision).Options.First().GetLevel();
         }
     }
 
@@ -400,13 +400,13 @@ namespace Subject_Selection
             //This is used by the GetRemainingDecision method.
             if (selectionType == Selection.CP)
             {
-                description = (GetPick() * 10).ToString() + "cp from ";
-                description += string.Join(" or ", GetOptions());
+                description = (Pick * 10).ToString() + "cp from ";
+                description += string.Join(" or ", Options);
             }
             else
             {
                 string separator = " " + selectionType + " ";
-                description = string.Join(separator, GetOptions());
+                description = string.Join(separator, Options);
             }
             return description;
         }

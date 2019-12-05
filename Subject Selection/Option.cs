@@ -177,44 +177,53 @@ namespace Subject_Selection
             ToString();
         }
 
-        public List<Option> GetOptions()
+        public List<Option> Options
         {
-            if (options == null)
-                LoadFromDescription();
-            return options;
+            get
+            {
+                if (options == null)
+                    LoadFromDescription();
+                return options;
+            }
         }
 
-        public int GetPick()
+        public int Pick
         {
-            if (options == null)
-                LoadFromDescription();
-            return pick;
+            get
+            {
+                if (options == null)
+                    LoadFromDescription();
+                return pick;
+            }
         }
 
-        public Selection GetSelectionType()
+        public Selection SelectionType
         {
-            if (options == null)
-                LoadFromDescription();
-            return selectionType;
+            get
+            {
+                if (options == null)
+                    LoadFromDescription();
+                return selectionType;
+            }
         }
 
         public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
         {
             // An "empty decision" (pick 0) is automatically met
-            if (GetPick() == 0)
+            if (Pick == 0)
                 return true;
             // Check the study plan for the earliest subject that requires this decision
             if (requiredCompletionTime == -1) requiredCompletionTime = RequiredCompletionTime(plan);
             // Recursively count the number of options that have been met, compare it to the number of options that need to be met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
-            // return GetPick() <= GetOptions().Count(option => option.HasBeenMet(plan, time));
+            // return Pick <= Options.Count(option => option.HasBeenMet(plan, time));
             int countMetOptions = 0;
-            foreach (Option option in GetOptions())
+            foreach (Option option in Options)
             {
                 if (option.HasBeenCompleted(plan, requiredCompletionTime))
                 {
                     countMetOptions++;
-                    if (countMetOptions >= GetPick())
+                    if (countMetOptions >= Pick)
                         return true;
                 }
             }
@@ -224,24 +233,24 @@ namespace Subject_Selection
         public override bool HasBeenBanned(Plan plan, int countPrerequisites)
         {
             // This function could be determined in a single line, but it would be inefficient:
-            // return GetOptions().Count(option => !option.HasBeenBanned(plan, cyclesNotAllowed)) < GetPick(plan);
+            // return Options.Count(option => !option.HasBeenBanned(plan, cyclesNotAllowed)) < GetPick(plan);
 
             // This is a simple catch to check for bans without checking recursively
-            if (GetPick() > GetOptions().Count)
+            if (Pick > Options.Count)
                 return true;
             // Assume electives cannot be banned
             if (IsElective()) return false;
             // If there is nothing to pick from, it cannot be banned
-            if (GetPick() <= 0)
+            if (Pick <= 0)
                 return false;
             // This compares the number of options that can be picked with the number of options that need to be picked
             int countRemainingOptions = 0;
-            foreach (Option option in GetOptions())
+            foreach (Option option in Options)
             {
                 if (!option.HasBeenBanned(plan, countPrerequisites))
                 {
                     countRemainingOptions++;
-                    if (countRemainingOptions == GetPick())
+                    if (countRemainingOptions == Pick)
                     {
                         return false;
                     }
@@ -257,7 +266,7 @@ namespace Subject_Selection
             // If it gets banned by too many options, then it gets banned by the entire decision
 
             Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
-            foreach (Option option in GetOptions())
+            foreach (Option option in Options)
             {
                 if (option is Subject && (option as Subject).IsSubject)
                 {
@@ -281,7 +290,7 @@ namespace Subject_Selection
                 }
             }
 
-            return counts.Where(kvp => GetOptions().Count - GetPick() < kvp.Value).Select(kvp => kvp.Key).ToList();
+            return counts.Where(kvp => Options.Count - Pick < kvp.Value).Select(kvp => kvp.Key).ToList();
         }
 
         public Decision GetRemainingDecision(Plan plan)
@@ -291,7 +300,7 @@ namespace Subject_Selection
             // If the decision is met then there should be nothing to return
             if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
             // Only select the options that can be picked
-            List<Option> remainingOptions = GetOptions().Where(option => !option.HasBeenCompleted(plan, requiredCompletionTime) && !option.HasBeenBanned(plan)).ToList();
+            List<Option> remainingOptions = Options.Where(option => !option.HasBeenCompleted(plan, requiredCompletionTime) && !option.HasBeenBanned(plan)).ToList();
             //If there is only one remaining option to pick from then pick it
             if (remainingOptions.Count == 1)
             {
@@ -300,7 +309,7 @@ namespace Subject_Selection
                     return (lastOption as Decision).GetRemainingDecision(plan);
             }
             // Figure out how many options still need to be picked
-            int remainingPick = GetPick() - GetOptions().Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
+            int remainingPick = Pick - Options.Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
             // Create a new list to store the remaining options
             List<Option> optionBuilder = new List<Option>();
             foreach (Option option in remainingOptions)
@@ -310,8 +319,8 @@ namespace Subject_Selection
                 else if (option is Decision)
                 {
                     Decision remainingDecision = (option as Decision).GetRemainingDecision(plan);
-                    if (remainingPick == 1 && remainingDecision.GetPick() == 1)
-                        optionBuilder.AddRange(remainingDecision.GetOptions());
+                    if (remainingPick == 1 && remainingDecision.Pick == 1)
+                        optionBuilder.AddRange(remainingDecision.Options);
                     else
                         optionBuilder.Add(remainingDecision);
                 }
@@ -325,15 +334,15 @@ namespace Subject_Selection
         public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites)
         {
             // If it weren't for cyclic prerequisites and electives, this function could be done in a single line:
-            // return GetOptions().ConvertAll(option => option.EarliestCompletionTime(MaxSubjects)).OrderBy(x => x).ElementAt(GetPick() - 1);
+            // return Options.ConvertAll(option => option.EarliestCompletionTime(MaxSubjects)).OrderBy(x => x).ElementAt(Pick - 1);
 
             // It is assumed that this method is only called by a Subject referring to it's requisites, or a Decision referring to it's options
 
             // Some prerequisites have been parsed incorrectly so they are automatically banned
-            if (GetOptions().Count < GetPick())
+            if (Options.Count < Pick)
                 return 100;
             // If there are no options, then the subject can be done straight away
-            if (GetOptions().Count == 0)
+            if (Options.Count == 0)
                 return -1;
 
             // Find the lowest useful result of this function
@@ -343,7 +352,7 @@ namespace Subject_Selection
                 lowerBound++;
             // Increase the lower bound according to the level of the subjects that is the reason
             lowerBound += GetReasons().Max(reason => reason.GetLevel()) - 1;
-            if (GetOptions().All(option => option is Subject))
+            if (Options.All(option => option is Subject))
             {
                 // If every option is a decision, then the EarliestCompletionTime cannot be negative
                 if (lowerBound < 0)
@@ -351,7 +360,7 @@ namespace Subject_Selection
                 // Find the lower bound by filling up the plan with random subjects (useful for electives)
                 int countSubjects = 0;
                 int otherLowerBound = -1;
-                while (countSubjects < GetPick())
+                while (countSubjects < Pick)
                 {
                     otherLowerBound++;
                     countSubjects += MaxSubjects[otherLowerBound];
@@ -365,18 +374,18 @@ namespace Subject_Selection
                 return lowerBound;
 
             /* This algorithm is similar to "get the smallest number in an array", with some differences:
-             * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers, where k equals GetPick()
+             * it is trying to get the kth smallest number, so it keeps track of the smallest k numbers, where k equals Pick
              * each value in the array needs to be calculated (this is a recursive function)
              * this checks if the recursive call is more complex than it should be
              * it is known that the smallest possible answer is -1 or 0, so the calculation ends early when that answer has been found
              */
 
             // Prepare an array to store the smallest values
-            int[] earliestTimes = new int[GetPick()];
+            int[] earliestTimes = new int[Pick];
             for (int i = 0; i < earliestTimes.Length; i++)
                 earliestTimes[i] = 100;
             // Iterate through the options to find their earliest times
-            foreach (Option option in GetOptions())
+            foreach (Option option in Options)
             {
                 int time = 100;
                 // If the option is a subject who's prerequisite is more complex then the current decision, then don't bother evaluating it

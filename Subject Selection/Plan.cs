@@ -169,7 +169,7 @@ namespace Subject_Selection
             if (requisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
                 return true;
             //Consider each option
-            foreach (Option option in requisite.GetOptions())
+            foreach (Option option in requisite.Options)
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
                 if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject, false))
                     return false;
@@ -198,7 +198,7 @@ namespace Subject_Selection
                 while(decisionsToAnalyze.Any())
                 {
                     Decision currentDecision = decisionsToAnalyze.Dequeue();
-                    foreach (Option option in currentDecision.GetOptions())
+                    foreach (Option option in currentDecision.Options)
                         if (option is Subject && SelectedSubjects.Contains(option as Subject) && !descendants.Contains(option as Subject))
                             subjectsToAnalyze.Enqueue(option as Subject);
                         else if (option is Decision && (includeElectives || !(option as Decision).IsElective()))

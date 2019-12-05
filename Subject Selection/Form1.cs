@@ -81,7 +81,7 @@ namespace Subject_Selection
                     currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
                 // Check if there are any decisions about courses
                 if (currentDecision == null)
-                    currentDecision = plan.Decisions.Find(decision => decision.GetOptions().Any(option => option is Subject && !(option as Subject).IsSubject));
+                    currentDecision = plan.Decisions.Find(decision => decision.Options.Any(option => option is Subject && !(option as Subject).IsSubject));
                 // Pick the first one
                 if (currentDecision == null)
                     currentDecision = plan.Decisions.First();
@@ -100,12 +100,12 @@ namespace Subject_Selection
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
             {
-                if (firstOption > currentDecision.GetOptions().Count)
+                if (firstOption > currentDecision.Options.Count)
                     firstOption = 0;
-                foreach (Option option in currentDecision.GetOptions().Skip(firstOption).Take(maxOptionsPerPage))
+                foreach (Option option in currentDecision.Options.Skip(firstOption).Take(maxOptionsPerPage))
                     AddOptionToFLP(option);
                 firstOption += maxOptionsPerPage;
-                if (maxOptionsPerPage < currentDecision.GetOptions().Count)
+                if (maxOptionsPerPage < currentDecision.Options.Count)
                     AddNextButton();
             }
             FLPchoose.ResumeLayout();
