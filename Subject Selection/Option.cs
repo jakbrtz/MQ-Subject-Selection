@@ -18,16 +18,18 @@ namespace Subject_Selection
     {
         public string ID { get; }
         public string Name { get; }
+        public int CP { get; }
         public List<int> Semesters { get; }
         public Decision Prerequisites { get; }
         public Decision Corequisites { get; }
         public string[] NCCWs { get; }
         public bool IsSubject { get; }
 
-        public Subject(string id, string name, string times, string prerequisites, string corequisites, string nccws)
+        public Subject(string id, string name, string cp, string times, string prerequisites, string corequisites, string nccws)
         {
             ID = id;
             Name = name;
+            CP = int.Parse(cp);
 
             Semesters = new List<int>();
             foreach (string time in times.Split('\n'))

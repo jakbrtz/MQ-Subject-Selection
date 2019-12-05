@@ -23,7 +23,7 @@ namespace Subject_Selection
                 var records = csv.EnumerateRecords(record);
                 foreach (var r in records)
                 {
-                    Subject subject = new Subject(r.Code, r.Name, r.Time, r.Prerequisites, r.Corequisites, r.NCCW);
+                    Subject subject = new Subject(r.Code, r.Name, r.CP, r.Time, r.Prerequisites, r.Corequisites, r.NCCW);
                     if (subject.Semesters.Any()) // Some subjects aren't offered yet
                         subjects[r.Code] = subject; // Sometimes a subject appears twice in the csv.
                 }
@@ -793,5 +793,8 @@ namespace Subject_Selection
 
         [Name("When Offered")]
         public string Time { get; set; }
+
+        [Name("Credit\nPoints")]
+        public string CP { get; set; }
     }
 }
