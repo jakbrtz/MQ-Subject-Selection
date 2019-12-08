@@ -130,6 +130,8 @@ namespace Subject_Selection
                     possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, session));
                     // Favor lower level subjects
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel());
+                    // Favor subjects that cannot fit in many semesters
+                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count);
                     // Favor subjects that have many other subjects relying on them
                     possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(other => IsAbove(parent: other, child: subject, includeElectives: true)));
                     // If any subjects are forced, filter them
