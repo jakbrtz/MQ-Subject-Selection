@@ -34,6 +34,10 @@ namespace Subject_Selection
 
             foreach (Subject course in Parser.AllCourses().Where(course => course.ID.StartsWith("C")))
                 AddOptionToFLP(course);
+
+            for (int i = 0; i < plan.MaxSubjects.Count; i++)
+                DGVplanTable.Columns.Add(i.ToString(), "Year " + (i / 3 + 1) + " Sem " + (i % 3 + 1));
+            UpdatePlanTable();
         }
 
         private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)
@@ -199,15 +203,23 @@ namespace Subject_Selection
 
         void UpdatePlanTable()
         {
-            LBLcourse.Text = string.Join(", ", plan.SelectedCourses.Select(course => course.Name));
+            // Refresh rows
             DGVplanTable.Rows.Clear();
-            foreach (List<Subject> semester in plan.SubjectsInOrder)
-                DGVplanTable.Rows.Add(semester.ToArray());
+            for (int i = 0; i < plan.MaxSubjects.Max(); i++)
+                DGVplanTable.Rows.Add();
+            // Populate cells
+            for (int i = 0; i < plan.SubjectsInOrder.Count; i++)
+                for (int j = 0; j < plan.SubjectsInOrder[i].Count; j++)
+                    DGVplanTable[i, j].Value = plan.SubjectsInOrder[i][j];
+            // Select current subject
             if (currentSubject != null)
                 foreach (DataGridViewRow row in DGVplanTable.Rows)
                     foreach (DataGridViewCell cell in row.Cells)
                         if (cell.Value is Subject && cell.Value == currentSubject)
                             DGVplanTable.CurrentCell = cell;
+            // Label course
+            groupBox2.Text = string.Join(", ", plan.SelectedCourses.Select(course => course.Name));
+            // Select current subject
             DGVplanTable_CellClick(null, null);
         }
     }

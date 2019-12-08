@@ -28,20 +28,16 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.LBXdecisions = new System.Windows.Forms.ListBox();
-            this.DGVplanTable = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.BTNremove = new System.Windows.Forms.Button();
+            this.LBXtime = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-            this.LBLcourse = new System.Windows.Forms.Label();
-            this.LBXtime = new System.Windows.Forms.ListBox();
             this.FLPchoose = new System.Windows.Forms.FlowLayoutPanel();
-            this.BTNremove = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
+            this.LBXdecisions = new System.Windows.Forms.ListBox();
+            this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.DGVplanTable = new System.Windows.Forms.DataGridView();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -54,64 +50,31 @@
             this.splitContainer3.Panel1.SuspendLayout();
             this.splitContainer3.Panel2.SuspendLayout();
             this.splitContainer3.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // LBXdecisions
+            // BTNremove
             // 
-            this.LBXdecisions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LBXdecisions.FormattingEnabled = true;
-            this.LBXdecisions.IntegralHeight = false;
-            this.LBXdecisions.Location = new System.Drawing.Point(0, 0);
-            this.LBXdecisions.Name = "LBXdecisions";
-            this.LBXdecisions.Size = new System.Drawing.Size(365, 287);
-            this.LBXdecisions.TabIndex = 4;
-            this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
+            this.BTNremove.Location = new System.Drawing.Point(61, 3);
+            this.BTNremove.Name = "BTNremove";
+            this.BTNremove.Size = new System.Drawing.Size(55, 23);
+            this.BTNremove.TabIndex = 1;
+            this.BTNremove.Text = "remove";
+            this.BTNremove.UseVisualStyleBackColor = true;
+            this.BTNremove.Click += new System.EventHandler(this.BTNremove_Click);
             // 
-            // DGVplanTable
+            // LBXtime
             // 
-            this.DGVplanTable.AllowUserToAddRows = false;
-            this.DGVplanTable.AllowUserToDeleteRows = false;
-            this.DGVplanTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.DGVplanTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1,
-            this.Column2,
-            this.Column3,
-            this.Column4});
-            this.DGVplanTable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DGVplanTable.Location = new System.Drawing.Point(0, 0);
-            this.DGVplanTable.Name = "DGVplanTable";
-            this.DGVplanTable.ReadOnly = true;
-            this.DGVplanTable.Size = new System.Drawing.Size(371, 287);
-            this.DGVplanTable.TabIndex = 9;
-            this.DGVplanTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DGVplanTable_CellClick);
-            // 
-            // Column1
-            // 
-            this.Column1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column1.HeaderText = "Subject 1";
-            this.Column1.Name = "Column1";
-            this.Column1.ReadOnly = true;
-            // 
-            // Column2
-            // 
-            this.Column2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column2.HeaderText = "Subject 2";
-            this.Column2.Name = "Column2";
-            this.Column2.ReadOnly = true;
-            // 
-            // Column3
-            // 
-            this.Column3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column3.HeaderText = "Subject 3";
-            this.Column3.Name = "Column3";
-            this.Column3.ReadOnly = true;
-            // 
-            // Column4
-            // 
-            this.Column4.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column4.HeaderText = "Subject 4";
-            this.Column4.Name = "Column4";
-            this.Column4.ReadOnly = true;
+            this.LBXtime.Dock = System.Windows.Forms.DockStyle.Left;
+            this.LBXtime.FormattingEnabled = true;
+            this.LBXtime.IntegralHeight = false;
+            this.LBXtime.Location = new System.Drawing.Point(0, 0);
+            this.LBXtime.Name = "LBXtime";
+            this.LBXtime.Size = new System.Drawing.Size(55, 109);
+            this.LBXtime.TabIndex = 0;
+            this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
             // 
             // splitContainer1
             // 
@@ -124,73 +87,31 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.splitContainer2);
+            this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.FLPchoose);
-            this.splitContainer1.Size = new System.Drawing.Size(799, 522);
-            this.splitContainer1.SplitterDistance = 287;
-            this.splitContainer1.TabIndex = 10;
+            this.splitContainer1.Panel2.Controls.Add(this.splitContainer3);
+            this.splitContainer1.Size = new System.Drawing.Size(991, 522);
+            this.splitContainer1.SplitterDistance = 261;
+            this.splitContainer1.TabIndex = 12;
             // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Location = new System.Drawing.Point(3, 16);
             this.splitContainer2.Name = "splitContainer2";
             // 
             // splitContainer2.Panel1
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.LBXdecisions);
+            this.splitContainer2.Panel1.Controls.Add(this.FLPchoose);
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(799, 287);
-            this.splitContainer2.SplitterDistance = 365;
-            this.splitContainer2.TabIndex = 0;
-            // 
-            // splitContainer3
-            // 
-            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer3.Name = "splitContainer3";
-            // 
-            // splitContainer3.Panel1
-            // 
-            this.splitContainer3.Panel1.Controls.Add(this.LBLcourse);
-            this.splitContainer3.Panel1.Controls.Add(this.DGVplanTable);
-            // 
-            // splitContainer3.Panel2
-            // 
-            this.splitContainer3.Panel2.Controls.Add(this.BTNremove);
-            this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
-            this.splitContainer3.Size = new System.Drawing.Size(430, 287);
-            this.splitContainer3.SplitterDistance = 371;
-            this.splitContainer3.TabIndex = 0;
-            // 
-            // LBLcourse
-            // 
-            this.LBLcourse.BackColor = System.Drawing.SystemColors.Control;
-            this.LBLcourse.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.LBLcourse.Dock = System.Windows.Forms.DockStyle.Top;
-            this.LBLcourse.Location = new System.Drawing.Point(0, 0);
-            this.LBLcourse.Name = "LBLcourse";
-            this.LBLcourse.Size = new System.Drawing.Size(371, 22);
-            this.LBLcourse.TabIndex = 10;
-            this.LBLcourse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // LBXtime
-            // 
-            this.LBXtime.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LBXtime.FormattingEnabled = true;
-            this.LBXtime.IntegralHeight = false;
-            this.LBXtime.Location = new System.Drawing.Point(0, 0);
-            this.LBXtime.Name = "LBXtime";
-            this.LBXtime.Size = new System.Drawing.Size(55, 287);
-            this.LBXtime.TabIndex = 0;
-            this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
+            this.splitContainer2.Panel2.Controls.Add(this.LBXdecisions);
+            this.splitContainer2.Size = new System.Drawing.Size(985, 242);
+            this.splitContainer2.SplitterDistance = 797;
+            this.splitContainer2.TabIndex = 13;
             // 
             // FLPchoose
             // 
@@ -198,30 +119,84 @@
             this.FLPchoose.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FLPchoose.Location = new System.Drawing.Point(0, 0);
             this.FLPchoose.Name = "FLPchoose";
-            this.FLPchoose.Size = new System.Drawing.Size(799, 231);
+            this.FLPchoose.Size = new System.Drawing.Size(797, 242);
             this.FLPchoose.TabIndex = 8;
             // 
-            // BTNremove
+            // LBXdecisions
             // 
-            this.BTNremove.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.BTNremove.Location = new System.Drawing.Point(0, 264);
-            this.BTNremove.Name = "BTNremove";
-            this.BTNremove.Size = new System.Drawing.Size(55, 23);
-            this.BTNremove.TabIndex = 1;
-            this.BTNremove.Text = "remove";
-            this.BTNremove.UseVisualStyleBackColor = true;
-            this.BTNremove.Click += new System.EventHandler(this.BTNremove_Click);
+            this.LBXdecisions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LBXdecisions.FormattingEnabled = true;
+            this.LBXdecisions.IntegralHeight = false;
+            this.LBXdecisions.Location = new System.Drawing.Point(0, 0);
+            this.LBXdecisions.Name = "LBXdecisions";
+            this.LBXdecisions.Size = new System.Drawing.Size(184, 242);
+            this.LBXdecisions.TabIndex = 4;
+            this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
+            // 
+            // splitContainer3
+            // 
+            this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer3.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer3.Name = "splitContainer3";
+            this.splitContainer3.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer3.Panel1
+            // 
+            this.splitContainer3.Panel1.Controls.Add(this.groupBox2);
+            // 
+            // splitContainer3.Panel2
+            // 
+            this.splitContainer3.Panel2.Controls.Add(this.BTNremove);
+            this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
+            this.splitContainer3.Size = new System.Drawing.Size(991, 257);
+            this.splitContainer3.SplitterDistance = 144;
+            this.splitContainer3.TabIndex = 13;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.DGVplanTable);
+            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox2.Location = new System.Drawing.Point(0, 0);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(991, 144);
+            this.groupBox2.TabIndex = 13;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Schedule";
+            // 
+            // DGVplanTable
+            // 
+            this.DGVplanTable.AllowUserToAddRows = false;
+            this.DGVplanTable.AllowUserToDeleteRows = false;
+            this.DGVplanTable.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.DGVplanTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.DGVplanTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DGVplanTable.Location = new System.Drawing.Point(3, 16);
+            this.DGVplanTable.Name = "DGVplanTable";
+            this.DGVplanTable.ReadOnly = true;
+            this.DGVplanTable.Size = new System.Drawing.Size(985, 125);
+            this.DGVplanTable.TabIndex = 11;
+            this.DGVplanTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DGVplanTable_CellClick);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.splitContainer2);
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox1.Location = new System.Drawing.Point(0, 0);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(991, 261);
+            this.groupBox1.TabIndex = 13;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Make a Decision";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 546);
+            this.ClientSize = new System.Drawing.Size(1015, 546);
             this.Controls.Add(this.splitContainer1);
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -234,24 +209,24 @@
             this.splitContainer3.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
             this.splitContainer3.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).EndInit();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.ListBox LBXdecisions;
-        private System.Windows.Forms.DataGridView DGVplanTable;
+        private System.Windows.Forms.ListBox LBXtime;
+        private System.Windows.Forms.Button BTNremove;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.SplitContainer splitContainer3;
-        private System.Windows.Forms.ListBox LBXtime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
+        private System.Windows.Forms.ListBox LBXdecisions;
         private System.Windows.Forms.FlowLayoutPanel FLPchoose;
-        private System.Windows.Forms.Label LBLcourse;
-        private System.Windows.Forms.Button BTNremove;
+        private System.Windows.Forms.DataGridView DGVplanTable;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }
 
