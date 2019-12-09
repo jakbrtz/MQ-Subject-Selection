@@ -20,7 +20,7 @@ namespace Subject_Selection
 
         readonly Plan plan = new Plan();
         Decision currentDecision;
-        Subject currentSubject;
+        Content currentContent;
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -32,7 +32,7 @@ namespace Subject_Selection
             foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            foreach (Subject course in Parser.AllCourses().Where(course => course.ID.StartsWith("C")))
+            foreach (Course course in Parser.AllCourses().Where(course => course.ID.StartsWith("C")))
                 AddOptionToFLP(course);
 
             for (int i = 0; i < plan.MaxSubjects.Count; i++)
@@ -46,7 +46,7 @@ namespace Subject_Selection
 
             Console.WriteLine("Current Decision:    " + currentDecision.ToString());
             Console.Write("Reasons:             ");
-            foreach (Subject reason in currentDecision.GetReasons())
+            foreach (Content reason in currentDecision.GetReasons())
                 Console.Write(reason + " ");
             Console.WriteLine();
 
@@ -61,15 +61,15 @@ namespace Subject_Selection
             // Detect what has been selected
             var selected = DGVplanTable.SelectedCells[0].Value;
             if (selected == null) return;
-            currentSubject = selected as Subject;
+            currentContent = selected as Subject;
 
-            Console.WriteLine("Subject:             " + currentSubject.ID);
-            Console.WriteLine("Prerequisites:       " + currentSubject.Prerequisites);
-            Console.WriteLine("Corequisites:        " + currentSubject.Corequisites);
+            Console.WriteLine("Subject:             " + currentContent.ID);
+            Console.WriteLine("Prerequisites:       " + currentContent.Prerequisites);
+            Console.WriteLine("Corequisites:        " + currentContent.Corequisites);
 
             // Show the user a list of times that the subject can be slotted into
             LBXtime.Items.Clear();
-            foreach (int time in currentSubject.GetPossibleTimes(plan.MaxSubjects))
+            foreach (int time in (currentContent as Subject).GetPossibleTimes(plan.MaxSubjects))
                 LBXtime.Items.Add(time);
 
             // Show the user a decision according to what subject has been selected
@@ -82,10 +82,10 @@ namespace Subject_Selection
                     currentDecision = plan.Decisions.Find(decision => currentDecision.Covers(decision));
                 // Check if the currently selected subject has a prerequisite that needs deciding
                 if (currentDecision == null || sender != null)
-                    currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentSubject));
+                    currentDecision = plan.Decisions.Find(decision => !decision.IsElective() && decision.GetReasons().Contains(currentContent));
                 // Check if there are any decisions about courses
                 if (currentDecision == null)
-                    currentDecision = plan.Decisions.Find(decision => decision.Options.Any(option => option is Subject && !(option as Subject).IsSubject));
+                    currentDecision = plan.Decisions.Find(decision => decision.Options.Any(option => option is Course));
                 // Pick the first one
                 if (currentDecision == null)
                     currentDecision = plan.Decisions.First();
@@ -142,11 +142,11 @@ namespace Subject_Selection
             // Find the option associated with that control
             Option selected = (sender as OptionView).Option;
 
-            if (selected is Subject)
+            if (selected is Content)
             {
                 // Add the subject to the plan
-                currentSubject = selected as Subject;
-                Decider.AddSubject(currentSubject, plan);
+                currentContent = selected as Content;
+                Decider.AddContent(currentContent, plan);
                 UpdatePlanTable();
             }
             else if (selected is Decision)
@@ -186,17 +186,17 @@ namespace Subject_Selection
         private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
         {
             int time = int.Parse(LBXtime.SelectedItem.ToString());
-            Decider.MoveSubject(currentSubject, plan, time);
+            Decider.MoveSubject(currentContent as Subject, plan, time);
             UpdatePlanTable();
             RefreshDecisionList();
         }
 
         private void BTNremove_Click(object sender, EventArgs e)
         {
-            if (currentSubject == null)
+            if (currentContent == null)
                 return;
-            Decider.RemoveSubject(currentSubject, plan);
-            currentSubject = null;
+            Decider.RemoveContent(currentContent, plan);
+            currentContent = null;
             UpdatePlanTable();
             RefreshDecisionList();
         }
@@ -212,10 +212,10 @@ namespace Subject_Selection
                 for (int j = 0; j < plan.SubjectsInOrder[i].Count; j++)
                     DGVplanTable[i, j].Value = plan.SubjectsInOrder[i][j];
             // Select current subject
-            if (currentSubject != null)
+            if (currentContent != null)
                 foreach (DataGridViewRow row in DGVplanTable.Rows)
                     foreach (DataGridViewCell cell in row.Cells)
-                        if (cell.Value is Subject && cell.Value == currentSubject)
+                        if (cell.Value is Content && cell.Value == currentContent)
                             DGVplanTable.CurrentCell = cell;
             // Label course
             groupBox2.Text = string.Join(", ", plan.SelectedCourses.Select(course => course.Name));

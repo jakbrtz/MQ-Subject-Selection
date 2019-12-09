@@ -12,20 +12,20 @@ namespace Subject_Selection
         public List<List<Subject>> SubjectsInOrder { get; }
         public List<Decision> Decisions { get; }
         public HashSet<Subject> SelectedSubjects { get; }
-        public HashSet<Subject> SelectedCourses { get; }
+        public HashSet<Course> SelectedCourses { get; }
 
         readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
         public List<int> MaxSubjects { get; }
-        public HashSet<Subject> BannedSubjects { get; }
+        public HashSet<Content> BannedContents { get; }
 
         public Plan()
         {
             SubjectsInOrder = new List<List<Subject>>();
             Decisions = new List<Decision>();
             SelectedSubjects = new HashSet<Subject>();
-            SelectedCourses = new HashSet<Subject>();
+            SelectedCourses = new HashSet<Course>();
             MaxSubjects = new List<int>();
-            BannedSubjects = new HashSet<Subject>();
+            BannedContents = new HashSet<Content>();
         }
 
         public Plan(Plan other)
@@ -33,37 +33,32 @@ namespace Subject_Selection
             SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
             Decisions = new List<Decision>(other.Decisions);
             SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
-            SelectedCourses = new HashSet<Subject>(other.SelectedCourses);
+            SelectedCourses = new HashSet<Course>(other.SelectedCourses);
             MaxSubjects = new List<int>(other.MaxSubjects);
-            BannedSubjects = new HashSet<Subject>(other.BannedSubjects);
+            BannedContents = new HashSet<Content>(other.BannedContents);
         }
 
-        public void AddSubjects(IEnumerable<Subject> subjects)
+        public void AddContents(IEnumerable<Content> contents)
         {
-            if (!subjects.Any())
+            if (!contents.Any())
                 return;
-            foreach (Subject subject in subjects)
-                if (subject.IsSubject)
-                    SelectedSubjects.Add(subject);
+            foreach (Content content in contents)
+                if (content is Subject)
+                    SelectedSubjects.Add(content as Subject);
                 else
-                    SelectedCourses.Add(subject);
+                    SelectedCourses.Add(content as Course);
             Order();
             RefreshBannedSubjectsList();
         }
 
-        public void RemoveSubject(Subject subject)
+        public void RemoveContent(Content content)
         {
-            if (subject.IsSubject)
-                SelectedSubjects.Remove(subject);
+            if (content is Subject)
+                SelectedSubjects.Remove(content as Subject);
             else
-                SelectedCourses.Remove(subject);
+                SelectedCourses.Remove(content as Course);
             Order();
             RefreshBannedSubjectsList();
-        }
-
-        public bool Contains(Subject option)
-        {
-            return SelectedSubjects.Contains(option) || SelectedCourses.Contains(option);
         }
 
         public void AddDecision(Decision decision)
@@ -157,12 +152,12 @@ namespace Subject_Selection
         }
 
         // IsLeaf and IsAbove are helper functions for Order()
-        private bool IsLeaf(Subject subject, int time)
+        private bool IsLeaf(Content subject, int time)
         {
             return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
         }
 
-        private bool IsLeaf(Subject subject, int time, Decision requisite)
+        private bool IsLeaf(Content subject, int time, Decision requisite)
         {
             //If the requisit is met, return true
             if (requisite.HasBeenCompleted(this, time))
@@ -173,23 +168,23 @@ namespace Subject_Selection
             //Consider each option
             foreach (Option option in requisite.Options)
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (option is Subject && SelectedSubjects.Contains(option) && !SelectedSubjectsSoFar().Contains(option) && !IsAbove(option as Subject, subject, false))
+                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar().Contains(content) && !IsAbove(content, subject, false))
                     return false;
                 //If the option is a decision that does not lead to a leaf then the subject is not a leaf
-                else if (option is Decision && !IsLeaf(subject, time, option as Decision))
+                else if (option is Decision decision && !IsLeaf(subject, time, decision))
                     return false;
             return true;
         }
 
-        private bool IsAbove(Subject parent, Subject child, bool includeElectives)
+        private bool IsAbove(Content parent, Content child, bool includeElectives)
         {
             //Creates a list of all subjects that are selected and are descendants of this subject
-            HashSet<Subject> descendants = new HashSet<Subject>();
-            Queue<Subject> subjectsToAnalyze = new Queue<Subject>();
+            HashSet<Content> descendants = new HashSet<Content>();
+            Queue<Content> subjectsToAnalyze = new Queue<Content>();
             subjectsToAnalyze.Enqueue(parent);
             while (subjectsToAnalyze.Any())
             {
-                Subject currentSubject = subjectsToAnalyze.Dequeue();
+                Content currentSubject = subjectsToAnalyze.Dequeue();
                 if (currentSubject == child) return true;
                 descendants.Add(currentSubject);
                 // TODO: what should the result be when it's an elective?
@@ -201,10 +196,10 @@ namespace Subject_Selection
                 {
                     Decision currentDecision = decisionsToAnalyze.Dequeue();
                     foreach (Option option in currentDecision.Options)
-                        if (option is Subject && SelectedSubjects.Contains(option as Subject) && !descendants.Contains(option as Subject))
-                            subjectsToAnalyze.Enqueue(option as Subject);
-                        else if (option is Decision && (includeElectives || !(option as Decision).IsElective()))
-                            decisionsToAnalyze.Enqueue(option as Decision);
+                        if (option is Content content && SelectedSubjects.Contains(option) && !descendants.Contains(option))
+                            subjectsToAnalyze.Enqueue(content);
+                        else if (option is Decision decision && (includeElectives || !decision.IsElective()))
+                            decisionsToAnalyze.Enqueue(decision);
                 }
             }
             return false;
@@ -212,20 +207,26 @@ namespace Subject_Selection
 
         void RefreshBannedSubjectsList()
         {
-            BannedSubjects.Clear();
+            BannedContents.Clear();
             // Get all selected subjects and check them for NCCWs
             foreach (Subject subject in SelectedSubjects)
                 foreach (string id in subject.NCCWs)
                     if (Parser.TryGetSubject(id, out Subject nccw))
-                        BannedSubjects.Add(nccw);
+                        BannedContents.Add(nccw);
+            // Get all selected courses and check them for NCCWs
+            foreach (Course course in SelectedCourses)
+                foreach (string id in course.NCCWs)
+                    if (Parser.TryGetOption(id, out Option nccw))
+                        if (nccw is Content content)
+                            BannedContents.Add(content);
             /* TODO: fix assumptions
              * This code assumes that when subject X is on subject Y's nccw list, then subject Y is on subject X's nccw list
              * I have found 45 exceptions to this assumption. Does that have a special meaning, or is it an incorrect data entry?
-             */ 
+             */
             // Check which decisions force a banned subject
             foreach (Decision decision in Decisions)
-                foreach (Subject subject in decision.ForcedBans())
-                    BannedSubjects.Add(subject);
+                foreach (Content subject in decision.ForcedBans())
+                    BannedContents.Add(subject);
         }
     }
 }

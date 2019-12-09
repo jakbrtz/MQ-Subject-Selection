@@ -8,59 +8,39 @@ namespace Subject_Selection
 {
     abstract public class Option
     {
-        //I have made this superclass to allow decisions to be made of other decisions
+        // This superclass allows decisions to be made of other decisions
         public abstract bool HasBeenCompleted(Plan plan, int requiredCompletionTime);
         public abstract bool HasBeenBanned(Plan plan, int countPrerequisites = 0);
         public abstract int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0);
     }
 
-    public class Subject : Option
+    public abstract class Content : Option
     {
+        // This superclass is used to represent both Subjects and Courses
         public string ID { get; }
         public string Name { get; }
-        public int CP { get; }
-        public List<int> Semesters { get; }
         public Decision Prerequisites { get; }
         public Decision Corequisites { get; }
         public string[] NCCWs { get; }
-        public bool IsSubject { get; }
 
-        public Subject(string id, string name, string cp, string times, string prerequisites, string corequisites, string nccws)
+        protected Content(string id, string name, string prerequisites, string corequisites, string nccws)
         {
             ID = id;
             Name = name;
-            CP = int.Parse(cp);
-
-            Semesters = new List<int>();
-            foreach (string time in times.Split('\n'))
-                if (time.StartsWith("S"))
-                    Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
-            Semesters = Semesters.Distinct().ToList();
-
-            // TODO: parse more types of times
-            if (!Semesters.Any())
-            {
-                Semesters.Add(0);
-                Semesters.Add(1);
-            }
 
             Prerequisites = new Decision(this, prerequisites);
             Corequisites = new Decision(this, corequisites, reasonIsCorequisite: true);
             NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
-
-            IsSubject = true;
         }
 
-        public Subject(string document)
+        protected Content(string document)
         {
             Prerequisites = new Decision(this);
             Prerequisites.LoadFromDocument(document, out string name, out string code);
             Corequisites = new Decision(this);
             ID = code;
             Name = name;
-            Semesters = new List<int> { 2 };
-            NCCWs = new string[1];
-            IsSubject = false;
+            NCCWs = new string[] { "" };
         }
 
         public override string ToString()
@@ -68,19 +48,11 @@ namespace Subject_Selection
             return ID;
         }
 
-        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
-        {
-            if (!plan.Contains(this)) return false;
-            if (IsSubject)
-                return plan.SelectedSubjectsSoFar(requiredCompletionTime).Contains(this);
-            return true;
-        }
-
         private int _countPrerequisites_HasBeenBanned = -1;
         public override bool HasBeenBanned(Plan plan, int countPrerequisites)
         {
             // If this subject has been listed as a banned subject by the plan, return true
-            if (plan.BannedSubjects.Contains(this))
+            if (plan.BannedContents.Contains(this))
                 return true;
             /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, BIOL2220 and BIOL2230)
              * When there are cyclic prerequisites then this should return true
@@ -97,6 +69,42 @@ namespace Subject_Selection
             // Unset the flag
             _countPrerequisites_HasBeenBanned = -1;
             return result;
+        }
+    }
+
+    public class Subject : Content
+    {
+        public int CP { get; }
+        public List<int> Semesters { get; }
+
+        public Subject(string id, string name, string cp, string times, string prerequisites, string corequisites, string nccws) :
+            base(id, name, prerequisites, corequisites, nccws)
+        {
+            CP = int.Parse(cp);
+
+            Semesters = new List<int>();
+            foreach (string time in times.Split('\n'))
+                if (time.StartsWith("S"))
+                    Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
+            Semesters = Semesters.Distinct().ToList();
+
+            // TODO: parse more types of times
+            if (!Semesters.Any())
+            {
+                Semesters.Add(0);
+                Semesters.Add(1);
+            }
+        }
+
+        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
+        {
+            if (!plan.SelectedSubjects.Contains(this)) return false;
+            return plan.SelectedSubjectsSoFar(requiredCompletionTime).Contains(this);
+        }
+
+        public int GetChosenTime(Plan plan)
+        {
+            return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
         }
 
         int _countPrerequisites_EarliestCompletionTime = -1;
@@ -137,19 +145,31 @@ namespace Subject_Selection
                     possibleTimes.Add(time);
             return possibleTimes;
         }
+    }
 
-        public int GetChosenTime(Plan plan)
+    public class Course : Content
+    {
+        public Course(string document) :
+            base(document)
         {
-            if (!IsSubject)
-                return 100;
-            return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
+
+        }
+
+        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
+        {
+            return plan.SelectedCourses.Contains(this);
+        }
+
+        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
+        {
+            return 100;
         }
     }
 
     public partial class Decision : Option
     {
-        List<Subject> reasonsPrerequisite = new List<Subject>();
-        List<Subject> reasonsCorequisite = new List<Subject>();
+        List<Content> reasonsPrerequisite = new List<Content>();
+        List<Content> reasonsCorequisite = new List<Content>();
         string description;
         List<Option> options;
         int pick;
@@ -157,17 +177,17 @@ namespace Subject_Selection
 
         public Decision(Option reason, string description = "", List<Option> options = null, int pick = 1, Selection selectionType = Selection.OR, bool reasonIsCorequisite = false)
         {
-            if (reason is Subject)
+            if (reason is Content content)
             {
                 if (reasonIsCorequisite)
-                    reasonsCorequisite.Add(reason as Subject);
+                    reasonsCorequisite.Add(content);
                 else
-                    reasonsPrerequisite.Add(reason as Subject);
+                    reasonsPrerequisite.Add(content);
             }
-            else if (reason is Decision)
+            else if (reason is Decision decision)
             {
-                reasonsPrerequisite.AddRange((reason as Decision).GetReasonsPrerequisite());
-                reasonsCorequisite.AddRange((reason as Decision).GetReasonsCorequisite());
+                reasonsPrerequisite.AddRange(decision.GetReasonsPrerequisite());
+                reasonsCorequisite.AddRange(decision.GetReasonsCorequisite());
             }
             this.description = description;
             this.options = options;
@@ -259,29 +279,29 @@ namespace Subject_Selection
             return true;
         }
 
-        public List<Subject> ForcedBans()
+        public List<Content> ForcedBans()
         {
             // For each option, check if it forces a subject to be banned
             // Count how often a subject is banned by an option
             // If it gets banned by too many options, then it gets banned by the entire decision
 
-            Dictionary<Subject, int> counts = new Dictionary<Subject, int>();
+            Dictionary<Content, int> counts = new Dictionary<Content, int>();
             foreach (Option option in Options)
             {
-                if (option is Subject && (option as Subject).IsSubject)
+                if (option is Content)
                 {
-                    foreach (string ID in (option as Subject).NCCWs)
+                    foreach (string ID in (option as Content).NCCWs)
                     {
-                        Subject subject = Parser.GetSubject(ID);
-                        if (subject == null) continue;
-                        if (!counts.ContainsKey(subject))
-                            counts[subject] = 0;
-                        counts[subject]++;
+                        Content content = Parser.GetSubject(ID);
+                        if (content == null) continue;
+                        if (!counts.ContainsKey(content))
+                            counts[content] = 0;
+                        counts[content]++;
                     }
                 }
                 else if (option is Decision)
                 {
-                    foreach (Subject subject in (option as Decision).ForcedBans())
+                    foreach (Content subject in (option as Decision).ForcedBans())
                     {
                         if (!counts.ContainsKey(subject))
                             counts[subject] = 0;
@@ -305,8 +325,8 @@ namespace Subject_Selection
             if (remainingOptions.Count == 1)
             {
                 Option lastOption = remainingOptions.First();
-                if (lastOption is Decision)
-                    return (lastOption as Decision).GetRemainingDecision(plan);
+                if (lastOption is Decision lastDecision)
+                    return lastDecision.GetRemainingDecision(plan);
             }
             // Figure out how many options still need to be picked
             int remainingPick = Pick - Options.Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
@@ -314,11 +334,11 @@ namespace Subject_Selection
             List<Option> optionBuilder = new List<Option>();
             foreach (Option option in remainingOptions)
             {
-                if (option is Subject)
+                if (option is Content)
                     optionBuilder.Add(option);
-                else if (option is Decision)
+                else if (option is Decision decision)
                 {
-                    Decision remainingDecision = (option as Decision).GetRemainingDecision(plan);
+                    Decision remainingDecision = decision.GetRemainingDecision(plan);
                     if (remainingPick == 1 && remainingDecision.Pick == 1)
                         optionBuilder.AddRange(remainingDecision.Options);
                     else
@@ -389,7 +409,7 @@ namespace Subject_Selection
             {
                 int time = 100;
                 // If the option is a subject who's prerequisite is more complex then the current decision, then don't bother evaluating it
-                if (!(option is Subject && (option as Subject).Prerequisites.Covers(this)))
+                if (!(option is Content content && content.Prerequisites.Covers(this)))
                     time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
                 // Insert the time into the array
                 int i = earliestTimes.Length;
@@ -408,8 +428,9 @@ namespace Subject_Selection
 
         public int RequiredCompletionTime(Plan plan)
         {
-            int requiredByPrerequisites = reasonsPrerequisite.Any() ? reasonsPrerequisite.Min(reason => reason.GetChosenTime(plan)) - 1 : 100;
-            int requiredByCorequisites = reasonsCorequisite.Any() ? reasonsCorequisite.Min(reason => reason.GetChosenTime(plan)) : 100;
+            int requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject) ? reasonsPrerequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) - 1 : 100;
+            int requiredByCorequisites = reasonsCorequisite.Any(reason => reason is Subject) ? reasonsCorequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) : 100;
+            // Return the earlier out of those two values
             if (requiredByPrerequisites < requiredByCorequisites)
                 return requiredByPrerequisites;
             return requiredByCorequisites;
@@ -421,17 +442,17 @@ namespace Subject_Selection
             reasonsCorequisite = reasonsCorequisite.Union(decision.reasonsCorequisite).ToList();
         }
 
-        public List<Subject> GetReasonsPrerequisite()
+        public List<Content> GetReasonsPrerequisite()
         {
             return reasonsPrerequisite;
         }
 
-        public List<Subject> GetReasonsCorequisite()
+        public List<Content> GetReasonsCorequisite()
         {
             return reasonsCorequisite;
         }
 
-        public IEnumerable<Subject> GetReasons()
+        public IEnumerable<Content> GetReasons()
         {
             return reasonsPrerequisite.Concat(reasonsCorequisite);
         }

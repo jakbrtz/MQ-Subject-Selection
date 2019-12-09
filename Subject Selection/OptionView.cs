@@ -15,8 +15,8 @@ namespace Subject_Selection
 
             switch (Option)
             {
-                case Subject subject:
-                    label1.Text = subject.ID + Environment.NewLine + subject.Name;
+                case Content content:
+                    label1.Text = content.ID + Environment.NewLine + content.Name;
                     break;
                 case Decision decision:
                     label1.Text = decision.ToString();

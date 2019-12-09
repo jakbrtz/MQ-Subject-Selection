@@ -43,7 +43,7 @@ namespace Subject_Selection
             void MakeMinor(string description)
             {
                 if (description == "") return;
-                Subject minor = new Subject(description);
+                Course minor = new Course(description);
                 if (minor.ID == null) return;
                 minors[minor.ID] = minor;
             }
@@ -66,7 +66,7 @@ namespace Subject_Selection
             void MakeMajor(string description)
             {
                 if (description == "") return;
-                Subject major = new Subject(description);
+                Course major = new Course(description);
                 if (major.ID == null) return;
                 majors[major.ID] = major;
             }
@@ -85,15 +85,15 @@ namespace Subject_Selection
             MakeMajor(descriptionBuilder);
 
             // Make NCCW links between matching majors and minors
-            foreach (Subject major in majors.Values)
+            foreach (Course major in majors.Values)
             {
-                Subject nccw = minors.Values.FirstOrDefault(minor => minor.Name == major.Name);
+                Course nccw = minors.Values.FirstOrDefault(minor => minor.Name == major.Name);
                 if (nccw != null)
                     major.NCCWs[0] = nccw.ID;
             }
-            foreach (Subject minor in minors.Values)
+            foreach (Course minor in minors.Values)
             {
-                Subject nccw = majors.Values.FirstOrDefault(major => major.Name == minor.Name);
+                Course nccw = majors.Values.FirstOrDefault(major => major.Name == minor.Name);
                 if (nccw != null)
                     minor.NCCWs[0] = nccw.ID;
             }
@@ -103,7 +103,7 @@ namespace Subject_Selection
             void MakeSpecialisation(string description)
             {
                 if (description == "") return;
-                Subject specialisation = new Subject(description);
+                Course specialisation = new Course(description);
                 if (specialisation.ID == null) return;
                 specialisations[specialisation.ID] = specialisation;
             }
@@ -125,23 +125,23 @@ namespace Subject_Selection
 
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                Subject course = new Subject("\r\nBachelor of" + description);
+                Course course = new Course("\r\nBachelor of" + description);
                 courses[course.ID] = course;
             }
         }
 
         static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Subject> minors = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Subject> majors = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Subject> specialisations = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Subject> courses = new Dictionary<string, Subject>();
+        static readonly Dictionary<string, Course> minors = new Dictionary<string, Course>();
+        static readonly Dictionary<string, Course> majors = new Dictionary<string, Course>();
+        static readonly Dictionary<string, Course> specialisations = new Dictionary<string, Course>();
+        static readonly Dictionary<string, Course> courses = new Dictionary<string, Course>();
 
         public static List<Subject> AllSubjects()
         {
             return subjects.Values.ToList();
         }
 
-        public static List<Subject> AllCourses()
+        public static List<Course> AllCourses()
         {
             return courses.Values.ToList();
         }
@@ -162,30 +162,30 @@ namespace Subject_Selection
             return subject != null;
         }
 
-        public static Subject GetMinor(string id)
+        public static Course GetMinor(string id)
         {
-            if (minors.TryGetValue(id, out Subject minor))
+            if (minors.TryGetValue(id, out Course minor))
                 return minor;
             return null;
         }
 
-        public static Subject GetMajor(string id)
+        public static Course GetMajor(string id)
         {
-            if (majors.TryGetValue(id, out Subject major))
+            if (majors.TryGetValue(id, out Course major))
                 return major;
             return null;
         }
 
-        public static Subject GetSpecialisation(string id)
+        public static Course GetSpecialisation(string id)
         {
-            if (specialisations.TryGetValue(id, out Subject specialisation))
+            if (specialisations.TryGetValue(id, out Course specialisation))
                 return specialisation;
             return null;
         }
 
-        public static Subject GetCourse(string id)
+        public static Course GetCourse(string id)
         {
-            if (courses.TryGetValue(id, out Subject course))
+            if (courses.TryGetValue(id, out Course course))
                 return course;
             return null;
         }
@@ -360,18 +360,18 @@ namespace Subject_Selection
 
         public static int GetNumber(this Subject subject)
         {
-            if (!subject.IsSubject)
-                return 1000;
             //Assumes all IDs are made of 4 letters then 4 digits
             return int.Parse(subject.ID.Substring(4));
         }
 
         public static int GetLevel(this Option option)
         {
-            if (option is Subject)
-                return (option as Subject).GetNumber() / 1000;
+            if (option is Subject subject)
+                return subject.GetNumber() / 1000;
+            else if (option is Decision decision && decision.Options.Any())
+                return decision.Options.First().GetLevel();
             else
-                return (option as Decision).Options.First().GetLevel();
+                return 1000;
         }
     }
 

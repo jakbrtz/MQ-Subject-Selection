@@ -18,7 +18,7 @@ I am making this application as an exercise to learn about Graph Theory and Opti
 A class that keeps track of decisions and which subjects have been selected and in what order. It contains a method called **Order()** which finds an appropriate order to put the selected subjects in.
 
 ## Option.cs
-This contains the classes **Subject** and **Decision**, as well as their superclass **Option**. The purpose of the superclass is to allow prerequisites to be made of subjects and other prerequisites, for example *ABST1000 and (ABST2020 or ABST2060 or ABST2035)*.
+This contains the classes **Content** and **Decision**, as well as their superclass **Option**. The purpose of the superclass is to allow prerequisites to be made of subjects and other prerequisites, for example *ABST1000 and (ABST2020 or ABST2060 or ABST2035)*.
 
 ## Decider.cs
 Static class that looks at all the decisions that the user must make and determines whether any of them are predetermined.

@@ -17,7 +17,7 @@ namespace Subject_Selection
                 toAnalyze.Enqueue(subject.Prerequisites);
                 toAnalyze.Enqueue(subject.Corequisites);
             }
-            foreach (Subject course in plan.SelectedCourses)
+            foreach (Course course in plan.SelectedCourses)
             {
                 toAnalyze.Enqueue(course.Prerequisites);
                 toAnalyze.Enqueue(course.Corequisites);
@@ -26,9 +26,9 @@ namespace Subject_Selection
             AnalyzeDecisions(toAnalyze, plan);
         }
 
-        public static void AddSubject(Subject subject, Plan plan)
+        public static void AddContent(Content content, Plan plan)
         {
-            plan.AddSubjects(new[] { subject });
+            plan.AddContents(new[] { content });
             AnalyzeAll(plan);
         }
 
@@ -38,9 +38,9 @@ namespace Subject_Selection
             AnalyzeAll(plan);
         }
 
-        public static void RemoveSubject(Subject subject, Plan plan)
+        public static void RemoveContent(Content content, Plan plan)
         {
-            plan.RemoveSubject(subject);
+            plan.RemoveContent(content);
             AnalyzeAll(plan);
         }
 
@@ -72,22 +72,22 @@ namespace Subject_Selection
                 decision = decision.GetRemainingDecision(plan);
 
                 //Remove all reasons that have been met
-                decision.GetReasonsPrerequisite().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
-                decision.GetReasonsCorequisite().RemoveAll(reason => reason.Corequisites.HasBeenCompleted(plan, reason.GetChosenTime(plan)));
+                decision.GetReasonsPrerequisite().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : 100));
+                decision.GetReasonsCorequisite().RemoveAll(reason => reason.Corequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : 100));
                 //If there are no more reasons to make a decision, don't analyze the decision
                 if (!(decision.GetReasonsPrerequisite().Any() || decision.GetReasonsCorequisite().Any()))
                     continue;
 
                 if (decision.Pick == decision.Options.Count)
                 {
-                    // Add all subjects from this decision
-                    IEnumerable<Subject> subjects = decision.Options.Where(option => option is Subject).Cast<Subject>();
-                    plan.AddSubjects(subjects);
-                    // Add each subject's prerequisites and corequisites to toAnalzye
-                    foreach (Subject subject in subjects)
+                    // Add all contents from this decision
+                    IEnumerable<Content> contents = decision.Options.Where(option => option is Content).Cast<Content>();
+                    plan.AddContents(contents);
+                    // Add each content's prerequisites and corequisites to toAnalzye
+                    foreach (Content content in contents)
                     {
-                        toAnalyze.Enqueue(subject.Prerequisites);
-                        toAnalyze.Enqueue(subject.Corequisites);
+                        toAnalyze.Enqueue(content.Prerequisites);
+                        toAnalyze.Enqueue(content.Corequisites);
                     }
                     // Add all other decisions from this decision
                     foreach (Option option in decision.Options.Where(option => option is Decision))
@@ -172,11 +172,11 @@ namespace Subject_Selection
                     return true;
 
             // If maybeRedundant is made of other decisions, recursively check if the those decisions are covered
-            if (!maybeRedundant.IsElective() && maybeRedundant.Options.Count(option => option is Decision && cover.Covers(option as Decision)) >= maybeRedundant.Pick)
+            if (!maybeRedundant.IsElective() && maybeRedundant.Options.Count(option => option is Decision decision && cover.Covers(decision)) >= maybeRedundant.Pick)
                 return true;
 
             // If cover is made of other decisions and everything must be picked, recursively check if any of the decisions work as a cover
-            if (cover.Options.Count() == cover.Pick && cover.Options.Any(option => option is Decision && (option as Decision).Covers(maybeRedundant)))
+            if (cover.Options.Count() == cover.Pick && cover.Options.Any(option => option is Decision decision && decision.Covers(maybeRedundant)))
                 return true;
 
             return false;
