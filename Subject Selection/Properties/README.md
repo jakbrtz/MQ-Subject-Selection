@@ -83,10 +83,12 @@ There are some mistakes in these files:
     * STAT2371 -> PSYU2248
     * TELE3001 -> STAT3494
 * Most of the double-degrees that say they need a minor from Bachelor of Arts don't give a list of what they are, so there is an extra resource called arts_minor
-* These courses are inconsistent on how they explains to do ARTS2000 or a minor from Arts:
+* These courses are inconsistent on how they explain to do ARTS2000 or a minor from Arts:
 	* D000053
 	* D000010
 	* D000041
+* This course cannot be completed as a single degree, so it got removed but its relevant double-degrees are still in the file:
+	* C000196
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
 * It's impossible to satisfy Bachelor of Cyber Security and Bachelor of Applied Finance {D000070} because it says to do STAT1170 and (STAT1250 or STAT1371)
 * Why do some prerequisites say " at 1000 level or above"? All subjects are 1000 level or above.
