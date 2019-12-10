@@ -32,6 +32,8 @@ There are some mistakes in these files:
     * BIOL2220
     * PSYU3349
     * PSYU3351
+* These subjects' prerequisites contain a typo
+	* AFIN2070
 * These subjects' corequisites are not written in the same pattern as the other corequisites:
 	* GEOS2111
 	* MMCC3150
