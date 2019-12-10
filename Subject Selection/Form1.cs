@@ -29,10 +29,10 @@ namespace Subject_Selection
             foreach (Subject subject in Parser.AllSubjects())
                 CreateOptionView(subject);
 
-            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 0, 4, 4, 1})
+            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 1, 4, 4, 1})
                 plan.MaxSubjects.Add(i);
 
-            foreach (Course course in Parser.AllCourses().Where(course => course.ID.StartsWith("C")))
+            foreach (Course course in Parser.AllCourses().Where(course => !course.HasBeenBanned(plan,0)))
                 AddOptionToFLP(course);
 
             for (int i = 0; i < plan.MaxSubjects.Count; i++)
@@ -44,11 +44,13 @@ namespace Subject_Selection
         {
             currentDecision = LBXdecisions.SelectedItem as Decision;
 
-            Console.WriteLine("Current Decision:    " + currentDecision.ToString());
-            Console.Write("Reasons:             ");
-            foreach (Content reason in currentDecision.GetReasons())
-                Console.Write(reason + " ");
-            Console.WriteLine();
+            if (currentDecision != null)
+            {
+                Console.WriteLine("Current Decision:    " + currentDecision.ToString());
+                Console.WriteLine("Reasons:             " + string.Join(", ", currentDecision.GetReasons()));
+            }
+            else
+                Console.WriteLine("Current Decision:    null");
 
             DisplayCurrentDecision();
         }
@@ -90,6 +92,8 @@ namespace Subject_Selection
                 if (currentDecision == null)
                     currentDecision = plan.Decisions.First();
             }
+            else
+                currentDecision = null;
 
             LBXdecisions.SelectedItem = currentDecision;
         }
