@@ -215,7 +215,8 @@ namespace Subject_Selection
             /* Aight now here me out
              * This doesn't properly parse a query, but it succeeds in parsing every query at Macquarie
              * I haven't tested every query, but I'm sure it works
-             * This works by splitting the query at spaces, then assuming the meaning of every word that isn't already a keyword
+             * okay maybe not
+             * This works by splitting the query at spaces, then assuming the meaning of every word that isn't a keyword
              * It also builds a list of conditions to filter the full list of subjects by: the smallest number, largest number, and list of possible Letters that it can start with
              
              * Some inputs include:
@@ -231,6 +232,12 @@ namespace Subject_Selection
 
             // Clear brackets and remove spaces around dashes
             query = query.Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "").Replace(" -", "-").Replace("- ", "-");
+
+            // Remove keywords
+            query = query.Replace("from", "").Replace("of", "").Replace("at", "").Replace("in", "").Replace("or", "").Replace("OR", "").Replace("units", "").Replace("level", "").Replace("either", "");
+
+            // Remove leading whitespace
+            query = query.Trim();
 
             // A blank query returns everything
             if (query == "")
@@ -248,8 +255,8 @@ namespace Subject_Selection
             // Iterate over each word
             foreach (string word in words)
             {
-                // If the word is a keyword, don't process it
-                if (word == "from" || word == "of" || word == "at" || word == "in" || word == "or" || word == "OR" || word == "units" || word == "level" || word == "either" || word == "")
+                // If there is no word (caused by consecutive spaces) then do nothing
+                if (word == "")
                     continue;
 
                 // Any subject gets added straight to the list of outputs.
@@ -308,7 +315,7 @@ namespace Subject_Selection
                 }
 
                 // Check if there is a limit for the number
-                if (word == "orabove")
+                if (word == "above")
                 {
                     upper = 9999;
                     continue;
@@ -653,10 +660,6 @@ namespace Subject_Selection
                 {
                     Name = cells[0];
                     Code = cells[1];
-
-                    if (Code == "D000010")
-                        Console.WriteLine();
-
                     continue;
                 }
 
