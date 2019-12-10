@@ -9,7 +9,25 @@ namespace Subject_Selection
 {
     public static class Decider
     {
-        static void AnalyzeAll(Plan plan)
+        public static void AddContent(Content content, Plan plan)
+        {
+            plan.AddContents(new[] { content });
+            Analyze(plan);
+        }
+
+        public static void MoveSubject(Subject subject, Plan plan, int time)
+        {
+            plan.ForceTime(subject, time);
+            Analyze(plan);
+        }
+
+        public static void RemoveContent(Content content, Plan plan)
+        {
+            plan.RemoveContent(content);
+            Analyze(plan);
+        }
+
+        static void Analyze(Plan plan)
         {
             Queue<Decision> toAnalyze = new Queue<Decision>();
             foreach (Subject subject in plan.SelectedSubjects)
@@ -23,29 +41,7 @@ namespace Subject_Selection
                 toAnalyze.Enqueue(course.Corequisites);
             }
             plan.ClearDecisions();
-            AnalyzeDecisions(toAnalyze, plan);
-        }
 
-        public static void AddContent(Content content, Plan plan)
-        {
-            plan.AddContents(new[] { content });
-            AnalyzeAll(plan);
-        }
-
-        public static void MoveSubject(Subject subject, Plan plan, int time)
-        {
-            plan.ForceTime(subject, time);
-            AnalyzeAll(plan);
-        }
-
-        public static void RemoveContent(Content content, Plan plan)
-        {
-            plan.RemoveContent(content);
-            AnalyzeAll(plan);
-        }
-
-        static void AnalyzeDecisions(Queue<Decision> toAnalyze, Plan plan)
-        {
             Stopwatch timer1 = new Stopwatch();
             Stopwatch timer2 = new Stopwatch();
             timer1.Start();
