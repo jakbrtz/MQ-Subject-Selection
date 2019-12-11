@@ -13,8 +13,9 @@ There are some mistakes in these files:
     * C000095
     * C000006
     * C000131
-* These subjects' prerequisites need extra extra brackets to get parsed correctly:
+* These subjects' prerequisites need extra extra/less brackets to get parsed correctly:
     * AFIN3052
+	* BIOL2410
     * COMP2800
 	* EDST4040
     * MGMT3904
