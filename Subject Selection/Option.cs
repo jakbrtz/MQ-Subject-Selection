@@ -55,9 +55,7 @@ namespace Subject_Selection
             if (plan.BannedContents.Contains(this))
                 return true;
             /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, BIOL2220 and BIOL2230)
-             * When there are cyclic prerequisites then this should return true
-             * When there are cyclic corequisites then this should return false
-             * When there is a cylce containing both prerequisites and corequisites this should return true
+             * When there is a cylce containing prerequisites this should return true
              * This flag needs to be an integer (not a bool) because sometimes there is a cycle of corequisites that are also a prequisite to another subject
              */
             if (_countPrerequisites_HasBeenBanned > -1)
@@ -111,9 +109,7 @@ namespace Subject_Selection
         public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
         {
             /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, EDTE4040 and EDTE4560)
-             * When there are cyclic prerequisites then this should return 100
-             * When there are cyclic corequisites then this should return -1
-             * When there is a cylce containing both prerequisites and corequisites this should return 100
+             * When there is a cylce containing prerequisites this should return 100
              * This flag needs to be an integer (not a bool) because sometimes there is a cycle of corequisites that are also a prequisite to another subject
              */
             if (_countPrerequisites_EarliestCompletionTime > -1)
