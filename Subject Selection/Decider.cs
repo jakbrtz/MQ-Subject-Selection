@@ -15,7 +15,7 @@ namespace Subject_Selection
             Analyze(plan);
         }
 
-        public static void MoveSubject(Subject subject, Plan plan, int time)
+        public static void MoveSubject(Subject subject, Plan plan, Time time)
         {
             plan.ForceTime(subject, time);
             Analyze(plan);
@@ -68,8 +68,8 @@ namespace Subject_Selection
                 decision = decision.GetRemainingDecision(plan);
 
                 //Remove all reasons that have been met
-                decision.GetReasonsPrerequisite().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : 100));
-                decision.GetReasonsCorequisite().RemoveAll(reason => reason.Corequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : 100));
+                decision.GetReasonsPrerequisite().RemoveAll(reason => reason.Prerequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : Time.Impossible));
+                decision.GetReasonsCorequisite().RemoveAll(reason => reason.Corequisites.HasBeenCompleted(plan, reason is Subject subject ? subject.GetChosenTime(plan) : Time.Impossible));
                 //If there are no more reasons to make a decision, don't analyze the decision
                 if (!(decision.GetReasonsPrerequisite().Any() || decision.GetReasonsCorequisite().Any()))
                     continue;
@@ -111,10 +111,10 @@ namespace Subject_Selection
             plan.Decisions.Sort(delegate (Decision p1, Decision p2)
             {
                 int compare = 0;
-                if (compare == 0) compare = p2.GetLevel()                   - p1.GetLevel();
-                if (compare == 0) compare = p1.Options.Count                - p2.Options.Count;
-                if (compare == 0) compare = p1.Pick                         - p2.Pick;
-                if (compare == 0) compare = p1.RequiredCompletionTime(plan) - p2.RequiredCompletionTime(plan);
+                if (compare == 0) compare = p2.GetLevel()                              - p1.GetLevel();
+                if (compare == 0) compare = p1.Options.Count                           - p2.Options.Count;
+                if (compare == 0) compare = p1.Pick                                    - p2.Pick;
+                if (compare == 0) compare = p1.RequiredCompletionTime(plan).AsNumber() - p2.RequiredCompletionTime(plan).AsNumber();
                 if (compare == 0) compare = p1.ToString().CompareTo(p2.ToString());
                 return compare;
             });

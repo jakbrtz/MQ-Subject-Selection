@@ -29,14 +29,21 @@ namespace Subject_Selection
             foreach (Subject subject in Parser.AllSubjects())
                 CreateOptionView(subject);
 
-            foreach (int i in new int[]{ 4, 4, 2, 4, 4, 2, 4, 4, 1, 4, 4, 1})
-                plan.MaxSubjects.Add(i);
+            for (int year = 1; year <= 4; year++)
+            {
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.S1 }, 4);
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.FY1 }, 1);
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.WV }, 1);
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.S2 }, 4);
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.FY2 }, 1);
+                plan.MaxSubjects.Add(new Time { year = year, session = Session.S3 }, 2);
+            }
+            foreach (Time time in plan.MaxSubjects.Keys)
+                plan.SubjectsInOrder.Add(time, new List<Subject>());
 
             foreach (Course course in Parser.AllCourses().Where(course => !course.HasBeenBanned(plan,0)))
                 AddOptionToFLP(course);
 
-            for (int i = 0; i < plan.MaxSubjects.Count; i++)
-                DGVplanTable.Columns.Add(i.ToString(), "Year " + (i / 3 + 1) + " Sem " + (i % 3 + 1));
             UpdatePlanTable();
         }
 
@@ -71,7 +78,7 @@ namespace Subject_Selection
 
             // Show the user a list of times that the subject can be slotted into
             LBXtime.Items.Clear();
-            foreach (int time in (currentContent as Subject).GetPossibleTimes(plan.MaxSubjects))
+            foreach (Time time in (currentContent as Subject).GetPossibleTimes(plan.MaxSubjects))
                 LBXtime.Items.Add(time);
 
             // Show the user a decision according to what subject has been selected
@@ -189,8 +196,9 @@ namespace Subject_Selection
 
         private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int time = int.Parse(LBXtime.SelectedItem.ToString());
-            Decider.MoveSubject(currentContent as Subject, plan, time);
+            Time? time = LBXtime.SelectedItem as Time?;
+            if (!time.HasValue) return;
+            Decider.MoveSubject(currentContent as Subject, plan, time.Value);
             UpdatePlanTable();
             RefreshDecisionList();
         }
@@ -207,14 +215,19 @@ namespace Subject_Selection
 
         void UpdatePlanTable()
         {
+            // Refresh Columns
+            DGVplanTable.Columns.Clear();
+            foreach (Time time in plan.IterateTimes())
+                if (time.session == Session.S1 || time.session == Session.S2 || plan.SubjectsInOrder[time].Any())
+                    DGVplanTable.Columns.Add(time.ToString(), time.ToString());
             // Refresh rows
             DGVplanTable.Rows.Clear();
-            for (int i = 0; i < plan.MaxSubjects.Max(); i++)
+            for (int i = 0; i < plan.MaxSubjects.Values.Max(); i++)
                 DGVplanTable.Rows.Add();
             // Populate cells
-            for (int i = 0; i < plan.SubjectsInOrder.Count; i++)
-                for (int j = 0; j < plan.SubjectsInOrder[i].Count; j++)
-                    DGVplanTable[i, j].Value = plan.SubjectsInOrder[i][j];
+            foreach (KeyValuePair<Time, List<Subject>> kvp in plan.SubjectsInOrder)
+                for (int j = 0; j < kvp.Value.Count; j++)
+                    DGVplanTable.Rows[j].Cells[kvp.Key.ToString()].Value = kvp.Value[j];
             // Select current subject
             if (currentContent != null)
                 foreach (DataGridViewRow row in DGVplanTable.Rows)

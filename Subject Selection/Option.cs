@@ -9,9 +9,9 @@ namespace Subject_Selection
     abstract public class Option
     {
         // This superclass allows decisions to be made of other decisions
-        public abstract bool HasBeenCompleted(Plan plan, int requiredCompletionTime);
+        public abstract bool HasBeenCompleted(Plan plan, Time requiredCompletionTime);
         public abstract bool HasBeenBanned(Plan plan, int countPrerequisites = 0);
-        public abstract int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0);
+        public abstract Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites = 0);
     }
 
     public abstract class Content : Option
@@ -73,72 +73,73 @@ namespace Subject_Selection
     public class Subject : Content
     {
         public int CP { get; }
-        public List<int> Semesters { get; }
+        public List<OfferTime> Semesters { get; }
 
         public Subject(string id, string name, string cp, string times, string prerequisites, string corequisites, string nccws) :
             base(id, name, prerequisites, corequisites, nccws)
         {
             CP = int.Parse(cp);
 
-            Semesters = new List<int>();
+            Semesters = new List<OfferTime>();
             foreach (string time in times.Split('\n'))
-                if (time.StartsWith("S"))
-                    Semesters.Add(int.Parse(time.Substring(1, 1)) - 1);
-            Semesters = Semesters.Distinct().ToList();
+                if (OfferTime.TryParse(time, out OfferTime result))
+                    Semesters.Add(result);
 
-            // TODO: parse more types of times
+            // If no semesters are found, add both semesters
             if (!Semesters.Any())
             {
-                Semesters.Add(0);
-                Semesters.Add(1);
+                if (OfferTime.TryParse("S1 Day", out OfferTime result1))
+                    Semesters.Add(result1);
+                if (OfferTime.TryParse("S1 Day", out OfferTime result2))
+                    Semesters.Add(result2);
             }
         }
 
-        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
+        public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
         {
             if (!plan.SelectedSubjects.Contains(this)) return false;
             return plan.SelectedSubjectsSoFar(requiredCompletionTime).Contains(this);
         }
 
-        public int GetChosenTime(Plan plan)
+        public Time GetChosenTime(Plan plan)
         {
-            return plan.SubjectsInOrder.FindIndex(semester => semester.Contains(this));
+            return plan.SubjectsInOrder.First(semester => semester.Value.Contains(this)).Key;
         }
 
         int _countPrerequisites_EarliestCompletionTime = -1;
-        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
+        public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites = 0)
         {
             /* `_countPrerequisites` acts as a flag to avoid infinite loops (looking at you, EDTE4040 and EDTE4560)
              * When there is a cylce containing prerequisites this should return 100
              * This flag needs to be an integer (not a bool) because sometimes there is a cycle of corequisites that are also a prequisite to another subject
              */
             if (_countPrerequisites_EarliestCompletionTime > -1)
-                return countPrerequisites > _countPrerequisites_EarliestCompletionTime ? 100 : -1;
+                return countPrerequisites > _countPrerequisites_EarliestCompletionTime ? Time.Impossible : Time.Early;
             // Set the flag
             _countPrerequisites_EarliestCompletionTime = countPrerequisites;
             // Find the first time after the prerequisites has been satisfied
-            int timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites + 1) + 1;
+            Time timePrerequisites = Prerequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites + 1).Next();
             // Find the first time that the corequisites has been satisfied
-            int timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites);
+            Time timeCorequisites = Corequisites.EarliestCompletionTime(MaxSubjects, countPrerequisites);
             // Pick the later of these times
-            int time = timePrerequisites > timeCorequisites ? timePrerequisites : timeCorequisites;
+            Time time = timeCorequisites.IsEarlierThan(timePrerequisites) ? timePrerequisites : timeCorequisites;
             // Make sure this value is not negative
-            if (time < 0) time = 0;
+            if (time.year == 0) time = time.Next();
             // Find a semester that this subject could happen in
-            while (!Semesters.Contains(time % 3)) time++; //TODO %6 (3 new semesters)
+            while (!Semesters.Any(semester => semester.session == time.session)) time = time.Next();
             // Unset the flag
             _countPrerequisites_EarliestCompletionTime = -1;
             return time;
         }
 
-        private List<int> possibleTimes;
-        public List<int> GetPossibleTimes(List<int> MaxSubjects)
+        private List<Time> possibleTimes;
+        public List<Time> GetPossibleTimes(Dictionary<Time, int> MaxSubjects)
         {
             if (possibleTimes != null) return possibleTimes;
-            possibleTimes = new List<int>();
-            for (int time = EarliestCompletionTime(MaxSubjects); time < MaxSubjects.Count; time++)
-                if (Semesters.Contains(time % 3))
-                    possibleTimes.Add(time);
+            possibleTimes = new List<Time>();
+            for (Time time = EarliestCompletionTime(MaxSubjects); time.year <= MaxSubjects.Count/6; time = time.Next())
+                foreach (OfferTime offerTime in Semesters.Where(offerTime => offerTime.session == time.session))
+                    possibleTimes.Add(new Time { year = time.year, session = offerTime.session });
             return possibleTimes;
         }
     }
@@ -151,14 +152,14 @@ namespace Subject_Selection
 
         }
 
-        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
+        public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
         {
             return plan.SelectedCourses.Contains(this);
         }
 
-        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites = 0)
+        public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites = 0)
         {
-            return 100;
+            return Time.Impossible;
         }
     }
 
@@ -223,13 +224,13 @@ namespace Subject_Selection
             }
         }
 
-        public override bool HasBeenCompleted(Plan plan, int requiredCompletionTime)
+        public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
         {
             // An "empty decision" (pick 0) is automatically met
             if (Pick == 0)
                 return true;
             // Check the study plan for the earliest subject that requires this decision
-            if (requiredCompletionTime == -1) requiredCompletionTime = RequiredCompletionTime(plan);
+            if (requiredCompletionTime.year == 0) requiredCompletionTime = RequiredCompletionTime(plan);
             // Recursively count the number of options that have been met, compare it to the number of options that need to be met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
             // return Pick <= Options.Count(option => option.HasBeenMet(plan, time));
@@ -312,7 +313,7 @@ namespace Subject_Selection
         public Decision GetRemainingDecision(Plan plan)
         {
             // Figure out when this decision must be completed
-            int requiredCompletionTime = RequiredCompletionTime(plan);
+            Time requiredCompletionTime = RequiredCompletionTime(plan);
             // If the decision is met then there should be nothing to return
             if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
             // Only select the options that can be picked
@@ -347,7 +348,7 @@ namespace Subject_Selection
             return new Decision(this, newDescription, optionBuilder, remainingPick, selectionType);
         }
 
-        public override int EarliestCompletionTime(List<int> MaxSubjects, int countPrerequisites)
+        public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites)
         {
             // If it weren't for cyclic prerequisites and electives, this function could be done in a single line:
             // return Options.ConvertAll(option => option.EarliestCompletionTime(MaxSubjects)).OrderBy(x => x).ElementAt(Pick - 1);
@@ -356,33 +357,34 @@ namespace Subject_Selection
 
             // Some prerequisites have been parsed incorrectly so they are automatically banned
             if (Options.Count < Pick)
-                return 100;
+                return Time.Impossible;
             // If there are no options, then the subject can be done straight away
             if (Options.Count == 0)
-                return -1;
+                return Time.Early;
 
             // Find the lowest useful result of this function
-            int lowerBound = -1;
+            Time lowerBound = Time.Early;
             // If this is a corequisite, then the lower bound can increase by 1
             if (!GetReasonsPrerequisite().Any())
-                lowerBound++;
+                lowerBound = lowerBound.Next();
             // Increase the lower bound according to the level of the subjects that is the reason
-            lowerBound += GetReasons().Max(reason => reason.GetLevel()) - 1;
+            for (int i = 1; i < GetReasons().Max(reason => reason.GetLevel()); i++)
+                lowerBound = lowerBound.Next();
             if (Options.All(option => option is Subject))
             {
                 // If every option is a decision, then the EarliestCompletionTime cannot be negative
-                if (lowerBound < 0)
-                    lowerBound = 0;
+                if (lowerBound.year == 0)
+                    lowerBound = lowerBound.Next(); ;
                 // Find the lower bound by filling up the plan with random subjects (useful for electives)
                 int countSubjects = 0;
-                int otherLowerBound = -1;
+                Time otherLowerBound = Time.Early;
                 while (countSubjects < Pick)
                 {
-                    otherLowerBound++;
+                    otherLowerBound = otherLowerBound.Next();
                     countSubjects += MaxSubjects[otherLowerBound];
                 }
                 // Pick the larger of these lower bounds
-                if (lowerBound < otherLowerBound)
+                if (lowerBound.IsEarlierThan(otherLowerBound))
                     lowerBound = otherLowerBound;
             }
             // If the decision is an elective, don't bother looking at its options
@@ -397,37 +399,37 @@ namespace Subject_Selection
              */
 
             // Prepare an array to store the smallest values
-            int[] earliestTimes = new int[Pick];
+            Time[] earliestTimes = new Time[Pick];
             for (int i = 0; i < earliestTimes.Length; i++)
-                earliestTimes[i] = 100;
+                earliestTimes[i] = Time.Impossible;
             // Iterate through the options to find their earliest times
             foreach (Option option in Options)
             {
-                int time = 100;
+                Time time = Time.Impossible;
                 // If the option is a subject who's prerequisite is more complex then the current decision, then don't bother evaluating it
                 if (!(option is Content content && content.Prerequisites.Covers(this)))
                     time = option.EarliestCompletionTime(MaxSubjects, countPrerequisites);
                 // Insert the time into the array
                 int i = earliestTimes.Length;
-                for (i = earliestTimes.Length; i > 0 && earliestTimes[i - 1] > time; i--)
+                for (i = earliestTimes.Length; i > 0 && time.IsEarlierThan(earliestTimes[i - 1]); i--)
                     if (i != earliestTimes.Length)
                         earliestTimes[i] = earliestTimes[i - 1];
                 if (i != earliestTimes.Length)
                     earliestTimes[i] = time;
                 // If the calculated solution so far is the lower bound, stop looking for a solution
-                if (earliestTimes.Last() <= lowerBound)
+                if (earliestTimes.Last().IsEarlierThanOrAtTheSameTime(lowerBound))
                     break;
             }
             // Select the last item from earliestTimes
             return earliestTimes.Last();
         }
 
-        public int RequiredCompletionTime(Plan plan)
+        public Time RequiredCompletionTime(Plan plan)
         {
-            int requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject) ? reasonsPrerequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) - 1 : 100;
-            int requiredByCorequisites = reasonsCorequisite.Any(reason => reason is Subject) ? reasonsCorequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) : 100;
+            Time requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject) ? reasonsPrerequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)).Previous() : Time.Impossible;
+            Time requiredByCorequisites = reasonsCorequisite.Any(reason => reason is Subject) ? reasonsCorequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) : Time.Impossible;
             // Return the earlier out of those two values
-            if (requiredByPrerequisites < requiredByCorequisites)
+            if (requiredByPrerequisites.IsEarlierThan(requiredByCorequisites))
                 return requiredByPrerequisites;
             return requiredByCorequisites;
         }

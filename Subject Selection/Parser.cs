@@ -800,4 +800,106 @@ namespace Subject_Selection
         [Name("Credit\nPoints")]
         public string CP { get; set; }
     }
+
+    public enum Session { S1, FY1, WV, S2, FY2, S3}
+    public enum Method { Day, Block, FieldWork, External, Online, Placement, Evening}
+
+    public static class TimeExtentionMethods
+    {
+        public static bool NextSessionIsNextYear(this Session session, out Session nextSession)
+        {
+            bool result = session == Session.S3;
+            if (result)
+                nextSession = Session.S1;
+            else
+                nextSession = session + 1;
+            return result;
+        }
+        public static bool PreviousSessionIsPreviousYear(this Session session, out Session nextSession)
+        {
+            bool result = session == Session.S1;
+            if (result)
+                nextSession = Session.S3;
+            else
+                nextSession = session - 1;
+            return result;
+        }
+    }
+
+    public struct OfferTime
+    {
+        public Session session;
+        public Method method;
+
+        public static bool TryParse(string str, out OfferTime result)
+        {
+            result = new OfferTime();
+
+            var words = str.Split(' ');
+            if (words.Length != 2)
+                return false;
+
+            if (!Session.TryParse(words[0], out result.session))
+                return false;
+            if (!Method.TryParse(words[1], out result.method))
+                return false;
+
+            return true;
+        }
+
+        public override string ToString()
+        {
+            return session.ToString() + " " + method.ToString();
+        }
+    }
+
+    public struct Time
+    {
+        public int year;
+        public Session session;
+
+        public override string ToString()
+        {
+            return "Year " + year.ToString() + " " + session.ToString();
+        }
+
+        public Time Next()
+        {
+            Time result = this;
+            if (session.NextSessionIsNextYear(out result.session))
+                result.year++;
+            return result;
+        }
+
+        public Time Previous()
+        {
+            Time result = this;
+            if (session.PreviousSessionIsPreviousYear(out result.session))
+                result.year--;
+            return result;
+        }
+
+        public int AsNumber()
+        {
+            return (year - 1) * 6 + (int)session;
+        }
+
+        public bool IsEarlierThan(Time other)
+        {
+            if (year < other.year)
+                return true;
+            if (year > other.year)
+                return false;
+            return session < other.session;
+        }
+
+        public bool IsEarlierThanOrAtTheSameTime(Time other)
+        {
+            return !other.IsEarlierThan(this);
+        }
+
+        public static readonly Time Early = new Time { year = 0, session = Session.S3 };
+        public static readonly Time Impossible = new Time { year = 100 };
+        public static readonly Time All = Impossible;
+    }
 }

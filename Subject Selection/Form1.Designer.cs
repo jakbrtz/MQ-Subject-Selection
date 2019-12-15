@@ -31,17 +31,18 @@
             this.BTNremove = new System.Windows.Forms.Button();
             this.LBXtime = new System.Windows.Forms.ListBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.FLPchoose = new System.Windows.Forms.FlowLayoutPanel();
             this.LBXdecisions = new System.Windows.Forms.ListBox();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.DGVplanTable = new System.Windows.Forms.DataGridView();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -52,12 +53,11 @@
             this.splitContainer3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).BeginInit();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // BTNremove
             // 
-            this.BTNremove.Location = new System.Drawing.Point(61, 3);
+            this.BTNremove.Location = new System.Drawing.Point(132, 3);
             this.BTNremove.Name = "BTNremove";
             this.BTNremove.Size = new System.Drawing.Size(55, 23);
             this.BTNremove.TabIndex = 1;
@@ -72,7 +72,7 @@
             this.LBXtime.IntegralHeight = false;
             this.LBXtime.Location = new System.Drawing.Point(0, 0);
             this.LBXtime.Name = "LBXtime";
-            this.LBXtime.Size = new System.Drawing.Size(55, 109);
+            this.LBXtime.Size = new System.Drawing.Size(126, 110);
             this.LBXtime.TabIndex = 0;
             this.LBXtime.SelectedIndexChanged += new System.EventHandler(this.LBXtime_SelectedIndexChanged);
             // 
@@ -93,8 +93,19 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer3);
             this.splitContainer1.Size = new System.Drawing.Size(991, 522);
-            this.splitContainer1.SplitterDistance = 261;
+            this.splitContainer1.SplitterDistance = 274;
             this.splitContainer1.TabIndex = 12;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.splitContainer2);
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox1.Location = new System.Drawing.Point(0, 0);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(991, 274);
+            this.groupBox1.TabIndex = 13;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Make a Decision";
             // 
             // splitContainer2
             // 
@@ -109,7 +120,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.LBXdecisions);
-            this.splitContainer2.Size = new System.Drawing.Size(985, 242);
+            this.splitContainer2.Size = new System.Drawing.Size(985, 255);
             this.splitContainer2.SplitterDistance = 797;
             this.splitContainer2.TabIndex = 13;
             // 
@@ -119,7 +130,7 @@
             this.FLPchoose.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FLPchoose.Location = new System.Drawing.Point(0, 0);
             this.FLPchoose.Name = "FLPchoose";
-            this.FLPchoose.Size = new System.Drawing.Size(797, 242);
+            this.FLPchoose.Size = new System.Drawing.Size(797, 255);
             this.FLPchoose.TabIndex = 8;
             // 
             // LBXdecisions
@@ -129,7 +140,7 @@
             this.LBXdecisions.IntegralHeight = false;
             this.LBXdecisions.Location = new System.Drawing.Point(0, 0);
             this.LBXdecisions.Name = "LBXdecisions";
-            this.LBXdecisions.Size = new System.Drawing.Size(184, 242);
+            this.LBXdecisions.Size = new System.Drawing.Size(184, 255);
             this.LBXdecisions.TabIndex = 4;
             this.LBXdecisions.SelectedIndexChanged += new System.EventHandler(this.LBXdecisions_SelectedIndexChanged);
             // 
@@ -148,8 +159,8 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.BTNremove);
             this.splitContainer3.Panel2.Controls.Add(this.LBXtime);
-            this.splitContainer3.Size = new System.Drawing.Size(991, 257);
-            this.splitContainer3.SplitterDistance = 144;
+            this.splitContainer3.Size = new System.Drawing.Size(991, 244);
+            this.splitContainer3.SplitterDistance = 130;
             this.splitContainer3.TabIndex = 13;
             // 
             // groupBox2
@@ -158,7 +169,7 @@
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(991, 144);
+            this.groupBox2.Size = new System.Drawing.Size(991, 130);
             this.groupBox2.TabIndex = 13;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Schedule";
@@ -173,20 +184,9 @@
             this.DGVplanTable.Location = new System.Drawing.Point(3, 16);
             this.DGVplanTable.Name = "DGVplanTable";
             this.DGVplanTable.ReadOnly = true;
-            this.DGVplanTable.Size = new System.Drawing.Size(985, 125);
+            this.DGVplanTable.Size = new System.Drawing.Size(985, 111);
             this.DGVplanTable.TabIndex = 11;
             this.DGVplanTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DGVplanTable_CellClick);
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.splitContainer2);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(0, 0);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(991, 261);
-            this.groupBox1.TabIndex = 13;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Make a Decision";
             // 
             // Form1
             // 
@@ -201,6 +201,7 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
@@ -211,7 +212,6 @@
             this.splitContainer3.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.DGVplanTable)).EndInit();
-            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

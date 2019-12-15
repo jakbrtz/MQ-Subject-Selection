@@ -9,33 +9,38 @@ namespace Subject_Selection
 {
     public class Plan
     {
-        public List<List<Subject>> SubjectsInOrder { get; }
+        public Dictionary<Time, List<Subject>> SubjectsInOrder { get; }
         public List<Decision> Decisions { get; }
         public HashSet<Subject> SelectedSubjects { get; }
         public HashSet<Course> SelectedCourses { get; }
 
-        readonly Dictionary<Subject, int> forcedTimes = new Dictionary<Subject, int>();
-        public List<int> MaxSubjects { get; }
+        readonly Dictionary<Subject, Time> forcedTimes = new Dictionary<Subject, Time>();
+
+        readonly public Dictionary<Time, int> MaxSubjects = new Dictionary<Time, int>();
         public HashSet<Content> BannedContents { get; }
 
         public Plan()
         {
-            SubjectsInOrder = new List<List<Subject>>();
+            SubjectsInOrder = new Dictionary<Time, List<Subject>>();
             Decisions = new List<Decision>();
             SelectedSubjects = new HashSet<Subject>();
             SelectedCourses = new HashSet<Course>();
-            MaxSubjects = new List<int>();
             BannedContents = new HashSet<Content>();
         }
 
         public Plan(Plan other)
         {
-            SubjectsInOrder = other.SubjectsInOrder.Select(x => x.ToList()).ToList();
+            SubjectsInOrder = new Dictionary<Time, List<Subject>>();
+            foreach (KeyValuePair<Time, List<Subject>> semester in other.SubjectsInOrder)
+                SubjectsInOrder.Add(semester.Key, semester.Value);
+
             Decisions = new List<Decision>(other.Decisions);
             SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
             SelectedCourses = new HashSet<Course>(other.SelectedCourses);
-            MaxSubjects = new List<int>(other.MaxSubjects);
             BannedContents = new HashSet<Content>(other.BannedContents);
+
+            forcedTimes = new Dictionary<Subject, Time>(other.forcedTimes);
+            MaxSubjects = new Dictionary<Time, int>(other.MaxSubjects);
         }
 
         public void AddContents(IEnumerable<Content> contents)
@@ -79,9 +84,21 @@ namespace Subject_Selection
             RefreshBannedSubjectsList();
         }
 
-        public void ForceTime(Subject subject, int time)
+        public List<Time> IterateTimes()
         {
-            if (forcedTimes.ContainsKey(subject) && forcedTimes[subject] == time)
+            List<Time> output = new List<Time>();
+            Time current = Time.Early;
+            for (int i = 0; i < MaxSubjects.Count; i++)
+            {
+                current = current.Next();
+                output.Add(current);
+            }
+            return output;
+        }
+
+        public void ForceTime(Subject subject, Time time)
+        {
+            if (forcedTimes.ContainsKey(subject) && forcedTimes[subject].year == time.year && forcedTimes[subject].session == time.session)
                 forcedTimes.Remove(subject);
             else
                 forcedTimes[subject] = time;
@@ -91,14 +108,14 @@ namespace Subject_Selection
         public override string ToString()
         {
             string output = "";
-            foreach (List<Subject> semester in SubjectsInOrder)
+            foreach (List<Subject> semester in SubjectsInOrder.Values)
                 output += "[" + string.Join(" ", semester) + "] ";
             return output;
         }
 
-        public IEnumerable<Subject> SelectedSubjectsSoFar(int time = 100)
+        public IEnumerable<Subject> SelectedSubjectsSoFar(Time time)
         {
-            return SubjectsInOrder.Take(time + 1).SelectMany(x => x);
+            return SubjectsInOrder.Where(semester => semester.Key.IsEarlierThanOrAtTheSameTime(time)).SelectMany(kvp => kvp.Value);
         }
 
         public void Order()
@@ -107,31 +124,31 @@ namespace Subject_Selection
             timer3.Start();
 
             SubjectsInOrder.Clear();
-            for (int session = 0; session < MaxSubjects.Count; session++)
+            foreach (Time semester in IterateTimes())
             {
                 // Create a new semester and add it to SubjectsInOrder
-                List<Subject> semester = new List<Subject>();
-                SubjectsInOrder.Add(semester);
+                List<Subject> semesterClasses = new List<Subject>();
+                SubjectsInOrder.Add(semester, semesterClasses);
                 // Fill the semester with subjects that can be chosen
-                for (int subjectNumber = 0; subjectNumber < MaxSubjects[session]; subjectNumber++)
+                for (int subjectNumber = 0; subjectNumber < MaxSubjects[semester]; subjectNumber++)
                 {
                     // Prepare a list of what subjects could be chosen
-                    IEnumerable<Subject> possibleSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar());
+                    IEnumerable<Subject> possibleSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All));
                     // Do not pick subjects with forced times later than the current session
-                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && forcedTimes[subject] > session));
+                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && semester.IsEarlierThan(forcedTimes[subject])));
                     // Pick from subjects that are allowed during this semester
-                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(MaxSubjects).Contains(session));
+                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(MaxSubjects).Contains(semester));
                     // Pick from subjects that have satisfied requisites
-                    possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, session));
+                    possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, semester));
                     // Favor lower level subjects
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel());
                     // Favor subjects that cannot fit in many semesters
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count);
                     // Favor subjects that have many other subjects relying on them
-                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar()).Count(other => IsAbove(parent: other, child: subject, includeElectives: true)));
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject, includeElectives: true)));
                     // If any subjects are forced, filter them
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
-                        .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject] <= session)
+                        .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject].IsEarlierThanOrAtTheSameTime(semester))
                         .OrderBy(subject => forcedTimes[subject]);
                     if (forcedSubjects.Any())
                         possibleSubjects = forcedSubjects;
@@ -140,11 +157,11 @@ namespace Subject_Selection
                     // If no subject was chosen, go to the next semester
                     if (nextSubject == null) break;
                     // Add the selected subject to this semester
-                    semester.Add(nextSubject);
+                    semesterClasses.Add(nextSubject);
                 }
             }
 
-            if (SelectedSubjects.Except(SelectedSubjectsSoFar()).Any())
+            if (SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Any())
                 Console.WriteLine("ERROR: Couldn't fit in all your subjects");
 
             timer3.Stop();
@@ -152,23 +169,23 @@ namespace Subject_Selection
         }
 
         // IsLeaf and IsAbove are helper functions for Order()
-        private bool IsLeaf(Content subject, int time)
+        private bool IsLeaf(Content subject, Time time)
         {
             return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
         }
 
-        private bool IsLeaf(Content subject, int time, Decision requisite)
+        private bool IsLeaf(Content subject, Time time, Decision requisite)
         {
             //If the requisit is met, return true
             if (requisite.HasBeenCompleted(this, time))
                 return true;
             //If the requisit is an elective and the recommended year has passed, count this as a leaf
-            if (requisite.IsElective() && subject.GetLevel() <= time / 3 + 1)
+            if (requisite.IsElective() && subject.GetLevel() <= time.year)
                 return true;
             //Consider each option
             foreach (Option option in requisite.Options)
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar().Contains(content) && !IsAbove(content, subject, false))
+                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar(Time.All).Contains(content) && !IsAbove(content, subject, false))
                     return false;
                 //If the option is a decision that does not lead to a leaf then the subject is not a leaf
                 else if (option is Decision decision && !IsLeaf(subject, time, decision))
