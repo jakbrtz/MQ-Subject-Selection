@@ -35,6 +35,8 @@ There are some mistakes in these files:
     * PSYU3351
 * These subjects' prerequisites contain a typo
 	* AFIN2070
+* These subjects' prerequisites were inconsistent with the online handbook
+	* SSCI3090
 * These subjects' corequisites are not written in the same pattern as the other corequisites:
 	* GEOS2111
 	* MMCC3150
