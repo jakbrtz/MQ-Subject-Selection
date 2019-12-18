@@ -99,4 +99,9 @@ There are some mistakes in these files:
 	* D000070
 	* D000030
 	* D000063
+* Courses including these degrees aren't in the program since the database is missing subjects:
+	* Bachelor of Environment
+	* Bachelor of Psychology
+	* Bachelor of Cognitive and Brain Sciences
+	* Anything with Master
 * Why do some prerequisites say " at 1000 level or above"? All subjects are 1000 level or above.
