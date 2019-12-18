@@ -95,5 +95,8 @@ There are some mistakes in these files:
 * This course cannot be completed as a single degree, so it got removed but its relevant double-degrees are still in the file:
 	* C000196
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
-* It's impossible to satisfy Bachelor of Cyber Security and Bachelor of Applied Finance {D000070} because it says to do STAT1170 and (STAT1250 or STAT1371)
+* These courses are impossible to satisfy due to issue's relating to STAT1170's NCCWs:
+	* D000070
+	* D000030
+	* D000063
 * Why do some prerequisites say " at 1000 level or above"? All subjects are 1000 level or above.
