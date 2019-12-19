@@ -29,7 +29,7 @@ namespace Subject_Selection
             foreach (Subject subject in Parser.AllSubjects())
                 CreateOptionView(subject);
 
-            for (int year = 1; year <= 4; year++)
+            for (int year = 1; year <= 8; year++)
             {
                 plan.MaxSubjects.Add(new Time { year = year, session = Session.S1 }, 4);
                 plan.MaxSubjects.Add(new Time { year = year, session = Session.FY1 }, 1);
@@ -45,6 +45,30 @@ namespace Subject_Selection
                 AddOptionToFLP(course);
 
             UpdatePlanTable();
+
+            
+            List<string> impossibru = new List<string>();
+            foreach (Course course in Parser.AllCourses().Where(course => !course.HasBeenBanned(plan, 0)))
+            {
+                Plan otherPlan = new Plan();
+                foreach (var idk in plan.MaxSubjects)
+                    otherPlan.MaxSubjects.Add(idk.Key, idk.Value);
+                Decider.AddContent(course, otherPlan);
+                if (otherPlan.Decisions.Any(decision => decision.HasBeenBanned(otherPlan, 0)))
+                    impossibru.Add(course.ID + " " + string.Join(" ", otherPlan.BannedContents));
+                else
+                {
+                    foreach (Subject subject in otherPlan.SelectedSubjects)
+                        if (otherPlan.SelectedSubjects.Any(otherSubjects => subject.NCCWs.Contains(otherSubjects.ID)))
+                        {
+                            impossibru.Add(course.ID + " " + otherPlan.SelectedSubjects.First(otherSubjects => subject.NCCWs.Contains(otherSubjects.ID)).ID);
+                            break;
+                        }
+                }
+            }
+            foreach (string course in impossibru)
+                Console.WriteLine(course);
+                
         }
 
         private void LBXdecisions_SelectedIndexChanged(object sender, EventArgs e)

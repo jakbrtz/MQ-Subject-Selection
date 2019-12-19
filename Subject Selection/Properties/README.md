@@ -95,11 +95,19 @@ There are some mistakes in these files:
 * This course cannot be completed as a single degree, so it got removed but its relevant double-degrees are still in the file:
 	* C000196
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes
-* These courses are impossible to satisfy due to issue's relating to STAT1xxx's NCCWs:
-	* D000008
-	* D000070
-	* D000030
-	* D000063
+* These courses are impossible to satisfy due to issues with NCCWs:
+	* D000002: ACST2001 & ACST2002
+	* D000008: ACST1052 & STAT1250
+	* D000070: STAT1170 & (STAT1250 STAT1371)
+	* D000030: STAT1170 & STAT1250
+	* D000029: LAWS2300 & ACCG2051
+	* D000048: LAWS2300 & ACCG2051
+	* D000003: EDST3140 & (EDTE4220 EDTE4240 EDTE4260 EDTE4280 EDTE4300 EDTE4320 EDTE4340 EDTE4400)
+	* D000023: EDST3140 & (EDTE4220 EDTE4240 EDTE4260 EDTE4280 EDTE4300 EDTE4320 EDTE4340 EDTE4400)
+	* D000019: EDST3140 & (EDTE4300 EDTE4340)
+	* C000012: EDST2140 & ECHE2320
+	* D000063: STAT1170 & STAT1250
+	* D000088: STAT1250 & STAT1371
 * Courses including these degrees aren't in the program since the database is missing subjects:
 	* Bachelor of Environment
 	* Bachelor of Psychology
