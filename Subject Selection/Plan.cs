@@ -145,7 +145,7 @@ namespace Subject_Selection
                     // Favor subjects that cannot fit in many semesters
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count);
                     // Favor subjects that have many other subjects relying on them
-                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject, includeElectives: true)));
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject, includeElectives: false)));
                     // If any subjects are forced, filter them
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
                         .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject].IsEarlierThanOrAtTheSameTime(semester))
@@ -212,10 +212,12 @@ namespace Subject_Selection
                 while(decisionsToAnalyze.Any())
                 {
                     Decision currentDecision = decisionsToAnalyze.Dequeue();
+                    if (!includeElectives && currentDecision.IsElective())
+                        continue;
                     foreach (Option option in currentDecision.Options)
                         if (option is Content content && SelectedSubjects.Contains(option) && !descendants.Contains(option))
                             subjectsToAnalyze.Enqueue(content);
-                        else if (option is Decision decision && (includeElectives || !decision.IsElective()))
+                        else if (option is Decision decision)
                             decisionsToAnalyze.Enqueue(decision);
                 }
             }
