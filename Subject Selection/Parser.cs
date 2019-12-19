@@ -853,7 +853,7 @@ namespace Subject_Selection
         }
     }
 
-    public struct Time
+    public struct Time : IComparable<Time>
     {
         public int year;
         public Session session;
@@ -896,6 +896,19 @@ namespace Subject_Selection
         public bool IsEarlierThanOrAtTheSameTime(Time other)
         {
             return !other.IsEarlierThan(this);
+        }
+
+        public int CompareTo(Time other)
+        {
+            if (year < other.year)
+                return -1;
+            if (year > other.year)
+                return 1;
+            if (session < other.session)
+                return -1;
+            if (session > other.session)
+                return 1;
+            return 0;
         }
 
         public static readonly Time Early = new Time { year = 0, session = Session.S3 };
