@@ -145,7 +145,7 @@ namespace Subject_Selection
                     // Favor subjects that cannot fit in many semesters
                     possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count);
                     // Favor subjects that have many other subjects relying on them
-                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject, includeElectives: false)));
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject)));
                     // If any subjects are forced, filter them
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
                         .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject].IsEarlierThanOrAtTheSameTime(semester))
@@ -168,14 +168,20 @@ namespace Subject_Selection
             Console.WriteLine("Ordering Plan:       " + timer3.ElapsedMilliseconds + "ms");
         }
 
-        // IsLeaf and IsAbove are helper functions for Order()
         private bool IsLeaf(Content subject, Time time)
         {
+            // Detects if this subject is relying on other subjects to be picked first
             return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
         }
 
         private bool IsLeaf(Content subject, Time time, Decision requisite)
         {
+            /* Back when I started writing this program I was naive and thought that prerequisites made a happy little tree
+             * For that reason, I wrote this function that checks if a subject was a leaf on that tree
+             * Thanks to elective decisions and corequisite pairs, I can't use a tree
+             * That's why this function's got to be so complicated. I've got to write another helper function called IsAbove that detects cycles. It ignores elective decisions.
+             */
+
             //If the requisit is met, return true
             if (requisite.HasBeenCompleted(this, time))
                 return true;
@@ -185,7 +191,7 @@ namespace Subject_Selection
             //Consider each option
             foreach (Option option in requisite.Options)
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar(Time.All).Contains(content) && !IsAbove(content, subject, false))
+                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar(Time.All).Contains(content) && !IsAbove(content, subject))
                     return false;
                 //If the option is a decision that does not lead to a leaf then the subject is not a leaf
                 else if (option is Decision decision && !IsLeaf(subject, time, decision))
@@ -193,32 +199,48 @@ namespace Subject_Selection
             return true;
         }
 
-        private bool IsAbove(Content parent, Content child, bool includeElectives)
+        private bool IsAbove(Content parent, Content child)
         {
-            //Creates a list of all subjects that are selected and are descendants of this subject
+            /* This is a breadth-first search of the parent's requisites to check if the child is a requisite of a parent,
+             *   such that the parent, child, and all subjects between, have all been selected by the user
+             * Even though the parameters are of Content type, this function only gets called with Subject parameters. 
+             * This is why the variables are called things like `currentSubject` instead of `currentContent`
+             * The algorithm does not consider elective prerequisites
+             */
+
+            // Create a list of all subjects that are selected and are descendants of this subject
             HashSet<Content> descendants = new HashSet<Content>();
+            // Create a list of subjects that need to be analyzed
             Queue<Content> subjectsToAnalyze = new Queue<Content>();
             subjectsToAnalyze.Enqueue(parent);
             while (subjectsToAnalyze.Any())
             {
                 Content currentSubject = subjectsToAnalyze.Dequeue();
-                if (currentSubject == child) return true;
+                // Check whether this has already been 
+                if (descendants.Contains(currentSubject)) continue;
+                // Add this to the list of subjects that has already been analyzed
                 descendants.Add(currentSubject);
-                // TODO: what should the result be when it's an elective?
                 
+                // Do a breadth-first search through the subject's requisites to find all direct requisites of that subject
                 Queue<Decision> decisionsToAnalyze = new Queue<Decision>();
                 decisionsToAnalyze.Enqueue(currentSubject.Prerequisites);
                 decisionsToAnalyze.Enqueue(currentSubject.Corequisites);
                 while(decisionsToAnalyze.Any())
                 {
                     Decision currentDecision = decisionsToAnalyze.Dequeue();
-                    if (!includeElectives && currentDecision.IsElective())
+                    // If the decision is an elective, skip this decision
+                    if (currentDecision.IsElective())
                         continue;
+                    // Add every option in this decision to the appropriate queue
                     foreach (Option option in currentDecision.Options)
-                        if (option is Content content && SelectedSubjects.Contains(option) && !descendants.Contains(option))
+                    {
+                        if (option is Content content && SelectedSubjects.Contains(option) && !subjectsToAnalyze.Contains(option))
                             subjectsToAnalyze.Enqueue(content);
-                        else if (option is Decision decision)
+                        if (option is Decision decision)
                             decisionsToAnalyze.Enqueue(decision);
+                        // If the child is found, return true
+                        if (currentSubject == child) return true;
+                    }
                 }
             }
             return false;
