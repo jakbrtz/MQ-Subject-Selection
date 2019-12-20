@@ -426,8 +426,12 @@ namespace Subject_Selection
 
         public Time RequiredCompletionTime(Plan plan)
         {
-            Time requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject) ? reasonsPrerequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)).Previous() : Time.Impossible;
-            Time requiredByCorequisites = reasonsCorequisite.Any(reason => reason is Subject) ? reasonsCorequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) : Time.Impossible;
+            Time requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject) 
+                ? reasonsPrerequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)).Previous() 
+                : Time.Impossible;
+            Time requiredByCorequisites = reasonsCorequisite.Any(reason => reason is Subject) 
+                ? reasonsCorequisite.OfType<Subject>().Min(reason => reason.GetChosenTime(plan)) 
+                : Time.Impossible;
             // Return the earlier out of those two values
             if (requiredByPrerequisites.IsEarlierThan(requiredByCorequisites))
                 return requiredByPrerequisites;
