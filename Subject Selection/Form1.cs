@@ -41,7 +41,7 @@ namespace Subject_Selection
             foreach (Time time in plan.MaxSubjects.Keys)
                 plan.SubjectsInOrder.Add(time, new List<Subject>());
 
-            foreach (Course course in Parser.AllCourses().Where(course => !course.HasBeenBanned(plan,0)))
+            foreach (Course course in Parser.AllCourses().Where(course => !course.HasBeenBanned(plan,0)).OrderBy(course => course.ID))
                 AddOptionToFLP(course);
 
             UpdatePlanTable();
