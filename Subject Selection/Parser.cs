@@ -386,11 +386,13 @@ namespace Subject_Selection
     {
         public bool IsElective()
         {
-            return selectionType == Selection.CP && !description.Contains("units");
+            //return selectionType == Selection.CP && !description.Contains("units");
+            return selectionType == Selection.CP && !description.Contains(" ");
         }
 
         string CopyDescription(int remainingPick)
         {
+            ToString();
             if (description.Contains("cp ") && !description.Contains("units") && !description.Contains("level"))
                 return "";
 

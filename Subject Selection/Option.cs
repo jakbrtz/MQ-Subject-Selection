@@ -224,16 +224,29 @@ namespace Subject_Selection
             }
         }
 
+        public bool Unique()
+        {
+            // When courses have overlapping units, the same unit cannot count towards both decisions. This makes a decision "Unique"
+            // Also, the results process faster and are easier to understand if electives aren't counted as unique
+            return GetReasons().Any(content => content is Course) && !IsElective();
+        }
+
         public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
         {
+            /* This method does not take into account that Unique decisions cannot have overlapping selected subjects
+             * This is not a problem, because the function gets called for Unique decisions, all selected subjects should have already been removed
+             * Here's a little check to make sure I follow that rule:
+             */
+
+            if (Unique() && Options.Any(option => option.HasBeenCompleted(plan, requiredCompletionTime)) && Options.All(option => !(option is Course)))
+                throw new Exception("You're not allowed to run this function on this object");
+
             // An "empty decision" (pick 0) is automatically met
             if (Pick == 0)
                 return true;
-            // Check the study plan for the earliest subject that requires this decision
-            if (requiredCompletionTime.year == 0) requiredCompletionTime = RequiredCompletionTime(plan);
             // Recursively count the number of options that have been met, compare it to the number of options that need to be met
             // This could be done in one line of LINQ, but this version of the code excecutes faster
-            // return Pick <= Options.Count(option => option.HasBeenMet(plan, time));
+            // return Pick <= Options.Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
             int countMetOptions = 0;
             foreach (Option option in Options)
             {
@@ -314,38 +327,78 @@ namespace Subject_Selection
         {
             // Figure out when this decision must be completed
             Time requiredCompletionTime = RequiredCompletionTime(plan);
-            // If the decision is met then there should be nothing to return
-            if (HasBeenCompleted(plan, requiredCompletionTime)) return new Decision(this);
-            // Only select the options that can be picked
-            List<Option> remainingOptions = Options.Where(option => !option.HasBeenCompleted(plan, requiredCompletionTime) && !option.HasBeenBanned(plan)).ToList();
-            //If there is only one remaining option to pick from then pick it
-            if (remainingOptions.Count == 1)
-            {
-                Option lastOption = remainingOptions.First();
-                if (lastOption is Decision lastDecision)
-                    return lastDecision.GetRemainingDecision(plan);
-            }
-            // Figure out how many options still need to be picked
-            int remainingPick = Pick - Options.Count(option => option.HasBeenCompleted(plan, requiredCompletionTime));
-            // Create a new list to store the remaining options
-            List<Option> optionBuilder = new List<Option>();
-            foreach (Option option in remainingOptions)
+            // Create a list containing all the remaining options
+            List<Option> remainingOptions = new List<Option>();
+            // Keep track of how many options need to be picked
+            int remainingPick = Pick;
+            // Iterate through all the options
+            foreach (Option option in Options)
             {
                 if (option is Content)
-                    optionBuilder.Add(option);
+                {
+                    if (option.HasBeenCompleted(plan, requiredCompletionTime))
+                    {
+                        remainingPick--;
+                        if (remainingPick <= 0)
+                            return new Decision(this);
+                    }
+                    else if (!option.HasBeenBanned(plan))
+                        remainingOptions.Add(option);
+                }
+                else if (option is Decision)
+                    remainingOptions.Add((option as Decision).GetRemainingDecision(plan));
+            }
+
+            string newDescription = selectionType == Selection.CP ? CopyDescription(Pick) : "";
+            return new Decision(this, newDescription, remainingOptions, Pick, selectionType);
+        }
+
+        public Decision GetSimplifiedDecision()
+        {
+            // If the decision doesn't require anything, then return a blank decision
+            if (Pick <= 0) return new Decision(this);
+            // Figure out how many options still need to be picked when the blank decisions are removed
+            int simplePick = Pick;
+            // Create a new list to store the remaining options
+            List<Option> simpleOptions = new List<Option>();
+            foreach (Option option in Options)
+            {
+                // Add all content
+                if (option is Content)
+                    simpleOptions.Add(option);
                 else if (option is Decision decision)
                 {
-                    Decision remainingDecision = decision.GetRemainingDecision(plan);
-                    if (remainingPick == 1 && remainingDecision.Pick == 1)
-                        optionBuilder.AddRange(remainingDecision.Options);
+                    // Simplify decisions
+                    Decision simplifiedOption = decision.GetSimplifiedDecision();
+                    // If the decision is impossible, skip it
+                    if (simplifiedOption.Pick > simplifiedOption.Options.Count)
+                        continue;
+                    // If the decision is blank, reduce simplePick, and skip the decision
+                    if (simplifiedOption.Pick <= 0)
+                        simplePick--;
+                    // Otherwise, just add the decision normally
                     else
-                        optionBuilder.Add(remainingDecision);
+                        simpleOptions.Add(simplifiedOption);
                 }
             }
-            string newDescription = "";
-            if (selectionType == Selection.CP)
-                newDescription = CopyDescription(remainingPick);
-            return new Decision(this, newDescription, optionBuilder, remainingPick, selectionType);
+            // If only one option needs to be picked, and some of the options are decisions which also only require picking one option, then combine the decisions
+            if (simplePick == 1)
+            {
+                foreach (Decision decision in new List<Option>(simpleOptions).Where(option => option is Decision decision && decision.Pick == 1))
+                {
+                    simpleOptions.Remove(decision);
+                    simpleOptions.AddRange(decision.Options);
+                }
+            }
+            // If there is only one remaining option to pick from then return it
+            if (simplePick == 1 && simpleOptions.Count == 1 && simpleOptions.First() is Decision onlyDecision)
+                return onlyDecision;
+            // If this is one of those decisions which are like "10CP from 2 options" then just turn it into an OR decision
+            Selection simpleSelectionType = (selectionType == Selection.CP && simplePick == 1 && simpleOptions.Count < 3) ? Selection.OR : selectionType;
+            // If the selection is one of those vague descriptions then figure it out now. Otherwise let the program figure out what it is later
+            string simpleDescription = simpleSelectionType == Selection.CP ? CopyDescription(simplePick) : "";
+            // Return the remaining decision
+            return new Decision(this, simpleDescription, simpleOptions, simplePick, simpleSelectionType);
         }
 
         public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites)
@@ -457,6 +510,65 @@ namespace Subject_Selection
         public IEnumerable<Content> GetReasons()
         {
             return reasonsPrerequisite.Concat(reasonsCorequisite);
+        }
+
+        public bool Contains(Option value)
+        {
+            return Options.Any(option => option == value || (option is Decision decision && decision.Contains(value)));
+        }
+
+        public Decision WithSelectedContent(Content selectedContent, bool designated)
+        {
+            // Local function that allow any option to call WithSelectedContent 
+            //TODO: create an abstract function to replace this local function
+            Option OptionWithoutSelectedContent(Option option, bool selected)
+            {
+                if (option is Decision decision)
+                    // Recursive call
+                    return decision.WithSelectedContent(selectedContent, selected);
+                if (option == selectedContent)
+                    if (selected)
+                        // Blank decision
+                        return new Decision(this);
+                    else
+                        // Impossible decision
+                        return new Decision(this, options: new List<Option>());
+                else
+                    // Content as decision (possible but optional)
+                    return option;
+            }
+
+            // If this decision does not contain the content, return the decision without any changes
+            if (!Contains(selectedContent))
+                return this;
+            // Prepare a list of every way this combination of decisions could end up in
+            List<Decision> possibleResults = new List<Decision>();
+            // The subject can only belong to one designated decision, so check what happens when each relevant option gets designated
+            if (designated)
+            {
+                // Find all decisions that involve this subject, but ignore electives
+                foreach (Option designatedOption in Options.Where(option => option == selectedContent || (option is Decision decision && decision.Contains(selectedContent) && !decision.IsElective())))
+                {
+                    // Remove the subject from each of the other decisions
+                    List<Option> allOptions = Options.Where(option => option != designatedOption).Select(option => OptionWithoutSelectedContent(option, false)).ToList<Option>();
+                    // Remove the subject from the designated decision, but also reduce the Pick of that decision
+                    allOptions.Add(OptionWithoutSelectedContent(designatedOption, true));
+                    // Create a new decision which is a combination of all decisions when the subject is removed
+                    string possibleDescription = SelectionType == Selection.CP ? CopyDescription(Pick) : "";
+                    possibleResults.Add(new Decision(this, options: allOptions, pick: Pick, selectionType: SelectionType));
+                }
+            }
+            // If none of the options can be designated, remove the selected subject from the desicion
+            if (!designated || !possibleResults.Any())
+            {
+                // Remove the subject from each of the decisions
+                List<Option> allOptions = Options.Select(option => OptionWithoutSelectedContent(option, false)).ToList<Option>();
+                // Create a new decision which is a combination of all decisions when the subject is removed
+                string possibleDescription = SelectionType == Selection.CP ? CopyDescription(Pick) : "";
+                possibleResults.Add(new Decision(this, possibleDescription, allOptions, Pick, SelectionType));
+            }
+            // Create a new decision that is a combination of all possible decisions, and simplify it
+            return new Decision(this, options: possibleResults.ToList<Option>()).GetSimplifiedDecision();
         }
     }
 

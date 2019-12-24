@@ -162,19 +162,19 @@ namespace Subject_Selection
             }
 
             if (SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Any())
-                Console.WriteLine("ERROR: Couldn't fit in all your subjects");
+                 Console.WriteLine("ERROR: Couldn't fit in all your subjects");
 
             timer3.Stop();
             Console.WriteLine("Ordering Plan:       " + timer3.ElapsedMilliseconds + "ms");
         }
 
-        private bool IsLeaf(Content subject, Time time)
+        private bool IsLeaf(Subject subject, Time time)
         {
             // Detects if this subject is relying on other subjects to be picked first
-            return IsLeaf(subject, time, subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
+            return IsLeaf(subject, time.Previous(), subject.Prerequisites) && IsLeaf(subject, time, subject.Corequisites);
         }
 
-        private bool IsLeaf(Content subject, Time time, Decision requisite)
+        private bool IsLeaf(Subject subject, Time time, Decision requisite)
         {
             /* Back when I started writing this program I was naive and thought that prerequisites made a happy little tree
              * For that reason, I wrote this function that checks if a subject was a leaf on that tree
@@ -191,7 +191,7 @@ namespace Subject_Selection
             //Consider each option
             foreach (Option option in requisite.Options)
                 //If the option is a subject that needs to be picked, hasn't been picked, and is not above the current subject: the subject is not a leaf
-                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar(Time.All).Contains(content) && !IsAbove(content, subject))
+                if (option is Content content && SelectedSubjects.Contains(content) && !SelectedSubjectsSoFar(time).Contains(content) && !IsAbove(content, subject))
                     return false;
                 //If the option is a decision that does not lead to a leaf then the subject is not a leaf
                 else if (option is Decision decision && !IsLeaf(subject, time, decision))
@@ -199,7 +199,7 @@ namespace Subject_Selection
             return true;
         }
 
-        private bool IsAbove(Content parent, Content child)
+        private bool IsAbove(Content parent, Subject child)
         {
             /* This is a breadth-first search of the parent's requisites to check if the child is a requisite of a parent,
              *   such that the parent, child, and all subjects between, have all been selected by the user
