@@ -774,6 +774,18 @@ namespace Subject_Selection
             selectionType = Selection.AND;
             pick = options.Count;
         }
+
+        // To be honest I don't know what this does, but I didn't like the 1 Warning at the bottom of my screen so I added this
+        public override int GetHashCode()
+        {
+            var hashCode = 243706747;
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<Content>>.Default.GetHashCode(reasonsPrerequisite);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<Content>>.Default.GetHashCode(reasonsCorequisite);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<Option>>.Default.GetHashCode(Options);
+            hashCode = hashCode * -1521134295 + Pick.GetHashCode();
+            hashCode = hashCode * -1521134295 + SelectionType.GetHashCode();
+            return hashCode;
+        }
     }
 
     public class SubjectRecord

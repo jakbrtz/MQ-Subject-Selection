@@ -50,81 +50,16 @@ namespace Subject_Selection
                 List<Option> megaDecisionOptions = plan.SelectedCourses.Select(course => course.Prerequisites).ToList<Option>();
                 Decision megaDecision = new Decision(plan.SelectedCourses.First(), options: megaDecisionOptions, pick: megaDecisionOptions.Count, selectionType: Selection.AND);
 
-
-                /*
-                // Split each decision into sub-decisions
-                List<Decision> courseDecisions = new List<Decision>();
-                while (toAnalyze.Any())
-                {
-                    Decision decision = toAnalyze.Dequeue();
-                    // If everything must be picked and this decision contains other decisions, split the other decisions into separate decisions
-                    if (decision.Pick == decision.Options.Count && decision.Options.Any(option => option is Decision))
-                    {
-                        // Create a decision containing only the contents, which are compulsory
-                        List<Option> contents = decision.Options.Where(option => option is Content).ToList();
-                        if (contents.Any())
-                            courseDecisions.Add(new Decision(decision, options: contents, pick: contents.Count, selectionType: Selection.AND));
-                        // All sub-decisions need to be checked for further sub-decisions
-                        foreach (Option option in decision.Options.Where(option => option is Decision))
-                            toAnalyze.Enqueue(option as Decision);
-                    }
-                    // Otherwise, this decision is ready for the next stage of processing
-                    else
-                        courseDecisions.Add(decision);
-                }
-
-                // For each selected subject, check if it's part of multiple decisions. Consider the result of that
-                foreach (Subject subject in plan.SelectedSubjects) //TODO: also plan.SelectedCourses
-                {
-                    // Find all decisions that involve this subject, but ignore electives
-                    List<Decision> relevantDecisions = courseDecisions.Where(decision => decision.Contains(subject) && !decision.IsElective()).ToList();
-                    // If there aren't any decisions, skip to the next subject
-                    if (!relevantDecisions.Any()) continue;
-                    // Remove these subjects from the plan
-                    foreach (Decision decision in relevantDecisions)
-                        courseDecisions.Remove(decision);
-                    // Prepare a list of every way this combination of decisions could end up in
-                    List<Option> possibleResults = new List<Option>();
-                    // The subject can only belong to one designated decision, so check what happens when each relevant decision gets designated
-                    foreach (Decision designatedDecision in relevantDecisions)
-                    {
-                        // Remove the subject from each of the other decisions
-                        var otherDecisions = relevantDecisions.Where(decision => decision != designatedDecision).Select(decision => decision.Without(subject));
-                        // Remove the subject from the designated decision, but also reduce the Pick of that decision
-                        List<Option> allDecision = otherDecisions.Cast<Option>().ToList();
-                        allDecision.Add(designatedDecision.Without(subject, reducePick: true));
-                        // Create a new decision which is a combination of all decisions when the subject is removed
-                        // TODO: is the reason (designatedDecision) correct?
-                        possibleResults.Add(new Decision(designatedDecision, options: allDecision, pick: allDecision.Count, selectionType: Selection.AND));
-                    }
-                    // Create a new decision that is a combination of all possible decisions
-                    Decision resultingDecision = new Decision(possibleResults.First(), options: possibleResults);
-                    // Simplify that decision
-                    Decision simplifiedResultingDecision = resultingDecision.GetSimplifiedDecision();
-                    // Make sure the resulting decision is allowed
-                    if (simplifiedResultingDecision.Pick > simplifiedResultingDecision.Options.Count)
-                        throw new Exception("Not enough options in this decision");
-                    // Add that decision back into the plan
-                    courseDecisions.Add(simplifiedResultingDecision);
-                }
-
-                */
-
                 foreach (Subject subject in plan.SelectedSubjects) //TODO: also plan.SelectedCourses
                 {
                     Decision withoutSubect = megaDecision.WithSelectedContent(subject, true);
                     Decision simplified = withoutSubect.GetSimplifiedDecision();
                     if (simplified.Pick > simplified.Options.Count)
-                        throw new Exception("Not enough options in the decision");
+                        throw new FormatException("Not enough options in the decision");
                     megaDecision = simplified;
                 }
 
                 Queue<Decision> toAnalyze = new Queue<Decision>();
-
-                /*
-                foreach (Decision decision in courseDecisions)
-                    toAnalyze.Enqueue(decision);
-                    */
 
                 toAnalyze.Enqueue(megaDecision); // It takes so long because megadecision's compulsory subjects should be explored first but they aren't
 
@@ -172,7 +107,7 @@ namespace Subject_Selection
 
                     // Make sure the resulting decision is allowed
                     if (decision.Pick > decision.Options.Count)
-                        throw new Exception("Not enough options in this decision");
+                        throw new FormatException("Not enough options in this decision");
 
                     // If everything must be picked, pick everything
                     if (decision.Pick == decision.Options.Count)

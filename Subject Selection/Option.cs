@@ -239,7 +239,7 @@ namespace Subject_Selection
              */
 
             if (Unique() && Options.Any(option => option.HasBeenCompleted(plan, requiredCompletionTime)) && Options.All(option => !(option is Course)))
-                throw new Exception("You're not allowed to run this function on this object");
+                throw new FormatException("You're not allowed to run this function on this object");
 
             // An "empty decision" (pick 0) is automatically met
             if (Pick == 0)
@@ -350,7 +350,7 @@ namespace Subject_Selection
             }
 
             string newDescription = selectionType == Selection.CP ? CopyDescription(Pick) : "";
-            return new Decision(this, newDescription, remainingOptions, Pick, selectionType);
+            return new Decision(this, newDescription, remainingOptions, remainingPick, selectionType);
         }
 
         public Decision GetSimplifiedDecision()
@@ -393,12 +393,46 @@ namespace Subject_Selection
             // If there is only one remaining option to pick from then return it
             if (simplePick == 1 && simpleOptions.Count == 1 && simpleOptions.First() is Decision onlyDecision)
                 return onlyDecision;
+            // Special case: try to rearrange it so it's nicer for the user
+            if (simplePick == 1 && simpleOptions.Any() && simpleOptions.All(option => option is Decision decision && decision.Pick == decision.Options.Count))
+            {
+                /* For example, if the decision is "(A and B) or (A and C)" turn it into "A and (B or C)"
+                 * This algorithm is a more general case which allows for more ANDs and ORs
+                 * It is most useful for simplifying megaDecisions
+                 */
+                // Compile a list of options that are forced by the decision
+                List<Option> commonOptions = (simpleOptions.First() as Decision).Options.Where(option => simpleOptions.All(otherOption => otherOption is Decision decision && decision.Options.Any(idk => idk.Equals(option)))).ToList();
+                // Find each decision with the common options removed
+                List<Option> decisionsWithoutCommonOptions = new List<Option>();
+                foreach (Decision decision in simpleOptions)
+                {
+                    List<Option> replacementOptions = decision.Options.Where(option => !commonOptions.Any(commonOption => option.Equals(commonOption))).ToList();
+                    Decision replacement = new Decision(this, options: replacementOptions, pick: replacementOptions.Count, selectionType: Selection.AND);
+                    decisionsWithoutCommonOptions.Add(replacement);
+                }
+                // Create a decision based on all the decisions with the common options removed
+                Decision remainingDecision = new Decision(this, options: decisionsWithoutCommonOptions);
+                // The overall decision is to choose everyone from the common options along with the remaining decision
+                simpleOptions = commonOptions.Concat(new List<Option> { remainingDecision}).ToList();
+                simplePick = simpleOptions.Count;
+            }
             // If this is one of those decisions which are like "10CP from 2 options" then just turn it into an OR decision
             Selection simpleSelectionType = (selectionType == Selection.CP && simplePick == 1 && simpleOptions.Count < 3) ? Selection.OR : selectionType;
             // If the selection is one of those vague descriptions then figure it out now. Otherwise let the program figure out what it is later
             string simpleDescription = simpleSelectionType == Selection.CP ? CopyDescription(simplePick) : "";
             // Return the remaining decision
             return new Decision(this, simpleDescription, simpleOptions, simplePick, simpleSelectionType);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Decision other))
+                return base.Equals(obj);
+            if (Pick != other.Pick)
+                return false;
+            if (Options.Count != other.Options.Count)
+                return false;
+            return Options.All(option => other.Options.Any(otherOption => option.Equals(otherOption)));
         }
 
         public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites)
@@ -537,7 +571,7 @@ namespace Subject_Selection
                     // Content as decision (possible but optional)
                     return option;
             }
-
+             
             // If this decision does not contain the content, return the decision without any changes
             if (!Contains(selectedContent))
                 return this;
