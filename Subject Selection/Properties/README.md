@@ -108,6 +108,8 @@ There are some mistakes in these files:
 	* C000012: EDST2140 & ECHE2320
 	* D000063: STAT1170 & STAT1250
 	* D000088: STAT1250 & STAT1371
+	* D000127: STAT1371 & N000055
+	* D000004: STAT1250 & ECON2041 & (30cp ACST2001 ACST2002 AFIN2070 ECON2041 STAT2371 STAT2372)
 * Courses including these degrees aren't in the program since the database is missing subjects:
 	* Bachelor of Environment
 	* Bachelor of Psychology
