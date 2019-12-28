@@ -115,6 +115,7 @@ namespace Subject_Selection
             FLPchoose.Controls.Clear();
             if (currentDecision != null)
             {
+                groupBox1.Text = "Pick " + currentDecision.Pick + ":";
                 if (firstOption > currentDecision.Options.Count)
                     firstOption = 0;
                 foreach (Option option in currentDecision.Options.Skip(firstOption).Take(maxOptionsPerPage))
