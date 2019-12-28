@@ -48,20 +48,19 @@ namespace Subject_Selection
                 // Load the requisites from courses
 
                 List<Option> megaDecisionOptions = plan.SelectedCourses.Select(course => course.Prerequisites).ToList<Option>();
-                Decision megaDecision = new Decision(plan.SelectedCourses.First(), options: megaDecisionOptions, pick: megaDecisionOptions.Count, selectionType: Selection.AND);
+                Decision megaDecision = new Decision(plan.SelectedCourses.First(), options: megaDecisionOptions, pick: megaDecisionOptions.Count, selectionType: Selection.AND).GetSimplifiedDecision();
 
                 foreach (Subject subject in plan.SelectedSubjects) //TODO: also plan.SelectedCourses
                 {
                     Decision withoutSubect = megaDecision.WithSelectedContent(subject, true);
-                    Decision simplified = withoutSubect.GetSimplifiedDecision();
-                    if (simplified.Pick > simplified.Options.Count)
+                    if (withoutSubect.Pick > withoutSubect.Options.Count)
                         throw new FormatException("Not enough options in the decision");
-                    megaDecision = simplified;
+                    megaDecision = withoutSubect;
                 }
 
                 Queue<Decision> toAnalyze = new Queue<Decision>();
 
-                toAnalyze.Enqueue(megaDecision); // It takes so long because megadecision's compulsory subjects should be explored first but they aren't
+                toAnalyze.Enqueue(megaDecision);
 
                 timer1.Stop();
                 Console.WriteLine("Reducing courses:    " + timer1.ElapsedMilliseconds + "ms");

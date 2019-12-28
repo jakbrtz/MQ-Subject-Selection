@@ -12,6 +12,7 @@ namespace Subject_Selection
         public abstract bool HasBeenCompleted(Plan plan, Time requiredCompletionTime);
         public abstract bool HasBeenBanned(Plan plan, int countPrerequisites = 0);
         public abstract Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites = 0);
+        public abstract bool HasSameOptions(Option other);
     }
 
     public abstract class Content : Option
@@ -67,6 +68,13 @@ namespace Subject_Selection
             // Unset the flag
             _countPrerequisites_HasBeenBanned = -1;
             return result;
+        }
+
+        public override bool HasSameOptions(Option other)
+        {
+            if (other is Decision decision)
+                return decision.Options.Count == 1 && decision.Options.First() == this;
+            return this.Equals(other);
         }
     }
 
@@ -381,6 +389,11 @@ namespace Subject_Selection
                         simpleOptions.Add(simplifiedOption);
                 }
             }
+            // If there is only one remaining option to pick from then return it
+            if (simplePick == 1 && simpleOptions.Count == 1 && simpleOptions.First() is Decision onlyDecision)
+                return onlyDecision;
+            // Figure out what the selection type is
+            Selection simpleSelectionType = SelectionType;
             // If only one option needs to be picked, and some of the options are decisions which also only require picking one option, then combine the decisions
             if (simplePick == 1)
             {
@@ -388,36 +401,96 @@ namespace Subject_Selection
                 {
                     simpleOptions.Remove(decision);
                     simpleOptions.AddRange(decision.Options);
+                    simpleSelectionType = Selection.OR;
                 }
             }
-            // If there is only one remaining option to pick from then return it
-            if (simplePick == 1 && simpleOptions.Count == 1 && simpleOptions.First() is Decision onlyDecision)
-                return onlyDecision;
+            // If every option needs to be picked, and some of the options are decisions which also require picking all options, then combine the decisions
+            if (simplePick == simpleOptions.Count)
+            {
+                
+                foreach (Decision decision in new List<Option>(simpleOptions).Where(option => option is Decision decision && decision.Pick == decision.Options.Count))
+                {
+                    simpleOptions.Remove(decision);
+                    simpleOptions.AddRange(decision.Options);
+                    simplePick = simpleOptions.Count;
+                    simpleSelectionType = Selection.AND;
+                }
+            }
             // Special case: try to rearrange it so it's nicer for the user
             if (simplePick == 1 && simpleOptions.Any() && simpleOptions.All(option => option is Decision decision && decision.Pick == decision.Options.Count))
             {
                 /* For example, if the decision is "(A and B) or (A and C)" turn it into "A and (B or C)"
-                 * This algorithm is a more general case which allows for more ANDs and ORs
+                 * Another example is "(2 from A and 1 from B) or (1 from A and 2 from B)" turns into "1 from A and 1 from B and 1 from union(A, B)"
+                 * TODO: figure out how this interacts with regular decisions
                  * It is most useful for simplifying megaDecisions
                  */
+
                 // Compile a list of options that are forced by the decision
-                List<Option> commonOptions = (simpleOptions.First() as Decision).Options.Where(option => simpleOptions.All(otherOption => otherOption is Decision decision && decision.Options.Any(idk => idk.Equals(option)))).ToList();
-                // Find each decision with the common options removed
-                List<Option> decisionsWithoutCommonOptions = new List<Option>();
-                foreach (Decision decision in simpleOptions)
+                List<Option> commonOptions = (simpleOptions.First() as Decision).Options
+                    .Where(option => simpleOptions.All(otherOption => (otherOption as Decision).Options.Any(foo => foo.HasSameOptions(option))))
+                    .ToList();
+
+                // Skip if nothing is found
+                if (commonOptions.Any())
                 {
-                    List<Option> replacementOptions = decision.Options.Where(option => !commonOptions.Any(commonOption => option.Equals(commonOption))).ToList();
-                    Decision replacement = new Decision(this, options: replacementOptions, pick: replacementOptions.Count, selectionType: Selection.AND);
-                    decisionsWithoutCommonOptions.Add(replacement);
+                    // Prepare a list of each decision with the common options removed
+                    List<Option> decisionsExcludingCommonOptions = new List<Option>();
+                    foreach (Decision decision in simpleOptions)
+                    {
+                        // Make a list of options in the decision that are not in commonOptions
+                        List<Option> excludedOptions = decision.Options.Where(option => !commonOptions.Any(commonOption => option.HasSameOptions(commonOption))).ToList();
+                        // For each common option, check if it should still be part of the excluded options (see the second example)
+                        foreach (Option commonOption in commonOptions)
+                        {
+                            // The option can only be part of the excluded options if it is a decision
+                            if (commonOption is Decision commonDecision)
+                            {
+                                // Compare the pick of the decision with the pick of commonDecision
+                                int minPick = simpleOptions.Min(simpleOption => ((simpleOption as Decision).Options.Find(subOption => subOption.HasSameOptions(commonDecision)) as Decision).Pick);
+                                // Find the sub-decision in the decision that matches with the commonDecision
+                                Decision relevantOption = decision.Options.Find(subOption => subOption.HasSameOptions(commonDecision)) as Decision;
+                                // Find the new value for Pick
+                                int excludedOptionPick = relevantOption.Pick - minPick;
+                                if (excludedOptionPick <= 0)
+                                    continue;
+                                // Recreate relevantOption with a new value of pick
+                                Selection excludedOptionSelectionType = relevantOption.SelectionType;
+                                string excludedOptionDescription = excludedOptionSelectionType == Selection.CP ? relevantOption.CopyDescription(excludedOptionPick) : "";
+                                Decision excludedOption = new Decision(this, excludedOptionDescription, commonDecision.Options, excludedOptionPick, excludedOptionSelectionType);
+                                // Add the excludedOption to the list of excludedOptions
+                                excludedOptions.Add(excludedOption);
+                            }
+                        }
+                        // Put the excludedOptions list in a decision, and add that decision to the list
+                        decisionsExcludingCommonOptions.Add(new Decision(this, options: excludedOptions, pick: excludedOptions.Count, selectionType: Selection.AND));
+                    }
+                    // Create a decision based on all the decisions but with the common options excluded
+                    Decision decisionExcludingCommonOptions = new Decision(this, options: decisionsExcludingCommonOptions).GetSimplifiedDecision();
+                    // Prepare a list for the new simplified decision. It will contain all the common options + decisionExcludingCommonOptions 
+                    List<Option> newSimpleOptions = new List<Option> { decisionExcludingCommonOptions };
+                    // For each common option, work out the Pick
+                    foreach (Option commonOption in commonOptions)
+                    {
+                        if (commonOption is Decision commonDecision)
+                        {
+                            int minPick = simpleOptions.Min(simpleOption => ((simpleOption as Decision).Options.Find(subOption => subOption.HasSameOptions(commonDecision)) as Decision).Pick);
+                            Selection subDecisionSelectionType = commonDecision.SelectionType;
+                            string subDecisionDescription = subDecisionSelectionType == Selection.CP ? commonDecision.CopyDescription(minPick) : "";
+                            newSimpleOptions.Add(new Decision(this, subDecisionDescription, commonDecision.Options, minPick, subDecisionSelectionType));
+                        }
+                        else
+                        {
+                            newSimpleOptions.Add(commonOption);
+                        }
+                    }
+                    // Move these values to simpleOptions and simplePick
+                    simpleOptions = newSimpleOptions;
+                    simplePick = simpleOptions.Count;
                 }
-                // Create a decision based on all the decisions with the common options removed
-                Decision remainingDecision = new Decision(this, options: decisionsWithoutCommonOptions);
-                // The overall decision is to choose everyone from the common options along with the remaining decision
-                simpleOptions = commonOptions.Concat(new List<Option> { remainingDecision}).ToList();
-                simplePick = simpleOptions.Count;
             }
             // If this is one of those decisions which are like "10CP from 2 options" then just turn it into an OR decision
-            Selection simpleSelectionType = (selectionType == Selection.CP && simplePick == 1 && simpleOptions.Count < 3) ? Selection.OR : selectionType;
+            if (simpleSelectionType == Selection.CP && simplePick == 1 && simpleOptions.Count < 3)
+                simpleSelectionType = Selection.OR;
             // If the selection is one of those vague descriptions then figure it out now. Otherwise let the program figure out what it is later
             string simpleDescription = simpleSelectionType == Selection.CP ? CopyDescription(simplePick) : "";
             // Return the remaining decision
@@ -426,13 +499,23 @@ namespace Subject_Selection
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Decision other))
-                return base.Equals(obj);
-            if (Pick != other.Pick)
-                return false;
-            if (Options.Count != other.Options.Count)
-                return false;
-            return Options.All(option => other.Options.Any(otherOption => option.Equals(otherOption)));
+            switch (obj)
+            {
+                case Decision other:
+                    return this.Pick == other.Pick && this.HasSameOptions(other);
+                case Content content:
+                    return Pick == 1 && Options.Count == 1 && Options.First() == content;
+                default:
+                    return base.Equals(obj);
+            }
+        }
+
+        public override bool HasSameOptions(Option other)
+        {
+            if (other is Decision decision)
+                return this.Options.Count == decision.Options.Count && this.Options.All(option => decision.Options.Any(otherOption => option.Equals(otherOption)));
+            else
+                return Options.Count == 1 && Options.First() == other;
         }
 
         public override Time EarliestCompletionTime(Dictionary<Time, int> MaxSubjects, int countPrerequisites)
@@ -580,8 +663,45 @@ namespace Subject_Selection
             // The subject can only belong to one designated decision, so check what happens when each relevant option gets designated
             if (designated)
             {
-                // Find all decisions that involve this subject, but ignore electives
-                foreach (Option designatedOption in Options.Where(option => option == selectedContent || (option is Decision decision && decision.Contains(selectedContent) && !decision.IsElective())))
+                /* Find all decisions that involve this subject, but ignore decisions that are made of vague options
+                 * For example, if one of the decisions contains the options {A, B} and another decision contains {A, B, C, D} then don't include the second option, regardless of their Pick
+                 * If one of the options is the subject, then it should be the only possible designated option
+                 */
+
+                // Find options that contain selectedContent or are selectedContent
+                List<Option> relevantOptions = Options.Where(option => option == selectedContent || (option is Decision decision && decision.Contains(selectedContent))).ToList();
+                // Prepare a list of options that could be the designated option
+                List<Option> possibleDesignations = new List<Option>();
+                // Check each relevant option to see if it could be a designated option
+                foreach (Option relevantOption in relevantOptions)
+                {
+                    // `keep` is a flag that stores whether this option can be a designated option
+                    bool keep = true;
+                    // If this option is a content then it should be the only designated option
+                    if (relevantOption is Decision relevantDecision)
+                    {
+                        // Compare this option to every other option
+                        foreach (Option otherOption in relevantOptions)
+                        {
+                            if (relevantOption == otherOption)
+                                continue;
+
+                            // Check if the other option is a decision that's Options is a subset of the relevant decision's Options
+                            if (otherOption is Decision otherDecision)
+                            {
+                                if (otherDecision.Options.All(option => relevantDecision.Options.Contains(option)))
+                                    keep = false;
+                            }
+                            // If the other option is a content, then that is the only option that can be the designated option
+                            else
+                                keep = false;
+                        }
+                    }
+                    // If the flag is still true, then this option could be a designated option
+                    if (keep) possibleDesignations.Add(relevantOption);
+                }
+
+                foreach (Option designatedOption in possibleDesignations)
                 {
                     // Remove the subject from each of the other decisions
                     List<Option> allOptions = Options.Where(option => option != designatedOption).Select(option => OptionWithoutSelectedContent(option, false)).ToList<Option>();
@@ -589,14 +709,14 @@ namespace Subject_Selection
                     allOptions.Add(OptionWithoutSelectedContent(designatedOption, true));
                     // Create a new decision which is a combination of all decisions when the subject is removed
                     string possibleDescription = SelectionType == Selection.CP ? CopyDescription(Pick) : "";
-                    possibleResults.Add(new Decision(this, options: allOptions, pick: Pick, selectionType: SelectionType));
+                    possibleResults.Add(new Decision(this, possibleDescription, allOptions, Pick, SelectionType));
                 }
             }
             // If none of the options can be designated, remove the selected subject from the desicion
             if (!designated || !possibleResults.Any())
             {
                 // Remove the subject from each of the decisions
-                List<Option> allOptions = Options.Select(option => OptionWithoutSelectedContent(option, false)).ToList<Option>();
+                List<Option> allOptions = Options.Select(option => OptionWithoutSelectedContent(option, false)).ToList();
                 // Create a new decision which is a combination of all decisions when the subject is removed
                 string possibleDescription = SelectionType == Selection.CP ? CopyDescription(Pick) : "";
                 possibleResults.Add(new Decision(this, possibleDescription, allOptions, Pick, SelectionType));
