@@ -120,8 +120,8 @@ namespace Subject_Selection
 
         public void Order()
         {
-            Stopwatch timer3 = new Stopwatch();
-            timer3.Start();
+            Stopwatch timerOrder = new Stopwatch();
+            timerOrder.Restart();
 
             SubjectsInOrder.Clear();
             foreach (Time semester in IterateTimes())
@@ -164,8 +164,8 @@ namespace Subject_Selection
             if (SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Any())
                  Console.WriteLine("ERROR: Couldn't fit in all your subjects");
 
-            timer3.Stop();
-            Console.WriteLine("Ordering Plan:       " + timer3.ElapsedMilliseconds + "ms");
+            timerOrder.Stop();
+            Console.WriteLine("Ordering Plan:       " + timerOrder.ElapsedMilliseconds + "ms");
         }
 
         private bool IsLeaf(Subject subject, Time time)

@@ -32,7 +32,6 @@ namespace Subject_Selection
             Stopwatch timer1 = new Stopwatch();
             Stopwatch timer2 = new Stopwatch();
             Stopwatch timer3 = new Stopwatch();
-            timer1.Start();
 
             bool newInformationFound = true;
             while (newInformationFound)
@@ -46,6 +45,8 @@ namespace Subject_Selection
                  */
 
                 // Load the requisites from courses
+
+                timer1.Restart();
 
                 List<Option> megaDecisionOptions = plan.SelectedCourses.Select(course => course.Prerequisites).ToList<Option>();
                 Decision megaDecision = new Decision(plan.SelectedCourses.First(), options: megaDecisionOptions, pick: megaDecisionOptions.Count, selectionType: Selection.AND).GetSimplifiedDecision();
@@ -68,7 +69,7 @@ namespace Subject_Selection
                 /* Now also analyze every decision that comes from the selected subjects and the courses
                  */
 
-                timer2.Start();
+                timer2.Restart();
 
                 foreach (Subject subject in plan.SelectedSubjects)
                 {
@@ -150,7 +151,7 @@ namespace Subject_Selection
             /* Sort the decisions and remove redundany ones
              */
 
-            timer3.Start();
+            timer3.Restart();
 
             foreach (Decision decision in new List<Decision>(plan.Decisions))
                 if (decision.CoveredBy(plan))
