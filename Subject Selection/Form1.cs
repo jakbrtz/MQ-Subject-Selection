@@ -159,6 +159,7 @@ namespace Subject_Selection
                 // Add the subject to the plan
                 currentContent = selected as Content;
                 Decider.AddContent(currentContent, plan);
+                RefreshDecisionList();
                 UpdatePlanTable();
             }
             else if (selected is Decision)
@@ -167,9 +168,8 @@ namespace Subject_Selection
                 currentDecision = selected as Decision;
                 DisplayCurrentDecision();
                 // TODO: process the decision (in case it is an AND selection)
+                RefreshDecisionList();
             }
-
-            RefreshDecisionList();
         }
 
         void AddNextButton()
@@ -192,7 +192,6 @@ namespace Subject_Selection
             LBXdecisions.Items.Clear();
             foreach (Decision decision in plan.Decisions)
                 LBXdecisions.Items.Add(decision);
-            LBXdecisions.SelectedItem = currentDecision;
         }
 
         private void LBXtime_SelectedIndexChanged(object sender, EventArgs e)
