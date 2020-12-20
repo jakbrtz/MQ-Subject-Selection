@@ -1,0 +1,53 @@
+﻿@code {
+    [Parameter]
+    public Option option { get; set; }
+    [Parameter]
+    public Plan plan { get; set; }
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+}
+
+<div class="option-box">
+    @if (option is Content content)
+    {
+        <div>
+            <div align="left" style="display:inline-block">
+                @if (content is Subject)
+                {
+                    <a href="https://coursehandbook.mq.edu.au/2020/units/@content.ID" target="_blank">@content.ID</a>
+
+                }
+                else if (content.ID.StartsWith('C') || content.ID.StartsWith('D'))
+                {
+                    <a href="https://coursehandbook.mq.edu.au/2020/courses/@content.ID" target="_blank">@content.ID</a>
+                }
+                else
+                {
+                    <a href="https://coursehandbook.mq.edu.au/2020/aos/@content.ID" target="_blank">@content.ID</a>
+                }
+            </div>
+            <div align="right" style="display:inline-block; float:right">@(content.CreditPoints())cp</div>
+        </div>
+        <button class="option-box-btn" @onclick="OnClick">
+            <div class="option-box-btn-inner">
+                <h5>@content.Name</h5>
+                @if (content is Subject subject)
+                {
+                    @if (subject.IsRecommended(plan.SelectedSubjects, plan.SelectedCourses, out List<Content> reasons))
+                    {
+                        <div>Recommended because you chose @string.Join(", ", reasons)</div>
+                    }
+                }
+            </div>
+        </button>
+    }
+    else // option is Decision
+    {
+        <div></div>
+        <button class="option-box-btn" @onclick="OnClick">
+            <div class="option-box-btn-inner">
+                @((option as Decision).ComponentItem())
+            </div>
+        </button>
+    }
+</div>

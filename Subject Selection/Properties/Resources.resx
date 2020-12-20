@@ -120,20 +120,26 @@
   <data name="arts_minor" xml:space="preserve">
     <value>T000438 or T000243 or T000244 or T000245 or T000246 or P000205 or P000206 or P000247 or T000248 or T000249 or P000103 or P000168 or T000250 or T000251 or P000207 or T000252 or T000253 or T000373 or T000255 or T000374 or T000375 or P000165 or T000329 or T000258 or T000259 or P000260 or P000434 or P000222 or P000102 or T000261 or T000262 or T000263 or T000264 or T000377 or P000169 or T000265 or T000266 or T000267 or T000268 or T000379 or T000269 or T000270 or T000271 or T000272 or T000273 or T000274 or T000275 or T000382 or T000383 or T000384 or T000330 or T000276 or T000364 or T000277 or P000288 or T000289 or T000290 or T000291 or T000292 or P000101 or T000450 or T000293 or P000437 or T000294 or T000295 or T000433 or T000297 or P000227 or T000332 or T000298 or T000299 or T000300 or T000301 or T000302 or T000303 or T000304 or T000305 or P000435 or T000306 or T000307 or T000308 or P000167</value>
   </data>
+  <data name="known_mistakes" xml:space="preserve">
+    <value>D000002 D000008 D000070 D000030 D000029 D000048 D000003 D000023 D000019 C000012 D000063 D000088 D000127 D000004</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Recommender" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\data\recommender.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="ScheduleOfUndergraduateUnits" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>ScheduleOfUndergraduateUnits.csv;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+    <value>..\data\scheduleofundergraduateunits.csv;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="_2020_ScheduleOfCoursesUG" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>2020-ScheduleOfCoursesUG.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+    <value>..\data\2020-scheduleofcoursesug.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="_2020_ScheduleOfMajors" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>2020-ScheduleOfMajors.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\data\2020-scheduleofmajors.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="_2020_ScheduleOfMinors" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>2020-ScheduleOfMinors.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\2020-ScheduleOfMinors.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="_2020_ScheduleOfUGSpecialisations" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>2020-ScheduleOfUGSpecialisations.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+    <value>..\Data\2020-ScheduleOfUGSpecialisations.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
 </root>

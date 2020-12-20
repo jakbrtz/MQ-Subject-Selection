@@ -1,0 +1,50 @@
+NCCWS:
+HSC Chinese
+HSC Chinese (any level)
+HSC Chinese Continuers Band 4 and above
+HSC Chinese Continuers Band 4, 5 & 6 and HSC Chinese Extension Band 3 & 4
+HSC Chinese Extension Band E3 and above
+HSC Classical Greek
+HSC Croatian
+HSC French
+HSC French beginners band 4 and above
+HSC French Extension or Continuers
+HSC German Extension or Continuers Band 4 and above
+HSC Italian beginners Band 4 and above
+HSC Italian Continuers
+HSC Italian Extension
+HSC Japanese Beginners Band 4 and above
+HSC Japanese Continuers
+HSC Japanese Continuers or HSC Japanese Extension
+HSC Japanese Extension
+HSC Japanese in Context
+HSC Japanese Literature
+HSC Latin
+HSC Modern Greek beginners Band 4 and above
+HSC Modern Greek Continuers
+HSC Modern Greek Extension
+HSC Russian
+HSC Spanish Extension or Continuers Band 4, 5 or 6
+
+Prereq:
+HSC beginners Band 4 and above or equivalent
+HSC Chemistry Band 5 and above
+HSC Croatian
+HSC French Continuers Band 4 and above or French Extension band E3 and above
+HSC General Mathematics Band 5 and above or Mathematics Band 3 and above or Extension 1 or Extension 2
+HSC German Extension band E3 and above or Continuers band 4 and above
+HSC German Extension or Continuers Band 4 and above or E3 and above German
+HSC Greek Continuers band 4 and above or Greek Extension band E3 and above
+HSC Italian Continuers band 4 and above or Italian Extension band E3 and above
+HSC Japanese Beginners Band 4 and above
+HSC Japanese Continuers
+HSC Japanese Extension
+HSC Japanese in Context
+HSC Japanese Literature
+HSC Mathematics Band 2 or Extension 1 or Extension 2
+HSC Mathematics Band 4 and above or Extension 1 Band E2 and above or Extension 2
+HSC Mathematics Extension 1 Band E3 and above or HSC Mathematics  Extension 2
+HSC Mathematics Extension 1 or Extension 2
+HSC Russian
+HSC Spanish Continuers Band 4 and above or Spanish Extension Band E3 and above
+Post HSC Chinese Beginners Band 2-3 or Post HSC Chinese Continuers Band 1-2

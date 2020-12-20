@@ -1952,11 +1952,8 @@ Essential		COGS1000		Introduction to Neuroscience 1 (10)	10
 Essential		MEDI3301		Clinical Neuroscience (10)	10
 
 Elective units	 
-Option set	20cp from 	ANAT2004		Neuroanatomy (10)	
-		BIOL2230		Neurophysiology (10)	
-					
-	or 20cp from 	MEDI2300		Nervous System (10)	
-		MEDI2301		Cellular and Molecular Neuroscience (10)	20
+Option set	20cp from 	(20cp from ANAT2004 or BIOL2230)		Neuroanatomy and Neurophysiology (20)	
+		(20cp from MEDI2300 or MEDI2301)		Nervous System and Cellular and Molecular Neuroscience (20)	20
 Option set	20cp from 	COGS2000		Cognitive Neuroscience (10)	
 		COGS2020		Experimental Design and Data Analysis for the Cognitive and Brain Sciences (10)	
 		MEDI2004		Pharmacology Fundamentals (10)	

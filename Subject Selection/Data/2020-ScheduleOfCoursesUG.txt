@@ -4296,7 +4296,7 @@ TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE	320
 
 Note: 	 Students may meet some of their credit requirements studying on international exchange. 
 
-Contact Macquarie International exchange team
+	Contact Macquarie International exchange team
 	Students may count a maximum of 120cp at 1000 level towards their course requirements.
 	
 
@@ -4335,7 +4335,7 @@ Option set	10cp from 	LAWS4052		International Participation and Community Engage
 		LAWS4099		Professional and Community Engagement (PACE) On-Campus Consultancy (10)	
 		LAWS5038		Access to Justice Placement Program (10)	
 		LAWS5051		Independent Professional Placement (10)	
-		LAWS5078		Macquarie University Social Justice Clinic (10)	
+		LAWS5078		Macquarie University Social Justice Clinic (10)	10
 					
 Option set	40cp from 	LAWS5003		Law and Literature (10)	
 		LAWS5005		Child/Elder Law (10)	
@@ -4393,7 +4393,7 @@ TOTAL CREDIT POINTS REQUIRED FOR THIS COURSE	320
 
 Note: 	 Students may meet some of their credit requirements studying on international exchange. 
 
-Contact Macquarie International exchange team
+	Contact Macquarie International exchange team
 	Units marked with a C are Capstone units.
 	
 
@@ -4936,7 +4936,7 @@ Essential		LAWS5040		Environmental Planning Law (10)	10
 
 Elective units	 
 Option set	10cp from 	COMP units at 1000 level	
-		STAT units at 1000 level	
+		STAT units at 1000 level	10
 					
 Option set	20cp from 	GEOP1020		Introducing Environmental Humanities (10)	
 		PHIL1037		Critical Thinking (10)	
@@ -12172,6 +12172,69 @@ Q000156	Chemistry
 Bachelor of Fake Course	E000000
 
 Award:				idk (BEd(ECE))
+	 
+Option set	10cp from 				10
+
+
+Bachelor of Secondary Education cant be done by itself	E000001
+
+Award:				idk (BEd(Sec))
+	 
+Option set	10cp from 				10
+
+
+Bachelor of Thing that doesn't exist anymore	E000002
+
+Award:				idk (BBusLeadCom)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of not being married	E000003
+
+Award:				idk (BActStudBSc)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of masters is now in this	E000004
+
+Award:				idk (MEngElecEng)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of maybe I should make this program include postgrad units	E000005
+
+Award:				idk (MEngNetTeleEng)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of Or maybe the parser should detect things that sound like degrees	E000006
+
+Award:				idk (MEngEnvSafetyEng)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of I need to write Bachelor or the program doesn't split the text	E000007
+
+Award:				idk (MEngMechEng)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of some of these mistakes are so bad I feel attacked	E000008
+
+Award:				idk (BDigitalBus)
+	 
+Option set	10cp from 				10
+
+
+Bachelor of some of these mistakes are so bad I feel attacked	E000009
+
+Award:				idk (BSecStudMSecStrategicStud)
 	 
 Option set	10cp from 				10
 

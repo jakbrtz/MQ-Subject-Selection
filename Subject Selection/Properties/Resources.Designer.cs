@@ -175,18 +175,41 @@ namespace Subject_Selection.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to D000002 D000008 D000070 D000030 D000029 D000048 D000003 D000023 D000019 C000012 D000063 D000088 D000127 D000004.
+        /// </summary>
+        internal static string known_mistakes {
+            get {
+                return ResourceManager.GetString("known_mistakes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to STAT2170 STAT1170
+        ///STAT2173 STAT1170
+        ///MATH1020 MATH1010
+        ///MATH1015 MATH1025
+        ///N000192 MGMT3003.
+        /// </summary>
+        internal static string Recommender {
+            get {
+                return ResourceManager.GetString("Recommender", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Scope,Code,Name,&quot;Credit
-        ///Points&quot;,Unit Designation,Unit Type,Prerequisites,Corequisites,NCCW,When Offered,On Campus Attendance,Staff Contact,&quot;Offering
+        ///Points&quot;,Unit Designation,Unit Type,Prerequisites,Corequisites,,NCCW,When Offered,On Campus Attendance,Staff Contact,&quot;Offering
         ///Department&quot;,Offering Faculty,&quot;FOE -
         ///Narrow&quot;,Pass/Fail,Co-taught Units,Quota,Unit Activity,ASQCNew,ASQCRecoded,WWCC,Status,Placement in SONIA,Authority,Capstone unit?,Awards/Majors
-        ///Undergraduate,ABST1000,Introducing Indigenous Australia,10,,,,,&quot;ABSP100, ABST100&quot;,&quot;S1 Day
+        ///Undergraduate,ABST1000,Introducing Indigenous Australia,10,,,,,,&quot;ABSP100, ABST100&quot;,&quot;S1 Day
         ///S1 Online
         ///S2 Day
         ///S2 Online&quot;,&quot;
         ///
         ///
         ///&quot;,&quot;Ms Josephine Bourne
-        ///        ///&quot;,Department of Indigenous Stud [rest of string was truncated]&quot;;.
+        ///
+        ///&quot;,Department of Indigenous St [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ScheduleOfUndergraduateUnits {
             get {

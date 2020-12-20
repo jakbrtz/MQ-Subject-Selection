@@ -1,0 +1,535 @@
+﻿@page "/"
+
+@code{
+    Plan plan = new Plan();
+    Decision currentDecision;
+    Subject HighlightedSubject;
+
+    public int MainTabIndex { get; set; } = 0;
+    public bool SubjectRemovedSuccessfully { get; set; } = true;
+    public bool Thinking { get; set; } = false;
+    public bool Welcome { get; set; } = true;
+    public bool currentDecisionIsFirst { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        Load();
+    }
+}
+
+
+@if (Welcome)
+{
+    <div class="dark-screen" @onclick="@(()=>Welcome=false)">
+        <div class="alert-box">
+            <h1>Macquaire Subject Selection Program</h1>
+            <p>This program is designed to help new students plan their undergrad degree, and make sure every condition has been met.</p>
+            <p>It allows you to:</p>
+            <ul>
+                <li>Select courses and subjects</li>
+                <li>Pick how many subjects you're doing per semester</li>
+                <li>Rearrange and remove selected subjects</li>
+                <li>Check which requisites you still need to complete</li>
+            </ul>
+            <p>This program is incomplete. I still need to add these features:</p>
+            <ul>
+                <li>Up-to-date information about subjects</li>
+                <li>Concentrations</li>
+                <li>Full-Year subjects</li>
+                <li>Additional elective minors</li>
+                <li><i>Special Permission</i> as a prerequisite</li>
+                <li><i>HSC marks</i> as a prereqiusite</li>
+                <li><i>Grades</i> as a prerequisite</li>
+            </ul>
+            <p>Once you're done making a schedule, you should double-check with the official handbook that every requisite is met.</p>
+            <p>Click anywhere to start.</p>
+        </div>
+    </div>
+}
+
+@if (Thinking)
+{
+    <div class="dark-screen">
+        <div class="alert-box loading">
+            <h2>Thinking...</h2>
+        </div>
+    </div>
+}
+
+<div class="full-page">
+    <div class="tab-wrapper">
+        <div class="tab">
+            <button @onclick="@(() => MainTabIndex = 0)">Add Subjects</button>
+            <button @onclick="@(() => MainTabIndex = 1)">Adjust Workload</button>
+            @if (HighlightedSubject != null)
+            {
+                <button @onclick="@(() => MainTabIndex = 2)">Subject Details</button>
+            }
+            @if (plan.BannedContents.Any(content => content.Key is Subject))
+            {
+                <button @onclick="@(() => MainTabIndex = 3)">Banned Subjects</button>
+            }
+        </div>
+
+        @switch (MainTabIndex)
+        {
+            case 0:
+                <div id="Options" class="tabcontent">
+                    @if (currentDecision != null)
+                    {
+                        bool filterByCreditPointsRequired = currentDecision.Options.Any(option => option.EnoughCreditPoints(plan, plan.RemainingCreditPoints(), out _));
+                        <div>
+                            <div align="left" style="display:inline-block;">
+                                <h2 style="display: inline-block;">@currentDecision.Instruction()</h2>
+                                <div>
+                                    <p>
+                                        <i>@(currentDecision.ReasonDescription())</i>
+                                    </p>
+                                </div>
+                            </div>
+                            <div align="right" style="display:inline-block; float:right;">
+                                <p><input type="text" @bind="TextFilterOptions" placeholder="Filter Options" style="margin: 2px" /></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            @foreach (Option option in currentDecision.Options.Where(option => AcceptFilter(option, filterByCreditPointsRequired)))
+                            {
+                                <OptionComponent option="@option" plan="@plan" OnClick="@(e => Think(() => SelectOption(option)))" />
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Click on the schedule to the right to rearrange subjects</p>
+                    }
+                </div>
+                break;
+            case 1:
+                <div id="WorkLoad" class="tabcontent" style="text-align:center;">
+                    <h3>Choose the maximum number of Credit Points that you want to do per semester:</h3>
+                    <br />
+                    <table class="workload">
+                        <thead>
+                            <tr>
+                                <th><p></p></th>
+                                @foreach (Session session in (Session[])Enum.GetValues(typeof(Session)))
+                                {
+                                    <th>@session.FullName()</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int year = 1; year <= plan.MaxCreditPoints.Keys.Max(time => time.year); year++)
+                            {
+                                int _year = year; // Local scope
+                                <tr>
+                                    <th>Year @year</th>
+                                    @foreach (Session session in (Session[])Enum.GetValues(typeof(Session)))
+                                    {
+                                        <td>
+                                            <input type="number" min="0" step="10"
+                                                   value="@plan.GetMaxCreditPoints(_year, session)"
+                                                   @onchange="@(e => Think(() => ChangeMaxCreditPoints(_year, session, int.Parse(e.Value.ToString()))))" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <br />
+                    <p>Quick acitons:</p>
+                    <div class="quick-workload">
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(10)))">1 Subject per Semester</button> <br />
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(20)))">2 Subjects per Semester</button> <br />
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(30)))">3 Subjects per Semester</button> <br />
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(40)))">4 Subjects per Semester</button> <br />
+                        <br />
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(Session.WV, 0)))">Remove Winter Vacation</button> <br />
+                        <button @onclick="@(e => Think(() => ChangeMaxCreditPoints(Session.S3, 0)))">Remove Session 3</button> <br />
+                        <br />
+                        <button @onclick="@(() => Think(add_year))">Add Year</button> <br />
+                    </div>
+                </div>
+                break;
+            case 2:
+                List<Edge> edges = plan.ContentRelations.Where(relation => relation.dest == HighlightedSubject && relation.importance == Importance.Compulsory).ToList();
+                <div id="Subject" class="tabcontent" style="padding-top:30px;padding-left:40px">
+                    <h2>
+                        <a href="https://coursehandbook.mq.edu.au/2020/units/@HighlightedSubject.ID" target="_blank">@HighlightedSubject.ID</a>
+                        @HighlightedSubject.Name
+                    </h2>
+                    <br />
+                    <p>When do you want to take this subject?</p>
+
+                    <label>
+                        <input type="radio" name="semester"
+                               checked="@(!plan.GetForcedTime(HighlightedSubject).HasValue)"
+                               @onchange="@(() => Think(unforce_time))" />
+                        Let the program decide
+                    </label>
+                    <br />
+                    @for (Time semester = Time.First; plan.MaxCreditPoints.Keys.Contains(semester); semester = semester.Next())
+                    {
+                        @if (HighlightedSubject.AllowedDuringSemester(semester, plan))
+                        {
+                            Time _semester = semester; // Create a local scope
+                            <label>
+                                <input type="radio" name="semester"
+                                       checked="@(_semester.Equals(plan.GetForcedTime(HighlightedSubject)))"
+                                       @onchange="@(() => Think(() => force_time(_semester)))" />
+                                @_semester
+                            </label>
+                            <br />
+                        }
+                    }
+                    <br />
+                    <button @onclick="@(() => Think(()=>remove_content()))">Remove Subject</button>
+                    @if (!SubjectRemovedSuccessfully)
+                    {
+                        <br />
+                        <p>This subject couldn't be removed because other subjects force this subject to be compulsory.</p>
+                        @if (edges.Any())
+                        {
+                            <p>Here is a list of subjects which have @HighlightedSubject.ID as a prerequisite. It is possible that this subject is compulsory for other reasons.</p>
+                            <ul>
+                                @foreach (Edge edge in edges)
+                                {
+                                    <li>@edge.source.ID @edge.source.Name</li>
+                                }
+                            </ul>
+                        }
+                    }
+                </div>
+                break;
+            case 3:
+                <div id="Banned" class="tabcontent" style="padding-top:30px; padding-left:40px">
+                    <h4>The following subjects are banned, and will not appear in "Add Subjects":</h4>
+                    @foreach (var banned in plan.BannedContents)
+                    {
+                        <br />
+                        <b>@banned.Key.ID - @banned.Key.Name</b>
+                        <p>because you chose @Parser.ListContents(banned.Value)</p>
+                    }
+                </div>
+                break;
+        }
+    </div>
+    @if (plan.SelectedCourses.Any())
+    {
+        <div class="right">
+            <div class="upper">
+                @if (plan.SelectedCourses.Any())
+                {
+                    bool incompleteRequisiteFound = false;
+                    bool outOfOrderRequisiteFound = false;
+                    bool moveableSubjectFound = false;
+                    bool incompleteElectiveRequisiteFound = false;
+                    bool cpOverFlow = plan.RemainingCreditPoints() < 0;
+                    bool cpComplete = plan.SelectedCourses.Any() && plan.RemainingCreditPoints() == 0;
+                    @foreach (Course course in plan.SelectedCourses)
+                    {
+                        <h1>@course.Name</h1>
+                    }
+                    <table class="schedule">
+                        @foreach (Time time in plan.NotableTimes())
+                        {
+                            <tr>
+                                <td>@time</td>
+                                @for (int i = 0; i < plan.SubjectsInOrder.Max(session => session.Value.Count); i++)
+                                {
+                                    <td>
+                                        @if (plan.GetSemester(time).Count > i)
+                                        {
+                                            Subject subject = plan.GetSemester(time)[i];
+                                            <a href="" @onclick="@(e => SelectSubjectFromTable(subject))">@subject</a>
+                                            @if (!subject.Prerequisites.HasBeenCompletedIgnoringElectives(plan, Time.All) || !subject.Corequisites.HasBeenCompletedIgnoringElectives(plan, Time.All))
+                                            {
+                                                incompleteRequisiteFound = true;
+                                                <span>*</span>
+                                            }
+                                            else if (!subject.Prerequisites.HasBeenCompletedIgnoringElectives(plan, time.Previous()) || !subject.Corequisites.HasBeenCompletedIgnoringElectives(plan, time))
+                                            {
+                                                outOfOrderRequisiteFound = true;
+                                                <span>+</span>
+                                            }
+                                            else if (!subject.Prerequisites.HasBeenCompleted(plan, time.Previous()) || !subject.Corequisites.HasBeenCompleted(plan, time))
+                                            {
+                                                incompleteElectiveRequisiteFound = true;
+                                                if (cpOverFlow || cpComplete)
+                                                {
+                                                    <span>^</span>
+                                                }
+                                            }
+                                            @if (MainTabIndex != 0 && subject.Semesters.Select(offer => offer.session).Distinct().Count() > 1)
+                                            {
+                                                //moveableSubjectFound = true;
+                                                //<span>#</span>
+                                            }
+                                            @if (cpOverFlow && !plan.ContentRelations.Any(relation => relation.dest == subject))
+                                            {
+                                                <span>X</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <p></p>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </table>
+
+                    @if (incompleteRequisiteFound)
+                    {
+                        <p><i>*Subjects marked with a star have not yet had their requisites selected.</i></p>
+                    }
+                    @if (outOfOrderRequisiteFound)
+                    {
+                        <p><i>+Subjects marked with a plus have their requisites selected, but not in the correct order.</i></p>
+                    }
+                    @if (moveableSubjectFound)
+                    {
+                        <p><i>#Subjects marked with a hash can be taken in more than one semesters.</i></p>
+                    }
+                    if (incompleteElectiveRequisiteFound && (cpOverFlow || cpComplete))
+                    {
+                        <p><i>^Subjects marked with a caret have been placed too early in the time-table</i></p>
+                    }
+                    @if (cpOverFlow)
+                    {
+                        <p><b>You have selected @plan.SelectedSubjects.Sum(subject => subject.CreditPoints()) Credit Points but you only require @plan.SelectedCourses.First().CreditPoints() Credit Points.</b></p>
+                        <p><i>Subjects marked with an X can be removed from the schedule without repercussions.</i></p>
+                    }
+                    @if (cpComplete && !incompleteRequisiteFound && !outOfOrderRequisiteFound && !incompleteElectiveRequisiteFound && !cpOverFlow)
+                    {
+                        <p>This is a valid schedule!</p>
+                    }
+                }
+            </div>
+            @if (plan.Decisions.Any())
+            {
+                <div class="bottom">
+                    <h2>Decisions you still need to make:</h2>
+                    <select id="SelectDecision" size="10" style="width:100%">
+                        @foreach (Decision decision in plan.Decisions)
+                        {
+                            <option style="margin:2px" @onclick="(() => SelectDecision_onclick(decision))">@decision.ListItem()</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code{
+
+        async Task Think(Action action)
+        {
+            if (Thinking) return;
+            Thinking = true;
+            await Task.Run(action);
+            next_decision();
+            Thinking = false;
+            await Task.CompletedTask;
+        }
+
+        void Load()
+        {
+            // Load information
+            Parser.LoadData();
+            // Construct a graph of subjects
+            foreach (Subject subject in Parser.AllSubjects())
+                subject.FindChildren();
+            // Add 3 years to the plan
+            for (int year = 0; year < 3; year++)
+                plan.AddYear();
+            // Offer a degree to the user
+            ChooseDegree();
+        }
+
+        void ChooseDegree()
+        {
+            // Make sure the program knows which subjects are banned
+            plan.RefreshEarliestTimes();
+            // Offer degrees that do not contain mistakes, in order of their subject code
+            currentDecision = new Decision(null,
+                options: Parser.AllCourses()
+                    .Where(course => !Properties.Resources.known_mistakes.Split().Contains(course.ID) && !course.Prerequisites.HasBeenBanned(plan))
+                    .OrderBy(course => course.ID).ToList<Option>(),
+                selectionType: Selection.OR);
+        }
+
+        void MinorDecision() // TODO: make button for this
+        {
+            currentDecision = new Decision(null, options: Parser.AllMinors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+        }
+
+        void MajorDecision() // TODO: make button for this
+        {
+            currentDecision = new Decision(null, options: Parser.AllMajors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+        }
+
+        void SelectSubjectFromTable(Subject subject)
+        {
+            HighlightedSubject = subject;
+            SubjectRemovedSuccessfully = true;
+            MainTabIndex = 2;
+            Console.WriteLine("Subject:             " + HighlightedSubject.ID);
+            Console.WriteLine("Prerequisites:       " + HighlightedSubject.Prerequisites);
+            Console.WriteLine("Corequisites:        " + HighlightedSubject.Corequisites);
+        }
+
+        void ChangeMaxCreditPoints(int year, Session session, int creditPoints)
+        {
+            Plan processing = new Plan(plan);
+            Decider.SetMaxCreditPoints(new Time { year = year, session = session }, creditPoints, processing); // TODO: check if Decider should analyze
+            plan = processing;
+        }
+
+        void ChangeMaxCreditPoints(Session session, int creditPoints)
+        {
+            Plan processing = new Plan(plan);
+            Decider.SetMaxCreditPoints(session, creditPoints, processing); // TODO: check if Decider should analyze
+            plan = processing;
+        }
+
+        void ChangeMaxCreditPoints(int creditPoints)
+        {
+            Plan processing = new Plan(plan);
+            Decider.SetMaxCreditPoints(creditPoints, processing); // TODO: check if Decider should analyze
+            plan = processing;
+        }
+
+        void remove_content()
+        {
+            Plan processing = new Plan(plan);
+            Decider.RemoveContent(HighlightedSubject, processing);
+            SubjectRemovedSuccessfully = !processing.SelectedSubjects.Contains(HighlightedSubject);
+            if (SubjectRemovedSuccessfully)
+            {
+                HighlightedSubject = null;
+                MainTabIndex = 0;
+            }
+            plan = processing;
+        }
+
+        void force_time(Time time)
+        {
+            Plan processing = new Plan(plan);
+            Decider.ForceSubject(HighlightedSubject, processing, time);
+            plan = processing;
+        }
+
+        void unforce_time()
+        {
+            Plan processing = new Plan(plan);
+            Decider.UnForceSubject(HighlightedSubject, processing);
+            plan = processing;
+        }
+
+        void add_year()
+        {
+            Plan processing = new Plan(plan);
+            processing.AddYear();
+            plan = processing;
+        }
+
+    public string TextFilterOptions { get; set; } = "";
+
+    bool AcceptFilter(Option option, bool filterByCreditPointsRequired)
+    {
+        // Remove those suspicious 3rd+ year subjects that have no information attached to them
+        if (currentDecision.IsElective() && option is Subject subject && subject.Prerequisites.Options.Count == 0 && subject.Corequisites.Options.Count == 0 && subject.GetLevel() > 2)
+            return false;
+
+        // Check text filter
+        bool filterSuccess = TextFilterOptions == "";
+        if (option is Content content)
+        {
+            if (content.ID.Contains(TextFilterOptions.ToUpper()) || content.Name.ToUpper().Contains(TextFilterOptions.ToUpper()))
+                filterSuccess = true;
+        }
+        else // option is Decision
+        {
+            if (option.ToString().ToUpper().Contains(TextFilterOptions.ToUpper()))
+                filterSuccess = true;
+        }
+        if (!filterSuccess)
+            return false;
+
+        // Some subjects have too many prerequisites and can't fit into electives. These subjects should be hidden from decisions
+        // The reason these options aren't simply removed from the decision is because the algorithm doesn't produce an exact answer
+        // A further explanation of this is given in the function
+        if (filterByCreditPointsRequired && !option.EnoughCreditPoints(plan, plan.RemainingCreditPoints(), out _))
+            return false;
+
+        // All filters passed
+        return true;
+    }
+
+    void SelectOption(Option selected)
+    {
+        if (selected is Content content)
+        {
+            Plan processing = new Plan(plan);
+            Decider.AddContent(content, processing);
+            plan = processing;
+        }
+        else if (selected is Decision)
+        {
+            currentDecision = selected as Decision;
+            if (currentDecision.MustPickAll())
+            {
+                List<Content> contents = currentDecision.Options.Where(option => option is Content).Cast<Content>().ToList();
+                if (contents.Any())
+                {
+                    Plan processing = new Plan(plan);
+                    Decider.AddContents(contents, processing);
+                    plan = processing;
+                }
+            }
+        }
+        HighlightedSubject = null;
+    }
+
+    void SelectDecision_onclick(Decision decision)
+    {
+        SelectDecision(decision);
+        MainTabIndex = 0;
+    }
+
+    void SelectDecision(Decision decision)
+    {
+        currentDecision = decision;
+        if (currentDecision != null)
+            Console.WriteLine("Current Decision:    " + currentDecision.ToString());
+        currentDecisionIsFirst = plan.Decisions.Any() && currentDecision == plan.Decisions.First();
+    }
+
+    void next_decision()
+    {
+        if (!plan.SelectedCourses.Any())
+        {
+            ChooseDegree();
+            return;
+        }
+
+        bool keepFilterSettings = false;
+        if (plan.Decisions.Any() && currentDecisionIsFirst)
+        {
+            keepFilterSettings = currentDecision.IsElective() && plan.Decisions.First().IsElective();
+            SelectDecision(plan.Decisions.First());
+        }
+        else
+        {
+            SelectDecision(Decider.NextDecision(plan, currentDecision, out keepFilterSettings));
+        }
+        if (!keepFilterSettings)
+            TextFilterOptions = "";
+        if (currentDecision == null && MainTabIndex == 0)
+            MainTabIndex = 1;
+    }
+}
