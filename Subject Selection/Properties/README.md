@@ -13,11 +13,16 @@ There are some mistakes in these files:
     * C000095
     * C000006
     * C000131
+* These minors use the word "elective" when they should say "option set":
+	* T000382
 * These subjects' prerequisites need extra extra/less brackets to get parsed correctly:
     * AFIN3052
+	* AHIS3250
 	* BIOL2410
+	* COGS2000
     * COMP2800
 	* EDST4040
+	* HLTH3100
     * MGMT3904
 * These subjects' prerequisites are not written in the same pattern as the other prerequisites:
     * BIOL3450
@@ -26,6 +31,7 @@ There are some mistakes in these files:
     * LAWS5060
 	* MECH4002
 	* PICT3001
+	* PICT3020
 	* PSYU3332
     * SPHL2212
     * SPHL3311
@@ -35,8 +41,23 @@ There are some mistakes in these files:
     * PSYU3351
 * These subjects' prerequisites contain a typo
 	* AFIN2070
-* These subjects' prerequisites were inconsistent with the online handbook
-	* SSCI3090
+	* ECHE2310
+	* ECHE2320
+	* ECHE3150
+	* ECHE3330
+	* ENGL2031
+	* HLTH3050
+	* MATH1015
+	* PICT3011
+	* PSYU3336
+	* STAT1371
+* These subjects' prerequisites refer to admission to invalid degrees, so those references were removed
+	* ACST (anything that requires admission)
+	* COMP1010
+	* EDST2000
+	* EDST2100
+	* EDST2110
+	* ENGG4104
 * These subjects' corequisites are not written in the same pattern as the other corequisites:
 	* GEOS2111
 	* MMCC3150
@@ -87,11 +108,22 @@ There are some mistakes in these files:
     * STAT2371 -> BIOL2610
     * STAT2371 -> PSYU2248
     * TELE3001 -> STAT3494
+* These degrees need a tab in their notes:
+	* C000132
+	* C000195
+* These degrees were missing a CP number:
+	* C000195
+	* C000008
+* There was no degree with these awards so I created ones that could not be completed:
+	* BEd(ECE)
 * Most of the double-degrees that say they need a minor from Bachelor of Arts don't give a list of what they are, so there is an extra resource called arts_minor
+	* Then the correct degrees (including C000004) had to have their list of Art minors removed to avoid the minors being copied twice
 * These courses are inconsistent on how they explain to do ARTS2000 or a minor from Arts:
 	* D000053
 	* D000010
 	* D000041
+* This major had a specific requirement that forced it to be written differently:
+	* N000113
 * This course cannot be completed as a single degree, so it got removed but its relevant double-degrees are still in the file:
 	* C000196
 * ECON1031 has a dash in its list of NCCWs, but I'm not going to do anything about that because it's referring to the old unit codes

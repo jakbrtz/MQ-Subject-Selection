@@ -1645,7 +1645,7 @@ Requirements:
 
 
 Elective units	Credit Points
-Electives	20cp from 	AHIS1140		Ancient Hebrew A (10)	
+Option set	20cp from 	AHIS1140		Ancient Hebrew A (10)	
 		AHIS1150		Hieroglyphic Egyptian A (10)	
 		AHIS1160		Coptic Egyptian A (10)	
 		AHIS1240		Ancient Israel and the Near East (10)	
@@ -1661,7 +1661,7 @@ Electives	20cp from 	AHIS1140		Ancient Hebrew A (10)
 		AHIS3241		Dialogue of Civilisations: Ancient Iran (10)	
 		AHIS3250		Ancient Egyptian Religion (10)	
 		AHIS3251		State Formation: Egypt and the Near East (10)	20
-Electives	20cp from 	AHIS2050		Biblical and Near Eastern Literature and History (10)	
+Option set	20cp from 	AHIS2050		Biblical and Near Eastern Literature and History (10)	
 		AHIS2140		Ancient Hebrew B (10)	
 		AHIS2150		Hieroglyphic Egyptian B (10)	
 		AHIS2160		Coptic Egyptian B (10)	

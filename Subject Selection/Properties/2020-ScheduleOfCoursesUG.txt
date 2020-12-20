@@ -12168,3 +12168,11 @@ Q000131	Chemical and Biomolecular Sciences
 Q000156	Chemistry	
  	 	
 
+
+Bachelor of Fake Course	E000000
+
+Award:				idk (BEd(ECE))
+	 
+Option set	10cp from 				10
+
+
