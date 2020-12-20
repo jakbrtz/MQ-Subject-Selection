@@ -53,7 +53,7 @@ namespace Subject_Selection
 
             descriptionBuilder = "";
 
-            foreach (string line in Properties.Resources._2020_ScheduleOfMinors.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in Properties.Resources._2020_ScheduleOfMinors.Replace("\r\n","\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("T000") || line.Contains("P000"))
                 {
@@ -61,7 +61,7 @@ namespace Subject_Selection
                     descriptionBuilder = "";
                 }
 
-                descriptionBuilder += line + "\r\n";
+                descriptionBuilder += line + "\n";
             }
             MakeMinor(descriptionBuilder);
 
@@ -78,7 +78,7 @@ namespace Subject_Selection
             }
 
             descriptionBuilder = "";
-            foreach (string line in Properties.Resources._2020_ScheduleOfMajors.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in Properties.Resources._2020_ScheduleOfMajors.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("N000"))
                 {
@@ -86,7 +86,7 @@ namespace Subject_Selection
                     descriptionBuilder = "";
                 }
 
-                descriptionBuilder += line + "\r\n";
+                descriptionBuilder += line + "\n";
             }
             MakeMajor(descriptionBuilder);
 
@@ -117,7 +117,7 @@ namespace Subject_Selection
             }
 
             descriptionBuilder = "";
-            foreach (string line in Properties.Resources._2020_ScheduleOfUGSpecialisations.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in Properties.Resources._2020_ScheduleOfUGSpecialisations.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("Q000"))
                 {
@@ -125,7 +125,7 @@ namespace Subject_Selection
                     descriptionBuilder = "";
                 }
 
-                descriptionBuilder += line + "\r\n";
+                descriptionBuilder += line + "\n";
             }
             MakeSpecialisation(descriptionBuilder);
 
@@ -133,9 +133,9 @@ namespace Subject_Selection
 
             // Load courses
 
-            foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Split(new string[] { "\r\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Replace("\r\n","\n").Split(new string[] { "\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                Course course = new Course("\r\nBachelor of" + description);
+                Course course = new Course("\nBachelor of" + description);
                 courses[course.ID] = course;
             }
 
@@ -152,7 +152,7 @@ namespace Subject_Selection
 
             // Read recommendations
 
-            foreach (string line in Properties.Resources.Recommender.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in Properties.Resources.Recommender.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 string reasonStr = line.Split()[0];
                 string recommendationStr = line.Split()[1];
@@ -418,7 +418,7 @@ namespace Subject_Selection
             string previousFirstCell = "";
             string previousLastCell = "";
 
-            foreach (string line in document.Split(new string[] { "\r\n" }, StringSplitOptions.None))
+            foreach (string line in document.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("Concentration")) break; // TODO: parse concentrations in Specialisations
 
