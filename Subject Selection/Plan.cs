@@ -132,32 +132,38 @@ namespace Subject_Selection
                 // Fill the semester with subjects that can be chosen
                 for (int subjectNumber = 0; subjectNumber < MaxSubjects[semester]; subjectNumber++)
                 {
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
                     // Prepare a list of what subjects could be chosen
-                    IEnumerable<Subject> possibleSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All));
+                    List<Subject> possibleSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).ToList();
                     // Do not pick subjects with forced times later than the current session
-                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && semester.IsEarlierThan(forcedTimes[subject])));
+                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && semester.IsEarlierThan(forcedTimes[subject]))).ToList();
                     // Pick from subjects that are allowed during this semester
-                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(MaxSubjects).Contains(semester));
+                    possibleSubjects = possibleSubjects.Where(subject => subject.GetPossibleTimes(MaxSubjects).Contains(semester)).ToList();
                     // Pick from subjects that have satisfied requisites
-                    possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, semester));
+                    possibleSubjects = possibleSubjects.Where(subject => IsLeaf(subject, semester)).ToList();
                     // Favor lower level subjects
-                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel());
+                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.GetLevel()).ToList();
                     // Favor subjects that cannot fit in many semesters
-                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count);
+                    possibleSubjects = possibleSubjects.OrderBy(subject => subject.Semesters.Count).ToList();
                     // Favor subjects that have many other subjects relying on them
-                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject)));
+                    possibleSubjects = possibleSubjects.OrderByDescending(subject => SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).Count(other => IsAbove(parent: other, child: subject))).ToList();
                     // If any subjects are forced, filter them
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
                         .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject].IsEarlierThanOrAtTheSameTime(semester))
                         .OrderBy(subject => forcedTimes[subject]);
                     if (forcedSubjects.Any())
-                        possibleSubjects = forcedSubjects;
+                        possibleSubjects = forcedSubjects.ToList();
                     // Pick the first item from that list
                     Subject nextSubject = possibleSubjects.FirstOrDefault();
                     // If no subject was chosen, go to the next semester
                     if (nextSubject == null) break;
                     // Add the selected subject to this semester
                     semesterClasses.Add(nextSubject);
+
+                    sw.Stop();
+                    Console.WriteLine(sw.ElapsedMilliseconds + "ms " + nextSubject);
                 }
             }
 
