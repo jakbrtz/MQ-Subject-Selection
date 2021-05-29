@@ -326,116 +326,122 @@
 
 @code{
 
-        async Task Think(Action action)
-        {
-            if (Thinking) return;
-            Thinking = true;
-            await Task.Run(action);
-            next_decision();
-            Thinking = false;
-            await Task.CompletedTask;
-        }
+    async Task Think(Action action)
+    {
+        if (Thinking) return;
+        Thinking = true;
+        await Task.Run(action);
+        next_decision();
+        Thinking = false;
+        await Task.CompletedTask;
+    }
 
-        void Load()
-        {
-            // Load information
-            Parser.LoadData();
-            // Construct a graph of subjects
-            foreach (Subject subject in Parser.AllSubjects())
-                subject.FindChildren();
-            // Add 3 years to the plan
-            for (int year = 0; year < 3; year++)
-                plan.AddYear();
-            // Offer a degree to the user
-            ChooseDegree();
-        }
+    void Load()
+    {
+        // Load information
+        Parser.LoadData();
+        // Construct a graph of subjects
+        foreach (Subject subject in Parser.AllSubjects())
+            subject.FindChildren();
+        // Add 3 years to the plan
+        for (int year = 0; year < 3; year++)
+            plan.AddYear();
+        // Offer a degree to the user
+        ChooseDegree();
+    }
 
-        void ChooseDegree()
-        {
-            // Make sure the program knows which subjects are banned
-            plan.RefreshEarliestTimes();
-            // Offer degrees that do not contain mistakes, in order of their subject code
-            currentDecision = new Decision(null,
-                options: Parser.AllCourses()
-                    .Where(course => !Properties.Resources.known_mistakes.Split().Contains(course.ID) && !course.Prerequisites.HasBeenBanned(plan))
-                    .OrderBy(course => course.ID).ToList<Option>(),
-                selectionType: Selection.OR);
-        }
+    void ChooseDegree()
+    {
+        // Make sure the program knows which subjects are banned
+        plan.RefreshEarliestTimes();
+        // Offer degrees that do not contain mistakes, in order of their subject code
+        currentDecision = new Decision(null,
+            options: Parser.AllCourses()
+                .Where(course => !Properties.Resources.known_mistakes.Split().Contains(course.ID) && !course.Prerequisites.HasBeenBanned(plan))
+                .OrderBy(course => course.ID).ToList<Option>(),
+            selectionType: Selection.OR);
+    }
 
-        void MinorDecision() // TODO: make button for this
-        {
-            currentDecision = new Decision(null, options: Parser.AllMinors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
-        }
+    void MinorDecision() // TODO: make button for this
+    {
+        currentDecision = new Decision(null, options: Parser.AllMinors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+    }
 
-        void MajorDecision() // TODO: make button for this
-        {
-            currentDecision = new Decision(null, options: Parser.AllMajors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
-        }
+    void MajorDecision() // TODO: make button for this
+    {
+        currentDecision = new Decision(null, options: Parser.AllMajors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+    }
 
-        void SelectSubjectFromTable(Subject subject)
-        {
-            HighlightedSubject = subject;
-            SubjectRemovedSuccessfully = true;
-            MainTabIndex = 2;
-            Console.WriteLine("Subject:             " + HighlightedSubject.ID);
-            Console.WriteLine("Prerequisites:       " + HighlightedSubject.Prerequisites);
-            Console.WriteLine("Corequisites:        " + HighlightedSubject.Corequisites);
-        }
+    void SelectSubjectFromTable(Subject subject)
+    {
+        HighlightedSubject = subject;
+        SubjectRemovedSuccessfully = true;
+        MainTabIndex = 2;
+        Console.WriteLine("Subject:             " + HighlightedSubject.ID);
+        Console.WriteLine("Prerequisites:       " + HighlightedSubject.Prerequisites);
+        Console.WriteLine("Corequisites:        " + HighlightedSubject.Corequisites);
+    }
 
-        void ChangeMaxCreditPoints(int year, Session session, int creditPoints)
-        {
-            Plan processing = new Plan(plan);
-            Decider.SetMaxCreditPoints(new Time { year = year, session = session }, creditPoints, processing); // TODO: check if Decider should analyze
-            plan = processing;
-        }
+    void ChangeMaxCreditPoints(int year, Session session, int creditPoints)
+    {
+        Plan processing = new Plan(plan);
+        processing.SetMaxCreditPoints(new Time { year = year, session = session }, creditPoints);
+        processing.Analyze(); //TODO: check if analyze is needed
+        plan = processing;
+    }
 
-        void ChangeMaxCreditPoints(Session session, int creditPoints)
-        {
-            Plan processing = new Plan(plan);
-            Decider.SetMaxCreditPoints(session, creditPoints, processing); // TODO: check if Decider should analyze
-            plan = processing;
-        }
+    void ChangeMaxCreditPoints(Session session, int creditPoints)
+    {
+        Plan processing = new Plan(plan);
+        processing.SetMaxCreditPoints(session, creditPoints);
+        processing.Analyze(); //TODO: check if analyze is needed
+        plan = processing;
+    }
 
-        void ChangeMaxCreditPoints(int creditPoints)
-        {
-            Plan processing = new Plan(plan);
-            Decider.SetMaxCreditPoints(creditPoints, processing); // TODO: check if Decider should analyze
-            plan = processing;
-        }
+    void ChangeMaxCreditPoints(int creditPoints)
+    {
+        Plan processing = new Plan(plan);
+        processing.SetMaxCreditPoints(creditPoints);
+        processing.Analyze(); //TODO: check if analyze is needed
+        plan = processing;
+    }
 
-        void remove_content()
+    void remove_content()
+    {
+        Plan processing = new Plan(plan);
+        processing.RemoveContent(HighlightedSubject);
+        processing.Analyze();
+        SubjectRemovedSuccessfully = !processing.SelectedSubjects.Contains(HighlightedSubject);
+        if (SubjectRemovedSuccessfully)
         {
-            Plan processing = new Plan(plan);
-            Decider.RemoveContent(HighlightedSubject, processing);
-            SubjectRemovedSuccessfully = !processing.SelectedSubjects.Contains(HighlightedSubject);
-            if (SubjectRemovedSuccessfully)
-            {
-                HighlightedSubject = null;
-                MainTabIndex = 0;
-            }
-            plan = processing;
+            HighlightedSubject = null;
+            MainTabIndex = 0;
         }
+        plan = processing;
+    }
 
-        void force_time(Time time)
-        {
-            Plan processing = new Plan(plan);
-            Decider.ForceSubject(HighlightedSubject, processing, time);
-            plan = processing;
-        }
+    void force_time(Time time)
+    {
+        Plan processing = new Plan(plan);
+        processing.ForceTime(HighlightedSubject, time);
+        processing.Analyze();
+        plan = processing;
+    }
 
-        void unforce_time()
-        {
-            Plan processing = new Plan(plan);
-            Decider.UnForceSubject(HighlightedSubject, processing);
-            plan = processing;
-        }
+    void unforce_time()
+    {
+        Plan processing = new Plan(plan);
+        processing.UnForceTime(HighlightedSubject);
+        processing.Analyze();
+        plan = processing;
+    }
 
-        void add_year()
-        {
-            Plan processing = new Plan(plan);
-            processing.AddYear();
-            plan = processing;
-        }
+    void add_year()
+    {
+        Plan processing = new Plan(plan);
+        processing.AddYear();
+        plan = processing;
+    }
 
     public string TextFilterOptions { get; set; } = "";
 
@@ -475,7 +481,8 @@
         if (selected is Content content)
         {
             Plan processing = new Plan(plan);
-            Decider.AddContent(content, processing);
+            processing.AddContent(content);
+            processing.Analyze();
             plan = processing;
         }
         else if (selected is Decision)
@@ -487,7 +494,8 @@
                 if (contents.Any())
                 {
                     Plan processing = new Plan(plan);
-                    Decider.AddContents(contents, processing);
+                    processing.AddContents(contents);
+                    processing.Analyze();
                     plan = processing;
                 }
             }
@@ -525,7 +533,7 @@
         }
         else
         {
-            SelectDecision(Decider.NextDecision(plan, currentDecision, out keepFilterSettings));
+            SelectDecision(plan.NextDecisionForUser(currentDecision, out keepFilterSettings));
         }
         if (!keepFilterSettings)
             TextFilterOptions = "";
