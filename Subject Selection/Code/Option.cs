@@ -6,27 +6,56 @@ using System.Threading.Tasks;
 
 namespace Subject_Selection
 {
+    // TODO: remove reference to Parser
+
+    /// <summary>
+    /// A component of a decision
+    /// </summary>
     abstract public class Option
     {
-        // This superclass allows decisions to be made of other decisions
+        /// <summary> Has this Option been satisfied by a plan </summary>
         public abstract bool HasBeenCompleted(Plan plan, Time requiredCompletionTime);
+
+        /// <summary> Is it impossible for this option to be satisfied in this plan? </summary>
         public abstract bool HasBeenBanned(Plan plan);
+
+        /// <summary> How many credit points are required to complete this option? </summary>
         public abstract int CreditPoints();
+
+        /// <summary> What is the earliest time that this option can be satisfied by </summary>
         public abstract Time EarliestCompletionTime(Plan plan);
+
+        /// <summary> Which subjects are banned due to this option? </summary>
         public abstract List<Content> ForcedBans();
+
+        /// <summary> Is this option practically the same as another option </summary>
         public abstract bool HasSameOptions(Option other);
+
+        /// <summary> Does this option force another option to be satisfied? </summary>
         public abstract bool Covers(Option maybeRedundant);
+
+        /// <summary> What does this option look like when another subject has been selected/deleted </summary>
         public abstract Option WithoutContent(Content content, bool countTowardsDecision);
+
+        /// <summary> Is there enough credit points remaining for this option to be satisfied? </summary>
         public abstract bool EnoughCreditPoints(Plan plan, int creditPointsAvailable, out int creditPointsRequired);
     }
 
     public abstract class Content : Option
     {
-        // This superclass is used to represent both Subjects and Courses
+        /// <summary> The short code </summary>
         public string ID { get; }
+
+        /// <summary> The full name </summary>
         public string Name { get; }
+
+        /// <summary> What other subjects need to be completed before this can be completed? </summary>
         public Decision Prerequisites { get; }
+
+        /// <summary> What other subjects need to be completed before (or at the same time) as this can be completed? </summary>
         public Decision Corequisites { get; }
+
+        /// <summary> What other subjects are not allowed to be done if the human selects this content? </summary>
         public string[] NCCWs { get; }
 
         protected Content(string id, string name, string prerequisites, string corequisites, string nccws)
@@ -99,10 +128,17 @@ namespace Subject_Selection
 
     public class Subject : Content
     {
+        /// <summary> How many credit points is this worth </summary>
         private readonly int CP;
+        /// <summary> Is this a pace unit? </summary>
         public readonly bool pace = false;
+        /// <summary> What is the earliest year that this can be taken? </summary>
         public readonly int earliestYear = 2020;
+
+        /// <summary> A list of subjects where their requisites include this subject </summary>
         public List<Subject> Parents { get; } = new List<Subject>(); //TODO: better name
+
+        /// <summary> A list of times where this subject is offered </summary>
         public List<OfferTime> Semesters { get; }
 
         public Subject(string id, string name, string cp, string pace, string times, string prerequisites, string corequisites, string nccws) :
@@ -148,6 +184,7 @@ namespace Subject_Selection
             return CP;
         }
 
+        /// <summary> Get the time that this subject was taken according to the plan </summary>
         public Time GetChosenTime(Plan plan)
         {
             return plan.SubjectsInOrder.First(semester => semester.Value.Contains(this)).Key;
@@ -162,28 +199,20 @@ namespace Subject_Selection
             return Time.Early;
         }
 
+        /// <summary> Return true if the earliest time is earliest than the semester, and the subject allows the session </summary>
         public bool AllowedDuringSemester(Time semester, Plan plan)
         {
-            // Return true if the earliest time is earliest than the semester, and the subject allows the session
             return plan.EarliestCompletionTimes[this].IsEarlierThanOrAtTheSameTime(semester) && Semesters.Any(offerTime => offerTime.session == semester.session);
         }
 
+        /// <summary> Check if this option is recommended to the human, according to the other subjects they have selected </summary>
         public bool IsRecommended(HashSet<Subject> otherSelectedSubjects, HashSet<Course> otherSelectedCourses, out List<Content> reasons)
         {
             reasons = Parser.Recommendations.Where(tuple => tuple.recommendation == this && (otherSelectedSubjects.Contains(tuple.reason) || otherSelectedCourses.Contains(tuple.reason))).Select(tuple => tuple.reason).ToList();
             return reasons.Any();
         }
 
-        public bool IsFullYear()
-        {
-            return Semesters.Any(semester => semester.fullYear);
-        }
-
-        public void AddParent(Subject parent)
-        {
-            Parents.Add(parent);
-        }
-
+        /// <summary> Work out the Parents of this subject </summary>
         public void FindChildren()
         {
             Prerequisites.FindChildren(this);
@@ -233,6 +262,9 @@ namespace Subject_Selection
         }
     }
 
+    /// <summary>
+    /// A group of subjects that the human needs to do to get a degree
+    /// </summary>
     public class Course : Content
     {
         public Course(string document) :
@@ -280,6 +312,7 @@ namespace Subject_Selection
             return Prerequisites.EnoughCreditPoints(plan, creditPointsAvailable, out creditPointsRequired);
         }
 
+        /// <summary> Is this a degree </summary>
         bool IsDegree()
         {
             // TODO: make a separate class
@@ -287,13 +320,22 @@ namespace Subject_Selection
         }
     }
 
+    /// <summary>
+    /// The human needs to decide which subjects they must complete in order to satisfy requisites
+    /// </summary>
     public partial class Decision : Option
     {
+        /// <summary> What subjects have this as a prerequisite? </summary>
         List<Content> reasonsPrerequisite = new List<Content>();
+        /// <summary> What subjects have this as a corequisite? </summary>
         List<Content> reasonsCorequisite = new List<Content>();
+        /// <summary> A human-friendly string to represent this decision </summary>
         string description;
+        /// <summary> A domain of options for the human to choose from </summary>
         List<Option> options;
+        /// <summary> The amount of credit points that need to be completed to satisfy this decision </summary>
         int? creditPoints;
+        /// <summary> What type of decision is this? </summary>
         Selection selectionType;
 
         public Decision(Option reason, string description = "", List<Option> options = null, Selection selectionType = Selection.OR, int? creditPoints = null, bool reasonIsCorequisite = false)
@@ -329,6 +371,7 @@ namespace Subject_Selection
                 CopyDescription(reason.ToString());
         }
 
+        /// <summary> A domain of options for the human to choose from </summary>
         public List<Option> Options
         {
             get
@@ -339,6 +382,7 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary> What type of decision is this? </summary>
         public Selection SelectionType
         {
             get
@@ -349,6 +393,7 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary> The amount of credit points that need to be completed to satisfy this decision </summary>
         public override int CreditPoints()
         {
             if (options == null)
@@ -362,9 +407,9 @@ namespace Subject_Selection
             throw new ArgumentException("CreditPoints cannot be evaluated for this SelectionType");
         }
 
+        /// <summary> When courses have overlapping units, the same unit cannot count towards both decisions. This makes a decision "Unique" </summary>
         public bool Unique()
         {
-            // When courses have overlapping units, the same unit cannot count towards both decisions. This makes a decision "Unique"
             return GetReasonsPrerequisite().Any(content => content is Course);
         }
 
@@ -398,6 +443,7 @@ namespace Subject_Selection
             };
         }
 
+        /// <summary> If you ignore the "Elective" component of this decision, has it been satisfied </summary>
         public bool HasBeenCompletedIgnoringElectives(Plan plan, Time requiredCompletionTime)
         {
             // Rather than evaluating elective decisions, assume that it is true
@@ -419,6 +465,7 @@ namespace Subject_Selection
             };
         }
 
+        /// <summary> Should only one option be selected? </summary>
         public bool OnlyPickOne()
         {
             return SelectionType switch
@@ -430,6 +477,7 @@ namespace Subject_Selection
             };
         }
 
+        /// <summary> Will all options need to be selected? </summary>
         public bool MustPickAll()
         {
             return SelectionType switch
@@ -506,6 +554,7 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary> What decision does the user still need to make, when account for what's already been selected </summary>
         public Decision GetRemainingDecision(Plan plan)
         {
             // Figure out when this decision must be completed
@@ -582,6 +631,7 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary> Create a simple version of this decision </summary>
         public Decision GetSimplifiedDecision()
         {
             // If the decision doesn't require anything, then return a blank decision
@@ -826,11 +876,6 @@ namespace Subject_Selection
             }
         }
 
-        public int MaxDepth()
-        {
-            return Options.Max(option => option is Decision decision ? decision.MaxDepth() : 0) + 1;
-        }
-
         public override bool Covers(Option maybeRedundant)
         {
             // This isn't a thorough check, because otherwise it would be possible for simple decisions to be CoveredBy very complicated decisions
@@ -984,6 +1029,7 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary> When must the options be completed by? </summary>
         public Time RequiredCompletionTime(Plan plan)
         {
             Time requiredByPrerequisites = reasonsPrerequisite.Any(reason => reason is Subject)
@@ -998,6 +1044,7 @@ namespace Subject_Selection
             return requiredByCorequisites;
         }
 
+        /// <summary> Combine the reasons from another decision into this decision's reasons </summary>
         public void AddReasons(Decision decision)
         {
             reasonsPrerequisite = reasonsPrerequisite.Union(decision.reasonsPrerequisite).ToList();
@@ -1019,6 +1066,7 @@ namespace Subject_Selection
             return reasonsPrerequisite.Concat(reasonsCorequisite);
         }
 
+        /// <summary> Check if an option exists in this decision </summary>
         public bool Contains(Option value)
         {
             return Options.Any(option => option == value || (option is Decision decision && decision.Contains(value)));
@@ -1106,6 +1154,7 @@ namespace Subject_Selection
             return new Decision(this, options: possibleResults.ToList<Option>(), selectionType: Selection.CP, creditPoints: possibleResults.First().CreditPoints()).GetSimplifiedDecision(); // TODO: make sure that creditPoints is consistent
         }
 
+        /// <summary> Remove the subjects that have been banned </summary>
         Decision RemoveBannedSubjects(Plan plan)
         {
             // Iterate recusively through Options
@@ -1126,6 +1175,7 @@ namespace Subject_Selection
             return new Decision(this, options: remainingOptions, selectionType: SelectionType, creditPoints: SelectionType == Selection.CP ? CreditPoints() : (int?)null);
         }
 
+        /// <summary> If this decision is an elective, how many credit point are part of that elective </summary>
         public int SizeOfElective()
         {
             if (IsElective())
@@ -1134,6 +1184,10 @@ namespace Subject_Selection
             return Options.Sum(option => option is Decision decision ? decision.SizeOfElective() : 0);
         }
 
+        /// <summary>
+        /// Find all options in this decisision and set their parent to a particular subject
+        /// </summary>
+        /// <param name="parent"></param>
         public void FindChildren(Subject parent)
         {
             // Skip electives
@@ -1146,7 +1200,7 @@ namespace Subject_Selection
                     decision.FindChildren(parent);
                 // Create an edge from the main subject to the option here
                 if (option is Subject subject)
-                    subject.AddParent(parent);
+                    subject.Parents.Add(parent);
             }
         }
 
@@ -1262,6 +1316,9 @@ namespace Subject_Selection
         }
     }
 
+    /// <summary>
+    /// A decision that is hard-coded to be impossible
+    /// </summary>
     class ImpossibleDecision : Decision
     {
         public ImpossibleDecision(Option reason) : base (reason, options: new List<Option>(), selectionType: Selection.OR) { }
@@ -1281,6 +1338,9 @@ namespace Subject_Selection
         }
     }
 
+    /// <summary>
+    /// A decision that is hard-coded to pass
+    /// </summary>
     class CompletedDecision : Decision 
     {
         public CompletedDecision(Option reason) : base(reason, options: new List<Option>(), selectionType: Selection.CP, creditPoints: 0) { }

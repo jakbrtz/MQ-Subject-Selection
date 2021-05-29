@@ -7,23 +7,40 @@ using System.Diagnostics;
 
 namespace Subject_Selection
 {
-    // When I started writing this program, I thought that the algorithms would involve duplicating the plan and experimenting on the duplicates
-    // This is why the Plan class is not a static class
-    // It is possible that in the future, HasBeenBanned might involve duplicating this class
+    // TODO: remove all reference to Parser
+
+    /// <summary>
+    /// An incomplete study plan for the human.
+    /// This class includes a list of subjects and when they will be taken, restrictions that the human has put on the plan, and restrictions that are caused by the plan.
+    /// </summary>
     public class Plan
     {
+        /// <summary> A map from times to lists of subjects that run during that time </summary>
         public Dictionary<Time, List<Subject>> SubjectsInOrder { get; } = new Dictionary<Time, List<Subject>>();
+
+        /// <summary> A list of decisions that the human still needs to make before the plan is valid </summary>
         public List<Decision> Decisions { get; } = new List<Decision>();
-        public HashSet<Subject> SelectedSubjects { get; } = new HashSet<Subject>();
+
+        /// <summary> A set of subjects that the human has selected already </summary>
+        public HashSet<Subject> SelectedSubjects { get; } = new HashSet<Subject>(); // TODO: delete this since it's redundant data (see SubjectsInOrder)
+
+        /// <summary> A set of courses that the human has selected already </summary>
         public HashSet<Course> SelectedCourses { get; } = new HashSet<Course>();
 
-        readonly Dictionary<Subject, Time> forcedTimes = new Dictionary<Subject, Time>();
+        /// <summary> A map of restrictions where a subject must run on a certain time </summary>
+        Dictionary<Subject, Time> forcedTimes { get; } = new Dictionary<Subject, Time>();
 
-        readonly public Dictionary<Time, int> MaxCreditPoints = new Dictionary<Time, int>();
+        /// <summary> A map of restrictions where a time can contain a limited number of credit points worth of subjects </summary>
+        public Dictionary<Time, int> MaxCreditPoints { get; } = new Dictionary<Time, int>();
+
+        /// <summary> A set of every banned content mapped to the reasons why it is banned</summary>
         public Dictionary<Content, List<Content>> BannedContents { get; } = new Dictionary<Content, List<Content>>();
+
+        /// <summary> A set of requisite-relationships between selected contents. </summary>
         public HashSet<Edge> ContentRelations { get; } = new HashSet<Edge>();
+
+        /// <summary> A map from subjects to the earliest time that subject could be completed when considering the current selected subjects </summary>
         public Dictionary<Subject, Time> EarliestCompletionTimes { get; } = new Dictionary<Subject, Time>();
-        public Dictionary<Subject, int> CreditPointsRequiredForCompletion { get; } = new Dictionary<Subject, int>();
 
         public Plan() { }
 
@@ -38,13 +55,25 @@ namespace Subject_Selection
             foreach (var BannedContent in other.BannedContents)
                 BannedContents.Add(BannedContent.Key, new List<Content>(BannedContent.Value));
             EarliestCompletionTimes = new Dictionary<Subject, Time>(other.EarliestCompletionTimes);
-            CreditPointsRequiredForCompletion = new Dictionary<Subject, int>(other.CreditPointsRequiredForCompletion);
 
             forcedTimes = new Dictionary<Subject, Time>(other.forcedTimes);
             MaxCreditPoints = new Dictionary<Time, int>(other.MaxCreditPoints);
             ContentRelations = new HashSet<Edge>(other.ContentRelations);
         }
 
+        /// <summary>
+        /// Add content to the study plan
+        /// </summary>
+        /// <param name="content">A subject or course that needs to be added</param>
+        public void AddContent(Content content)
+        {
+            AddContents(new[] { content });
+        }
+
+        /// <summary>
+        /// Add content(s) to this study plan
+        /// </summary>
+        /// <param name="contents">A list of subjects or courses that need to be added</param>
         public void AddContents(IEnumerable<Content> contents)
         {
             contents = contents.Except(SelectedSubjects);
@@ -60,6 +89,10 @@ namespace Subject_Selection
             Order();
         }
 
+        /// <summary>
+        /// Remove content from the study plan
+        /// </summary>
+        /// <param name="content">A subject or course that is being removed from the plan</param>
         public void RemoveContent(Content content)
         {
             if (content is Subject)
@@ -71,30 +104,43 @@ namespace Subject_Selection
             Order();
         }
 
+        /// <summary>
+        /// Add a decision to the list of decisions that the human needs to make
+        /// </summary>
         public void AddDecision(Decision decision)
         {
             Decisions.Add(decision);
             RefreshBannedSubjectsList();
         }
 
+        /// <summary>
+        /// Remove a decision from the list of decisions that the human needs to make. It can always be added later
+        /// </summary>
         public void RemoveDecision(Decision decision)
         {
-            if (Decisions.RemoveAll(match => match == decision) > 0) // I have to use a predicate because I overrode `Decision.Equals`
+            if (Decisions.RemoveAll(match => match == decision) > 0) // I have to use a predicate because I overrode `Decision.Equals` //TODO: wtf is this kid on about
                 RefreshBannedSubjectsList();
         }
 
+        /// <summary>
+        /// Clear the list of decisions that the human needs to make
+        /// </summary>
         public void ClearDecisions()
         {
             Decisions.Clear();
             RefreshBannedSubjectsList();
         }
 
+        /// <summary>
+        /// Add more time to the plan
+        /// </summary>
         public void AddYear()
         {
             int year = MaxCreditPoints.Any() ? 1 + MaxCreditPoints.Keys.Max(time => time.year) : 1;
 
             if (year == 1 || year > 20)
             {
+                // Add a standard year
                 MaxCreditPoints.Add(new Time { year = year, session = Session.S1 }, 40);
                 MaxCreditPoints.Add(new Time { year = year, session = Session.WV }, 10);
                 MaxCreditPoints.Add(new Time { year = year, session = Session.S2 }, 40);
@@ -102,6 +148,7 @@ namespace Subject_Selection
             }
             else
             {
+                // Copy the previous year
                 MaxCreditPoints.Add(new Time { year = year, session = Session.S1 }, GetMaxCreditPoints(year - 1, Session.S1));
                 MaxCreditPoints.Add(new Time { year = year, session = Session.WV }, GetMaxCreditPoints(year - 1, Session.WV));
                 MaxCreditPoints.Add(new Time { year = year, session = Session.S2 }, GetMaxCreditPoints(year - 1, Session.S2));
@@ -115,11 +162,17 @@ namespace Subject_Selection
                 throw new InvalidOperationException("Unless the user is a fool, this should not happen");
         }
 
+        /// <summary>
+        /// Get a list of times that should visually appear on the study plan
+        /// </summary>
         public IEnumerable<Time> NotableTimes()
         {
             return MaxCreditPoints.Keys.Where(time => time.session == Session.S1 || time.session == Session.S2 || GetSemester(time).Any());
         }
 
+        /// <summary>
+        /// Get a list of subjects that occur during a time
+        /// </summary>
         public List<Subject> GetSemester(Time time)
         {
             if (SubjectsInOrder.ContainsKey(time))
@@ -127,18 +180,28 @@ namespace Subject_Selection
             return new List<Subject>();
         }
 
+        /// <summary>
+        /// Record that a subject needs to run on a specific time
+        /// </summary>
         public void ForceTime(Subject subject, Time time)
         {
             forcedTimes[subject] = time;
             Order();
         }
 
+        /// <summary>
+        /// Remove the record that says a subject needs to run on a specific time
+        /// </summary>
         public void UnForceTime(Subject subject)
         {
             if (forcedTimes.Remove(subject))
                 Order();
         }
 
+        /// <summary>
+        /// Find what time a subject is forced to
+        /// </summary>
+        /// <returns>If the subject is not forced on any time, return null</returns>
         public Time? GetForcedTime(Subject subject)
         {
             if (forcedTimes.ContainsKey(subject))
@@ -146,11 +209,17 @@ namespace Subject_Selection
             return null;
         }
 
+        /// <summary>
+        /// Gets the maximum number of credit points worth of subjects that can run during a semester
+        /// </summary>
         public int GetMaxCreditPoints(Time time)
         {
             return GetMaxCreditPoints(time.year, time.session);
         }
 
+        /// <summary>
+        /// Gets the maximum number of credit points worth of subjects that can run during a semester
+        /// </summary>
         public int GetMaxCreditPoints(int year, Session session)
         {
             if (year <= 0)
@@ -160,6 +229,9 @@ namespace Subject_Selection
             return GetMaxCreditPoints(year - 1, session);
         }
 
+        /// <summary>
+        /// Sets the maximum number of credit points worth of subjects that can run during a semester
+        /// </summary>
         public void SetMaxCreditPoints(Time time, int creditPoints)
         {
             // Set the new value
@@ -170,6 +242,9 @@ namespace Subject_Selection
             // TODO: do I need to Analyze everything?
         }
 
+        /// <summary>
+        /// Sets the maximum number of credit points worth of subjects that can run during a semester
+        /// </summary>
         public void SetMaxCreditPoints(Session session, int creditPoints)
         {
             // Set the new values
@@ -180,6 +255,9 @@ namespace Subject_Selection
             Order();
         }
 
+        /// <summary>
+        /// Sets the maximum number of credit points worth of subjects that can run during a semester
+        /// </summary>
         public void SetMaxCreditPoints(int creditPoints)
         {
             // Set the new values
@@ -191,6 +269,9 @@ namespace Subject_Selection
             // Check how this affects times
         }
 
+        /// <summary>
+        /// Find out the earliest time that all subjects can run. Take into account that some subjects might be banned
+        /// </summary>
         public void RefreshEarliestTimes()
         {
             Stopwatch timer1 = new Stopwatch();
@@ -238,73 +319,15 @@ namespace Subject_Selection
             Console.WriteLine("Getting times:       " + timer1.ElapsedMilliseconds + "ms");
         }
 
-        public void RefreshCreditPointsRequiredForCompletion()
-        {
-            Stopwatch timer4 = new Stopwatch();
-            timer4.Restart();
-
-            // Prepare to analyze everything
-            Queue<Subject> subjectQueue = new Queue<Subject>(); // TODO: uniqueQueue
-            foreach (Subject subject in Parser.AllSubjects())
-                subjectQueue.Enqueue(subject);
-            // TODO: prioritize subjects if they're a leaf
-            // Iterate through the queue
-            while (subjectQueue.Any())
-            {
-                Subject current = subjectQueue.Dequeue();
-
-
-                /*
-
-                int evaluatedCreditPoints = 0;
-                if (creditPointsAvailable == int.MaxValue)
-                    return true;
-                if (creditPointsAvailable < 0)
-                    return false;
-                // If this subject is already part of the plan, then no more credit points are required
-                if (HasBeenCompleted(plan, Time.All))
-                    return true;
-                // Otherwise the credit points from this subject are required
-                evaluatedCreditPoints = current.CreditPoints();
-                // Also the credit points from the prerequisites and corequisites are required
-                if (!current.Prerequisites.EnoughCreditPoints(this, creditPointsAvailable - evaluatedCreditPoints, out int creditPointsRequiredPrerequisites))
-                    return false;
-                if (!current.Corequisites.EnoughCreditPoints(this, creditPointsAvailable - evaluatedCreditPoints, out int creditPointsRequiredCorequisites))
-                    return false;
-                // Add the larger of creditPointsRequiredRequisites
-                evaluatedCreditPoints += creditPointsRequiredPrerequisites > creditPointsRequiredCorequisites ? creditPointsRequiredPrerequisites : creditPointsRequiredCorequisites;
-                // If the number of available credit points is greater than or equal to the required amount, then there are enough credit points
-                return evaluatedCreditPoints <= creditPointsAvailable;
-
-
-
-                
-
-
-
-                // Check if the value changed
-                if (!CreditPointsRequiredForCompletion.TryGetValue(current, out int initialCreditPointsRequiredForCompletion)) initialCreditPointsRequiredForCompletion = 0;
-                CreditPointsRequiredForCompletion[current] = evaluatedCreditPoints;
-                if (initialCreditPointsRequiredForCompletion.CompareTo(evaluatedCreditPoints) != 0)
-                    // If the value changed, re-analyze every subject that depends on this subject
-                    foreach (Subject parent in current.Parents)
-                        subjectQueue.Enqueue(parent);
-
-
-                */
-            }
-
-            timer4.Stop();
-            Console.WriteLine("Getting times:       " + timer4.ElapsedMilliseconds + "ms");
-        }
-
+        /// <summary>
+        /// How many credit points worth of subjects still need to be taken before this plan is valid?
+        /// </summary>
         public int RemainingCreditPoints()
         {
             if (!SelectedCourses.Any())
                 return int.MaxValue;
             return SelectedCourses.First().CreditPoints() - SelectedSubjects.Sum(subject => subject.CreditPoints());
         }
-
 
         public override string ToString()
         {
@@ -314,11 +337,17 @@ namespace Subject_Selection
             return output;
         }
 
+        /// <summary>
+        /// Get a list of subjects that occur before or at the same time as a specified time
+        /// </summary>
         public IEnumerable<Subject> SelectedSubjectsSoFar(Time time)
         {
             return SubjectsInOrder.Where(semester => semester.Key.IsEarlierThanOrAtTheSameTime(time)).SelectMany(kvp => kvp.Value);
         }
 
+        /// <summary>
+        /// Find out the relation between all selected subjects to see if any are required
+        /// </summary>
         private void RefreshRelations()
         {
             ContentRelations.Clear();
@@ -326,16 +355,16 @@ namespace Subject_Selection
             foreach (Content content in SelectedSubjects.Cast<Content>().Concat(SelectedCourses))
             {
                 // Use a breadth-first search for subjects that this subject rely on
-                Queue<(Decision, Importance)> toAnalyze = new Queue<(Decision, Importance)>();
-                toAnalyze.Enqueue((content.Prerequisites, Importance.Compulsory));
-                toAnalyze.Enqueue((content.Corequisites, Importance.Compulsory));
+                Queue<(Decision, Edge.Importance)> toAnalyze = new Queue<(Decision, Edge.Importance)>();
+                toAnalyze.Enqueue((content.Prerequisites, Edge.Importance.Compulsory));
+                toAnalyze.Enqueue((content.Corequisites, Edge.Importance.Compulsory));
                 while (toAnalyze.Any())
                 {
-                    (Decision requisite, Importance importance) = toAnalyze.Dequeue();
+                    (Decision requisite, Edge.Importance importance) = toAnalyze.Dequeue();
                     // Ignore electives
                     if (requisite.IsElective()) continue;
                     // Rank the importance according to whether the option is compulsory or not
-                    importance = (importance == Importance.Compulsory && requisite.MustPickAll()) ? Importance.Compulsory : Importance.Optional;
+                    importance = (importance == Edge.Importance.Compulsory && requisite.MustPickAll()) ? Edge.Importance.Compulsory : Edge.Importance.Optional;
                     foreach (Option option in requisite.Options)
                     {
                         // Search the sub-decisions
@@ -349,6 +378,9 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary>
+        /// Assign a time to all selected subjects
+        /// </summary>
         private void Order()
         {
             Stopwatch timerOrder = new Stopwatch();
@@ -462,7 +494,7 @@ namespace Subject_Selection
                 if (!relevantEdges.Any())
                     return false;
                 // If a compulsory edge is found
-                if (relevantEdges.Any(edge => edge.importance == Importance.Compulsory))
+                if (relevantEdges.Any(edge => edge.importance == Edge.Importance.Compulsory))
                     // Return true if there is no series of compulsory relations from child to parent, and false otherwise
                     return !IsAbove(parent: child, child: parent, onlyCheckCompulsory: true, size: out _);
                 // This means that there are only Optional Relations
@@ -487,7 +519,7 @@ namespace Subject_Selection
                     visited.Add(current);
                     if (current == child)
                         return true;
-                    foreach (Edge edge in ContentRelations.Where(edge => edge.source == current && (edge.importance == Importance.Compulsory || !onlyCheckCompulsory)))
+                    foreach (Edge edge in ContentRelations.Where(edge => edge.source == current && (edge.importance == Edge.Importance.Compulsory || !onlyCheckCompulsory)))
                         toAnalyze.Enqueue((edge.dest, size + 1));
                 }
                 size = -1;
@@ -495,6 +527,9 @@ namespace Subject_Selection
             }
         }
 
+        /// <summary>
+        /// Find out which subjects cannot be taken anymore
+        /// </summary>
         void RefreshBannedSubjectsList()
         {
             void AddBannedSubject(Content banned, Option reason)
@@ -533,11 +568,9 @@ namespace Subject_Selection
                     AddBannedSubject(subject, decision);   
         }
 
-        public void AddContent(Content content)
-        {
-            AddContents(new[] { content });
-        }
-
+        /// <summary>
+        /// Look through all the subjects to determine which decisions still need to be made, and which subjects are now compulsary
+        /// </summary>
         public void Analyze()
         {
             if (!SelectedCourses.Any()) return;
@@ -664,7 +697,7 @@ namespace Subject_Selection
 
             }
 
-            // Sort the decisions so it is nice for the user
+            // Sort the decisions so it is nice for the human
 
             timer2.Restart();
 
@@ -691,6 +724,7 @@ namespace Subject_Selection
             timer2.Stop();
             Console.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
         }
+
 
         public bool AlreadyCovers(Decision decision)
         {
@@ -727,6 +761,11 @@ namespace Subject_Selection
             return false;
         }
 
+        /// <summary>
+        /// Pick a decision to give to the human
+        /// </summary>
+        /// <param name="originalDecision">The most recent decision that the human did</param>
+        /// <param name="keepFilterSettings">If the human was searching for a subject, should the search terms still be there?</param>
         public Decision NextDecisionForUser(Decision originalDecision, out bool keepFilterSettings)
         {
             Decision offer = null;
@@ -750,12 +789,16 @@ namespace Subject_Selection
         }
     }
 
-    public enum Importance { Optional, Compulsory }
+    /// <summary>
+    /// A relation between two subjects (or courses), where one subject requires another subject to be selected
+    /// </summary>
     public struct Edge
     {
         public Content source;
         public Importance importance;
         public Content dest;
+
+        public enum Importance { Optional, Compulsory }
 
         public override string ToString()
         {

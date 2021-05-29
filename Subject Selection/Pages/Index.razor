@@ -153,7 +153,7 @@
                 </div>
                 break;
             case 2:
-                List<Edge> edges = plan.ContentRelations.Where(relation => relation.dest == HighlightedSubject && relation.importance == Importance.Compulsory).ToList();
+                List<Edge> edges = plan.ContentRelations.Where(relation => relation.dest == HighlightedSubject && relation.importance == Edge.Importance.Compulsory).ToList();
                 <div id="Subject" class="tabcontent" style="padding-top:30px;padding-left:40px">
                     <h2>
                         <a href="https://coursehandbook.mq.edu.au/2020/units/@HighlightedSubject.ID" target="_blank">@HighlightedSubject.ID</a>
