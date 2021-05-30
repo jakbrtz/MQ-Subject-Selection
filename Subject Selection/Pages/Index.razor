@@ -227,6 +227,8 @@
                     bool incompleteElectiveRequisiteFound = false;
                     bool cpOverFlow = plan.RemainingCreditPoints() < 0;
                     bool cpComplete = plan.SelectedCourses.Any() && plan.RemainingCreditPoints() == 0;
+                    int maxSubjectsPerSession = plan.MaxSubjectsPerSession();
+
                     @foreach (Course course in plan.SelectedCourses)
                     {
                         <h1>@course.Name</h1>
@@ -236,7 +238,7 @@
                         {
                             <tr>
                                 <td>@time</td>
-                                @for (int i = 0; i < plan.SubjectsInOrder.Max(session => session.Value.Count); i++)
+                                @for (int i = 0; i < maxSubjectsPerSession; i++)
                                 {
                                     <td>
                                         @if (plan.GetSemester(time).Count > i)

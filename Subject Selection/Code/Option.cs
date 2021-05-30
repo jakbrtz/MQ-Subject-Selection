@@ -187,7 +187,7 @@ namespace Subject_Selection
         /// <summary> Get the time that this subject was taken according to the plan </summary>
         public Time GetChosenTime(Plan plan)
         {
-            return plan.SubjectsInOrder.First(semester => semester.Value.Contains(this)).Key;
+            return plan.AssignedTimes[this];
         }
 
         public override Time EarliestCompletionTime(Plan plan)
@@ -206,7 +206,7 @@ namespace Subject_Selection
         }
 
         /// <summary> Check if this option is recommended to the human, according to the other subjects they have selected </summary>
-        public bool IsRecommended(HashSet<Subject> otherSelectedSubjects, HashSet<Course> otherSelectedCourses, out List<Content> reasons)
+        public bool IsRecommended(List<Subject> otherSelectedSubjects, List<Course> otherSelectedCourses, out List<Content> reasons)
         {
             reasons = Parser.Recommendations.Where(tuple => tuple.recommendation == this && (otherSelectedSubjects.Contains(tuple.reason) || otherSelectedCourses.Contains(tuple.reason))).Select(tuple => tuple.reason).ToList();
             return reasons.Any();

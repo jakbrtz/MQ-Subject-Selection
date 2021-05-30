@@ -15,20 +15,20 @@ namespace Subject_Selection
     /// </summary>
     public class Plan
     {
-        /// <summary> A map from times to lists of subjects that run during that time </summary>
-        public Dictionary<Time, List<Subject>> SubjectsInOrder { get; } = new Dictionary<Time, List<Subject>>();
-
         /// <summary> A list of decisions that the human still needs to make before the plan is valid </summary>
         public List<Decision> Decisions { get; } = new List<Decision>();
 
         /// <summary> A set of subjects that the human has selected already </summary>
-        public HashSet<Subject> SelectedSubjects { get; } = new HashSet<Subject>(); // TODO: delete this since it's redundant data (see SubjectsInOrder)
+        public List<Subject> SelectedSubjects { get; } = new List<Subject>();
 
         /// <summary> A set of courses that the human has selected already </summary>
-        public HashSet<Course> SelectedCourses { get; } = new HashSet<Course>();
+        public List<Course> SelectedCourses { get; } = new List<Course>();
 
-        /// <summary> A map of restrictions where a subject must run on a certain time </summary>
-        Dictionary<Subject, Time> forcedTimes { get; } = new Dictionary<Subject, Time>();
+        /// <summary> A map from subjects to the time that the subject is being taken </summary>
+        public Dictionary<Subject, Time> AssignedTimes { get; } = new Dictionary<Subject, Time>();
+
+        /// <summary> A set of subjects that have their times fixed </summary>
+        public HashSet<Subject> SubjectsWithForcedTimes { get; } = new HashSet<Subject>();
 
         /// <summary> A map of restrictions where a time can contain a limited number of credit points worth of subjects </summary>
         public Dictionary<Time, int> MaxCreditPoints { get; } = new Dictionary<Time, int>();
@@ -46,17 +46,16 @@ namespace Subject_Selection
 
         public Plan(Plan other)
         {
-            foreach (var semester in other.SubjectsInOrder)
-                SubjectsInOrder.Add(semester.Key, new List<Subject>(semester.Value));
+            AssignedTimes = new Dictionary<Subject, Time>(other.AssignedTimes);
             Decisions.AddRange(other.Decisions);
             
-            SelectedSubjects = new HashSet<Subject>(other.SelectedSubjects);
-            SelectedCourses = new HashSet<Course>(other.SelectedCourses);
+            SelectedSubjects = new List<Subject>(other.SelectedSubjects);
+            SelectedCourses = new List<Course>(other.SelectedCourses);
             foreach (var BannedContent in other.BannedContents)
                 BannedContents.Add(BannedContent.Key, new List<Content>(BannedContent.Value));
             EarliestCompletionTimes = new Dictionary<Subject, Time>(other.EarliestCompletionTimes);
 
-            forcedTimes = new Dictionary<Subject, Time>(other.forcedTimes);
+            SubjectsWithForcedTimes = new HashSet<Subject>(other.SubjectsWithForcedTimes);
             MaxCreditPoints = new Dictionary<Time, int>(other.MaxCreditPoints);
             ContentRelations = new HashSet<Edge>(other.ContentRelations);
         }
@@ -155,9 +154,6 @@ namespace Subject_Selection
                 MaxCreditPoints.Add(new Time { year = year, session = Session.S3 }, GetMaxCreditPoints(year - 1, Session.S3));
             }
 
-            foreach (Time time in MaxCreditPoints.Keys.Where(time => time.year == year))
-                SubjectsInOrder[time] = new List<Subject>();
-
             if (year > 90)
                 throw new InvalidOperationException("Unless the user is a fool, this should not happen");
         }
@@ -175,9 +171,11 @@ namespace Subject_Selection
         /// </summary>
         public List<Subject> GetSemester(Time time)
         {
-            if (SubjectsInOrder.ContainsKey(time))
-                return SubjectsInOrder[time];
-            return new List<Subject>();
+            List<Subject> semester = new List<Subject>();
+            foreach (Subject subject in SelectedSubjects)
+                if (AssignedTimes[subject] == time)
+                    semester.Add(subject);
+            return semester;
         }
 
         /// <summary>
@@ -185,7 +183,8 @@ namespace Subject_Selection
         /// </summary>
         public void ForceTime(Subject subject, Time time)
         {
-            forcedTimes[subject] = time;
+            AssignedTimes[subject] = time;
+            SubjectsWithForcedTimes.Add(subject);
             Order();
         }
 
@@ -194,7 +193,7 @@ namespace Subject_Selection
         /// </summary>
         public void UnForceTime(Subject subject)
         {
-            if (forcedTimes.Remove(subject))
+            if (SubjectsWithForcedTimes.Remove(subject))
                 Order();
         }
 
@@ -204,8 +203,8 @@ namespace Subject_Selection
         /// <returns>If the subject is not forced on any time, return null</returns>
         public Time? GetForcedTime(Subject subject)
         {
-            if (forcedTimes.ContainsKey(subject))
-                return forcedTimes[subject];
+            if (SubjectsWithForcedTimes.Contains(subject))
+                return AssignedTimes[subject];
             return null;
         }
 
@@ -331,8 +330,16 @@ namespace Subject_Selection
 
         public override string ToString()
         {
+            List<List<Subject>> semesters = new List<List<Subject>>();
+            foreach (Subject subject in SelectedSubjects)
+            {
+                int timeIndex = AssignedTimes[subject].AsNumber();
+                while (semesters.Count < timeIndex)
+                    semesters.Add(new List<Subject>());
+                semesters[timeIndex].Add(subject);
+            }
             string output = "";
-            foreach (List<Subject> semester in SubjectsInOrder.Values)
+            foreach (List<Subject> semester in semesters)
                 output += "[" + string.Join(" ", semester) + "] ";
             return output;
         }
@@ -342,7 +349,7 @@ namespace Subject_Selection
         /// </summary>
         public IEnumerable<Subject> SelectedSubjectsSoFar(Time time)
         {
-            return SubjectsInOrder.Where(semester => semester.Key.IsEarlierThanOrAtTheSameTime(time)).SelectMany(kvp => kvp.Value);
+            return SelectedSubjects.Where(subject => AssignedTimes.TryGetValue(subject, out Time subjectsTime) && subjectsTime.IsEarlierThanOrAtTheSameTime(time));
         }
 
         /// <summary>
@@ -387,39 +394,40 @@ namespace Subject_Selection
             timerOrder.Restart();
 
             // Check that all forcedTimes are allowed
-            foreach (var kvp in forcedTimes)
-                if (!kvp.Key.AllowedDuringSemester(kvp.Value, this))
-                    forcedTimes.Remove(kvp.Key);
+            foreach (Subject subject in SubjectsWithForcedTimes)
+                if (!subject.AllowedDuringSemester(AssignedTimes[subject], this))
+                    SubjectsWithForcedTimes.Remove(subject);
+
+            // Remove current time assignments
+            foreach (Subject subject in SelectedSubjects)
+                if (!SubjectsWithForcedTimes.Contains(subject))
+                    AssignedTimes.Remove(subject);
 
             // This variable works because IEnumerables get evaluated every time a method is called on it. I usually use a local function instead of a variable.
             IEnumerable<Subject> RemainingSubjects = SelectedSubjects.Except(SelectedSubjectsSoFar(Time.All)).OrderBy(subject => subject.GetLevel());
 
-            SubjectsInOrder.Clear();
             for (Time semester = Time.First; MaxCreditPoints.Keys.Contains(semester) || RemainingSubjects.Any(); semester = semester.Next())
             {
                 // If neccessary, add another year to the planner
                 if (!MaxCreditPoints.Keys.Contains(semester)) AddYear();
-                // Create a new semester and add it to SubjectsInOrder (this works because a reference is being added to the Dictionary)
-                List<Subject> semesterClasses = new List<Subject>();
-                SubjectsInOrder[semester] = semesterClasses;
                 // Fill the semester with subjects that can be chosen
-                int selectedCredits = 0;
+                int selectedCredits = SelectedSubjects.Where(subject => AssignedTimes.TryGetValue(subject, out Time selectedTime) && selectedTime == semester).Sum(subject => subject.CreditPoints());
                 while (selectedCredits < GetMaxCreditPoints(semester))
                 {
                     // Prepare a list of what subjects could be chosen
                     var possibleSubjects = RemainingSubjects;
                     // Do not pick subjects with forced times later than the current session
-                    possibleSubjects = possibleSubjects.Where(subject => !(forcedTimes.ContainsKey(subject) && semester.IsEarlierThan(forcedTimes[subject])));
+                    possibleSubjects = possibleSubjects.Where(subject => !(SubjectsWithForcedTimes.Contains(subject) && semester.IsEarlierThan(AssignedTimes[subject])));
                     // Pick from subjects that are allowed during this semester
                     possibleSubjects = possibleSubjects.Where(subject => subject.AllowedDuringSemester(semester, this));
                     // Pick from subjects which would not result in Credit Overflow
-                    possibleSubjects = possibleSubjects.Where(subject => subject.CreditPoints() + semesterClasses.Sum(selected => selected.CreditPoints()) <= GetMaxCreditPoints(semester));
+                    possibleSubjects = possibleSubjects.Where(subject => subject.CreditPoints() + selectedCredits <= GetMaxCreditPoints(semester));
                     // Check if any subjects are forced
                     IEnumerable<Subject> forcedSubjects = possibleSubjects
-                        .Where(subject => forcedTimes.ContainsKey(subject) && forcedTimes[subject].IsEarlierThanOrAtTheSameTime(semester));
+                        .Where(subject => SubjectsWithForcedTimes.Contains(subject) && AssignedTimes[subject].IsEarlierThanOrAtTheSameTime(semester));
                     // If any subjects are forced, only consider the forced subjects
                     if (forcedSubjects.Any())
-                        possibleSubjects = forcedSubjects.OrderBy(subject => forcedTimes[subject]);
+                        possibleSubjects = forcedSubjects.OrderBy(subject => AssignedTimes[subject]);
                     // Otherwise, filter subjects according to whether their requisites are completed
                     else
                         possibleSubjects = possibleSubjects.Where(subject => RequisitesHaveBeenSelected(subject, semester));
@@ -438,7 +446,7 @@ namespace Subject_Selection
                     // If no subject was chosen, go to the next semester
                     if (nextSubject == null) break;
                     // Add the selected subject to this semester
-                    semesterClasses.Add(nextSubject);
+                    AssignedTimes[nextSubject] = semester;
                     // Keep track of how many more times this loop can repeat
                     selectedCredits += nextSubject.CreditPoints();
                 }
@@ -786,6 +794,23 @@ namespace Subject_Selection
             if (Decisions.Any())
                 offer = Decisions.First();
             return offer;
+        }
+
+        /// <summary>
+        /// What is the largest number of subjects that occur at the same time?
+        /// </summary>
+        public int MaxSubjectsPerSession()
+        {
+            Dictionary<Time, int> counts = new Dictionary<Time, int>();
+            foreach (Subject subject in SelectedSubjects)
+            {
+                Time time = AssignedTimes[subject];
+                if (counts.ContainsKey(time))
+                    counts[time]++;
+                else
+                    counts[time] = 1;
+            }
+            return counts.Max(kvp => kvp.Value);
         }
     }
 

@@ -80,6 +80,17 @@ namespace Subject_Selection
         public static readonly Time Early = First.Previous();
         public static readonly Time Impossible = new Time { year = 100 };
         public static readonly Time All = Impossible;
+
+        public override bool Equals(object obj)
+        {
+            return obj is Time other
+                && this.year == other.year
+                && this.session == other.session;
+        }
+
+        public override int GetHashCode() => AsNumber();
+        public static bool operator ==(Time t1, Time t2) => t1.Equals(t2);
+        public static bool operator !=(Time t1, Time t2) => !(t1 == t2);
     }
     public enum Session { S1, WV, S2, S3 }
     public enum Method { Day, Block, Fieldwork, External, Online, Placement, Evening }
