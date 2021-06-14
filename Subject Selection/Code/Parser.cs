@@ -235,7 +235,7 @@ namespace Subject_Selection
                     string right = word.Split('-')[1].Trim();
 
                     // Get the last 4 character from left. Make sure they're digits
-                    if (!(left.Length == 8 && int.TryParse(left.Substring(4), out int localLower)))
+                    if (!(left.Length == 8 && int.TryParse(left[4..], out int localLower)))
                     {
                         // There was an error getting the digits from left. Maybe it's using the old codes?
                         if (CouldBeSubjectCode(left))
@@ -245,7 +245,7 @@ namespace Subject_Selection
                     }
 
                     // Get the last 4 character from right. Make sure they're digits
-                    if (!((right.Length == 8 && int.TryParse(right.Substring(4), out int localUpper)) || (right.Length == 4 && int.TryParse(right, out localUpper))))
+                    if (!((right.Length == 8 && int.TryParse(right[4..], out int localUpper)) || (right.Length == 4 && int.TryParse(right, out localUpper))))
                     {
                         // There was an error getting the digits from right. Maybe it's using the old codes?
                         if (CouldBeSubjectCode(right) || right.Length == 3)
@@ -475,13 +475,13 @@ namespace Subject_Selection
         {
             if (id.EndsWith("(P)") || id.EndsWith("(Cr)") || id.EndsWith("(D)") || id.EndsWith("(HD)"))
                 id = id.Split('(')[0];
-            return id.Length >= 6 && id.Length <= 8 && !id.Contains(' ') && int.TryParse(id.Substring(id.Length - 3), out _);
+            return id.Length >= 6 && id.Length <= 8 && !id.Contains(' ') && int.TryParse(id[^3..], out _);
         }
 
         public static int GetNumber(this Subject subject)
         {
             //Assumes all IDs are made of 4 letters then 4 digits
-            return int.Parse(subject.ID.Substring(4));
+            return int.Parse(subject.ID[4..]);
         }
 
         public static int GetLevel(this Option option)
@@ -528,7 +528,7 @@ namespace Subject_Selection
                 return;
             description = creditPoints + "cp";
             if (previousDescription.Contains("cp "))
-                description += " " + previousDescription.Substring(previousDescription.IndexOf(' ') + 1);
+                description += " " + previousDescription[(previousDescription.IndexOf(' ') + 1)..];
         }
 
         public string Description
@@ -796,7 +796,7 @@ namespace Subject_Selection
                 if (source[i] == ')' || source[i] == ']')
                     brackets--;
                 // If there are no brackets and the text has been found, add that to the output
-                if (brackets == 0 && source.ToUpper().Substring(i).StartsWith(search) && (without == "" || !source.ToUpper().Substring(i).StartsWith(without)))
+                if (brackets == 0 && source.ToUpper()[i..].StartsWith(search) && (without == "" || !source.ToUpper()[i..].StartsWith(without)))
                 {
                     result.Add(source[startOfSubstring..i]);
                     startOfSubstring = i + search.Length;
@@ -918,8 +918,8 @@ namespace Subject_Selection
 
             // Unknown edge cases
             else if (
-                !(description.Split('(')[0].Length < 8 && int.TryParse(description.Split('(')[0].Substring(description.Split('(')[0].Length - 3), out _)) &&
-                !(description.Split('(')[0].Length == 8 && int.TryParse(description.Split('(')[0].Substring(4), out _)))
+                !(description.Split('(')[0].Length < 8 && int.TryParse(description.Split('(')[0][^3..], out _)) &&
+                !(description.Split('(')[0].Length == 8 && int.TryParse(description.Split('(')[0][4..], out _)))
             {
                 Debug.WriteLine(GetReasons().First());
                 throw new FormatException("idk how to parse this:\n" + description);
