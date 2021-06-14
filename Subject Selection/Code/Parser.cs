@@ -52,31 +52,29 @@ namespace Subject_Selection
 
             Debug.WriteLine("loaded subjects");
 
-            string descriptionBuilder;
+            StringBuilder descriptionBuilder = new StringBuilder();
 
             // Load minors
 
             static void MakeMinor(string description)
             {
-                if (description == "") return;
-                Course minor = new Course(description);
-                if (minor.ID == null) return;
-                MasterList.AddMinor(minor);
+                if (TryReadDocument(description, out Course minor))
+                    MasterList.AddMinor(minor);
             }
 
-            descriptionBuilder = "";
+            descriptionBuilder.Clear();
 
             foreach (string line in Properties.Resources._2020_ScheduleOfMinors.Replace("\r\n","\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("T000") || line.Contains("P000"))
                 {
-                    MakeMinor(descriptionBuilder);
-                    descriptionBuilder = "";
+                    MakeMinor(descriptionBuilder.ToString());
+                    descriptionBuilder.Clear();
                 }
 
-                descriptionBuilder += line + "\n";
+                descriptionBuilder.Append(line + "\n");
             }
-            MakeMinor(descriptionBuilder);
+            MakeMinor(descriptionBuilder.ToString());
 
             Debug.WriteLine("loaded minor");
 
@@ -84,24 +82,22 @@ namespace Subject_Selection
 
             static void MakeMajor(string description)
             {
-                if (description == "") return;
-                Course major = new Course(description);
-                if (major.ID == null) return;
-                MasterList.AddMajor(major);
+                if (TryReadDocument(description, out Course major))
+                    MasterList.AddMajor(major);
             }
 
-            descriptionBuilder = "";
+            descriptionBuilder.Clear();
             foreach (string line in Properties.Resources._2020_ScheduleOfMajors.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("N000"))
                 {
-                    MakeMajor(descriptionBuilder);
-                    descriptionBuilder = "";
+                    MakeMajor(descriptionBuilder.ToString());
+                    descriptionBuilder.Clear();
                 }
 
-                descriptionBuilder += line + "\n";
+                descriptionBuilder.Append(line + "\n");
             }
-            MakeMajor(descriptionBuilder);
+            MakeMajor(descriptionBuilder.ToString());
 
             Debug.WriteLine("loaded majors");
 
@@ -123,24 +119,22 @@ namespace Subject_Selection
 
             static void MakeSpecialisation(string description)
             {
-                if (description == "") return;
-                Course specialisation = new Course(description);
-                if (specialisation.ID == null) return;
-                MasterList.AddSpecialisation(specialisation);
+                if (TryReadDocument(description, out Course specialisation))
+                    MasterList.AddSpecialisation(specialisation);
             }
 
-            descriptionBuilder = "";
+            descriptionBuilder.Clear();
             foreach (string line in Properties.Resources._2020_ScheduleOfUGSpecialisations.Replace("\r\n", "\n").Split('\n', StringSplitOptions.None))
             {
                 if (line.Contains("Q000"))
                 {
-                    MakeSpecialisation(descriptionBuilder);
-                    descriptionBuilder = "";
+                    MakeSpecialisation(descriptionBuilder.ToString());
+                    descriptionBuilder.Clear();
                 }
 
-                descriptionBuilder += line + "\n";
+                descriptionBuilder.Append(line + "\n");
             }
-            MakeSpecialisation(descriptionBuilder);
+            MakeSpecialisation(descriptionBuilder.ToString());
 
             Debug.WriteLine("loaded specialisations");
 
@@ -148,8 +142,8 @@ namespace Subject_Selection
 
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Replace("\r\n","\n").Split(new string[] { "\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                Course course = new Course("\nBachelor of" + description);
-                MasterList.AddCourse(course);
+                if (TryReadDocument("\nBachelor of" + description, out Course course))
+                    MasterList.AddCourse(course);
             }
 
             Debug.WriteLine("loaded courses");
@@ -321,14 +315,14 @@ namespace Subject_Selection
             return output;
         }
 
-        public static void LoadFromDocument(Content course, string document, out string Name, out string Code, out Decision mainDecision, out Decision levelConditions)
+        public static bool TryReadDocument(string document, out Course course)
         {
-            Name = null;
-            Code = null;
-            mainDecision = null;
-            levelConditions = null;
+            string Name = null;
+            string Code = null;
 
-            if (!document.Contains("0")) return;
+            course = null;
+
+            if (!document.Contains("0")) return false;
 
             List<Option> mainOptions = new List<Option>();
 
@@ -357,17 +351,19 @@ namespace Subject_Selection
                             ? firstOption.CreditPoints().ToString() 
                             : throw new FormatException("The first word should be an option");
                     // Create a decision from the decisionBuilder, and add it to the list of stuff to do
+                    Debug.Assert(course != null);
                     mainOptions.Add(new Decision(course, "(" + previousLastCell + "cp from " + decisionBuilder + ")"));
                     // Reset the builder
                     decisionBuilder = "";
                 }
 
-                if (line.Trim() == "") continue;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 if (Code == null)
                 {
                     Name = cells[0];
                     Code = cells[1];
+                    course = new Course(Code, Name);
                     continue;
                 }
 
@@ -427,6 +423,7 @@ namespace Subject_Selection
                         break;
                     case "Electives":
                         //decisionBuilder += " or ";
+                        Debug.Assert(course != null);
                         mainOptions.Add(new Decision(course, description: cells.Last() + "cp"));
                         break;
                     case "Note:":
@@ -436,9 +433,10 @@ namespace Subject_Selection
                             maxAt1000Level = int.Parse(potentialSentence[1].Split("cp")[0]);
                         break;
                     case "Award:":
+                        Debug.Assert(course != null);
                         string award = cells.Last();
                         string awardCode = award.Split(" (").Last()[0..^1];
-                        MasterList.AddAward(course as Course, awardCode);
+                        MasterList.AddAward(course, awardCode);
                         break;
                     // I might need these later
                     case "Owner:":
@@ -465,10 +463,13 @@ namespace Subject_Selection
                 if (cells.Last() != "") previousLastCell = cells.Last();
             }
 
-            mainDecision = new Decision(course, options: mainOptions, selectionType: Selection.CP, creditPoints: mainOptions.Sum(option => option.CreditPoints()));
+            Decision mainDecision = new Decision(course, options: mainOptions, selectionType: Selection.CP, creditPoints: mainOptions.Sum(option => option.CreditPoints()));
             int minAt200LevelOrAbove = mainDecision.CreditPoints() - maxAt1000Level;
             if (minAt200LevelOrAbove < 0) minAt200LevelOrAbove = 0;
-            levelConditions = new Decision(course, description: minAt200LevelOrAbove + "cp at 2000 level or above", reasonIsCorequisite: true);
+            Decision levelConditions = new Decision(course, description: minAt200LevelOrAbove + "cp at 2000 level or above", reasonIsCorequisite: true);
+
+            course.PostLoad(mainDecision, levelConditions);
+            return true;
         }
 
         public static bool CouldBeSubjectCode(string id)

@@ -7,8 +7,6 @@ using System.Diagnostics;
 
 namespace Subject_Selection
 {
-    // TODO: remove all reference to Parser
-
     /// <summary>
     /// An incomplete study plan for the human.
     /// This class includes a list of subjects and when they will be taken, restrictions that the human has put on the plan, and restrictions that are caused by the plan.

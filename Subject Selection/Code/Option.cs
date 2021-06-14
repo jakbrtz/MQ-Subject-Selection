@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace Subject_Selection
 {
-    // TODO: remove reference to Parser
-
     /// <summary>
     /// A component of a decision
     /// </summary>
@@ -62,19 +60,6 @@ namespace Subject_Selection
         public List<Content> NCCWs => _nccws;
         private List<Content> _nccws;
 
-        protected Content(string document)
-        {
-            // Used by Course
-
-            Parser.LoadFromDocument(this, document, out string name, out string code, out Decision prerequisites, out Decision corequisites);
-
-            _prerequisites = prerequisites;
-            _corequisites = corequisites;
-            ID = code;
-            Name = name;
-            _nccws = new List<Content>();
-        }
-
         protected Content(string id, string name) 
         {
             this.ID = id;
@@ -86,14 +71,14 @@ namespace Subject_Selection
             return ID;
         }
 
-        internal void PostLoad(Decision prerequisites, Decision corequisites, List<Content> nccws)
+        internal void PostLoad(Decision prerequisites, Decision corequisites, List<Content> nccws = null)
         {
             Debug.Assert(Prerequisites == null, "The prerequisites should not be set at this point");
             Debug.Assert(Corequisites == null, "The corequisites should not be set at this point");
             Debug.Assert(NCCWs == null, "The nccws should not be set at this point");
             _prerequisites = prerequisites;
             _corequisites = corequisites;
-            _nccws = nccws;
+            _nccws = nccws ?? new List<Content>();
         }
 
         public override List<Content> ForcedBans()
@@ -249,11 +234,7 @@ namespace Subject_Selection
     /// </summary>
     public class Course : Content
     {
-        public Course(string document) :
-            base(document)
-        {
-            
-        }
+        public Course(string code, string name) : base (code, name) { }
 
         public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
         {
