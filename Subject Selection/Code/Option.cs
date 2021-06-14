@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,25 +51,16 @@ namespace Subject_Selection
         public string Name { get; }
 
         /// <summary> What other subjects need to be completed before this can be completed? </summary>
-        public Decision Prerequisites { get; }
+        public Decision Prerequisites => _prerequisites;
+        private Decision _prerequisites;
 
         /// <summary> What other subjects need to be completed before (or at the same time) as this can be completed? </summary>
-        public Decision Corequisites { get; }
+        public Decision Corequisites => _corequisites;
+        private Decision _corequisites;
 
         /// <summary> What other subjects are not allowed to be done if the human selects this content? </summary>
-        public string[] NCCWs { get; }
-
-        protected Content(string id, string name, string prerequisites, string corequisites, string nccws)
-        {
-            // Used by Subject
-
-            ID = id;
-            Name = name;
-
-            Prerequisites = new Decision(this, description: prerequisites);
-            Corequisites = new Decision(this, description: corequisites, reasonIsCorequisite: true);
-            NCCWs = nccws.Split(new string[] { ", " }, StringSplitOptions.None);
-        }
+        public List<Content> NCCWs => _nccws;
+        private List<Content> _nccws;
 
         protected Content(string document)
         {
@@ -76,11 +68,17 @@ namespace Subject_Selection
 
             Parser.LoadFromDocument(this, document, out string name, out string code, out Decision prerequisites, out Decision corequisites);
 
-            Prerequisites = prerequisites;
-            Corequisites = corequisites;
+            _prerequisites = prerequisites;
+            _corequisites = corequisites;
             ID = code;
             Name = name;
-            NCCWs = new string[] { "" };
+            _nccws = new List<Content>();
+        }
+
+        protected Content(string id, string name) 
+        {
+            this.ID = id;
+            this.Name = name;
         }
 
         public override string ToString()
@@ -88,16 +86,19 @@ namespace Subject_Selection
             return ID;
         }
 
+        internal void PostLoad(Decision prerequisites, Decision corequisites, List<Content> nccws)
+        {
+            Debug.Assert(Prerequisites == null, "The prerequisites should not be set at this point");
+            Debug.Assert(Corequisites == null, "The corequisites should not be set at this point");
+            Debug.Assert(NCCWs == null, "The nccws should not be set at this point");
+            _prerequisites = prerequisites;
+            _corequisites = corequisites;
+            _nccws = nccws;
+        }
+
         public override List<Content> ForcedBans()
         {
-            List<Content> output = new List<Content>();
-            foreach (string ID in NCCWs)
-            {
-                Content content = Parser.GetSubject(ID);
-                if (content == null) continue;
-                output.Add(content);
-            }
-            return output;
+            return NCCWs;
         }
 
         public override bool HasSameOptions(Option other)
@@ -141,31 +142,12 @@ namespace Subject_Selection
         /// <summary> A list of times where this subject is offered </summary>
         public List<OfferTime> Semesters { get; }
 
-        public Subject(string id, string name, string cp, string pace, string times, string prerequisites, string corequisites, string nccws) :
-            base(id, name, prerequisites, corequisites, nccws)
+        public Subject(string id, string name, int cp, bool pace, List<OfferTime> semesters, int earliestYear) : base (id, name)
         {
-            CP = int.Parse(cp);
-            if (CP < 0)
-                throw new ArgumentException("CP cannot be negative");
-            this.pace = pace == "PACE";
-
-            Semesters = new List<OfferTime>();
-            foreach (string time in times.Split('\n'))
-                if (OfferTime.TryParse(time, out OfferTime result))
-                    Semesters.Add(result);
-                else if (int.TryParse(time, out int result2))
-                    earliestYear = result2;
-                else if (time != "" && time != "TBD")
-                    throw new FormatException("Unknown semester: \"" + time + "\"");
-
-            // If no semesters are found, add both semesters
-            if (!Semesters.Any())
-            {
-                if (OfferTime.TryParse("S1 Day", out OfferTime result1))
-                    Semesters.Add(result1);
-                if (OfferTime.TryParse("S2 Day", out OfferTime result2))
-                    Semesters.Add(result2);
-            }
+            CP = cp;
+            this.pace = pace;
+            this.Semesters = semesters;
+            this.earliestYear = earliestYear;
         }
 
         public override bool HasBeenCompleted(Plan plan, Time requiredCompletionTime)
@@ -208,7 +190,7 @@ namespace Subject_Selection
         /// <summary> Check if this option is recommended to the human, according to the other subjects they have selected </summary>
         public bool IsRecommended(List<Subject> otherSelectedSubjects, List<Course> otherSelectedCourses, out List<Content> reasons)
         {
-            reasons = Parser.Recommendations.Where(tuple => tuple.recommendation == this && (otherSelectedSubjects.Contains(tuple.reason) || otherSelectedCourses.Contains(tuple.reason))).Select(tuple => tuple.reason).ToList();
+            reasons = MasterList.ReasonsForRecommendation(this, otherSelectedSubjects.Concat<Content>(otherSelectedCourses));
             return reasons.Any();
         }
 
@@ -853,6 +835,18 @@ namespace Subject_Selection
                 _ => 
                     base.Equals(obj),
             };
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 352033288;
+            hashCode = hashCode * -1521134295 + OnlyPickOne().GetHashCode();
+            hashCode = hashCode * -1521134295 + MustPickAll().GetHashCode();
+            if (!OnlyPickOne() && !MustPickAll())
+                hashCode = hashCode * -1521134295 + CreditPoints().GetHashCode();
+            foreach (Option option in Options)
+                hashCode = hashCode * -1521134295 + option.GetHashCode();
+            return hashCode;
         }
 
         public override bool HasSameOptions(Option other)

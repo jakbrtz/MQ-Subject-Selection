@@ -343,7 +343,7 @@
         // Load information
         Parser.LoadData();
         // Construct a graph of subjects
-        foreach (Subject subject in Parser.AllSubjects())
+        foreach (Subject subject in MasterList.AllSubjects)
             subject.FindChildren();
         // Add 3 years to the plan
         for (int year = 0; year < 3; year++)
@@ -358,7 +358,7 @@
         plan.RefreshEarliestTimes();
         // Offer degrees that do not contain mistakes, in order of their subject code
         currentDecision = new Decision(null,
-            options: Parser.AllCourses()
+            options: MasterList.AllCourses
                 .Where(course => !Properties.Resources.known_mistakes.Split().Contains(course.ID) && !course.Prerequisites.HasBeenBanned(plan))
                 .OrderBy(course => course.ID).ToList<Option>(),
             selectionType: Selection.OR);
@@ -366,12 +366,12 @@
 
     void MinorDecision() // TODO: make button for this
     {
-        currentDecision = new Decision(null, options: Parser.AllMinors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+        currentDecision = new Decision(null, options: MasterList.AllMinors.Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
     }
 
     void MajorDecision() // TODO: make button for this
     {
-        currentDecision = new Decision(null, options: Parser.AllMajors().Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
+        currentDecision = new Decision(null, options: MasterList.AllMajors.Where(minor => !minor.HasBeenBanned(plan)).ToList<Option>(), selectionType: Selection.OR);
     }
 
     void SelectSubjectFromTable(Subject subject)

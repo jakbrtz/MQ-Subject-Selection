@@ -7,22 +7,17 @@ using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
+using System.Diagnostics;
 
 namespace Subject_Selection
 {
     // This class deals with everything related to parsing from databases
     public static class Parser
     {
-        static readonly Dictionary<string, Subject> subjects = new Dictionary<string, Subject>();
-        static readonly Dictionary<string, Course> minors = new Dictionary<string, Course>();
-        static readonly Dictionary<string, Course> majors = new Dictionary<string, Course>();
-        static readonly Dictionary<string, Course> specialisations = new Dictionary<string, Course>();
-        static readonly Dictionary<string, Course> courses = new Dictionary<string, Course>();
-        static readonly Dictionary<string, Course> awards = new Dictionary<string, Course>();
-        public static List<(Content reason, Subject recommendation)> Recommendations { get; } = new List<(Content reason, Subject recommendation)>();
-
         public static void LoadData()
         {
+            List<SubjectRecord> subjectRecords = new List<SubjectRecord>();
+
             // Open csv to get subjects
             using (var reader = new StringReader(Properties.Resources.ScheduleOfUndergraduateUnits))
             using (var csv = new CsvReader(reader))
@@ -31,13 +26,31 @@ namespace Subject_Selection
                 var records = csv.EnumerateRecords(record);
                 foreach (var r in records)
                 {
-                    Subject subject = new Subject(r.Code, r.Name, r.CP, r.Pace, r.Time, r.Prerequisites, r.Corequisites, r.NCCW);
-                    if (subject.Semesters.Any()) // Some subjects aren't offered yet
-                        subjects[r.Code] = subject; // Sometimes a subject appears twice in the csv.
+                    var subjectRecord = (SubjectRecord)r.Clone();
+                    subjectRecord.InitialSetup();
+                    // Make sure the subject is being offered
+                    if (subjectRecord.Actual.Semesters.Any())
+                    {
+                        // subject codes should be unique - if this code already exists then replace it
+                        bool found = false;
+                        for (int i = 0; i < subjectRecords.Count; i++)
+                            if (subjectRecords[i].Code == subjectRecord.Code)
+                            {
+                                found = true;
+                                subjectRecords[i] = subjectRecord;
+                                break;
+                            }
+                        if (!found)
+                            subjectRecords.Add(subjectRecord);
+                        Debug.Assert(subjectRecords.Count(s => s.Code == subjectRecord.Code) == 1, "the code should appear exactly once");
+                    }
                 }
             }
 
-            Console.WriteLine("loaded subjects");
+            foreach (SubjectRecord subject in subjectRecords)
+                MasterList.AddSubject(subject.Actual);
+
+            Debug.WriteLine("loaded subjects");
 
             string descriptionBuilder;
 
@@ -48,7 +61,7 @@ namespace Subject_Selection
                 if (description == "") return;
                 Course minor = new Course(description);
                 if (minor.ID == null) return;
-                minors[minor.ID] = minor;
+                MasterList.AddMinor(minor);
             }
 
             descriptionBuilder = "";
@@ -65,7 +78,7 @@ namespace Subject_Selection
             }
             MakeMinor(descriptionBuilder);
 
-            Console.WriteLine("loaded minor");
+            Debug.WriteLine("loaded minor");
 
             // Load majors
 
@@ -74,7 +87,7 @@ namespace Subject_Selection
                 if (description == "") return;
                 Course major = new Course(description);
                 if (major.ID == null) return;
-                majors[major.ID] = major;
+                MasterList.AddMajor(major);
             }
 
             descriptionBuilder = "";
@@ -90,20 +103,20 @@ namespace Subject_Selection
             }
             MakeMajor(descriptionBuilder);
 
-            Console.WriteLine("loaded majors");
+            Debug.WriteLine("loaded majors");
 
             // Make NCCW links between matching majors and minors
-            foreach (Course major in majors.Values)
+            foreach (Course major in MasterList.AllMajors)
             {
-                Course nccw = minors.Values.FirstOrDefault(minor => minor.Name == major.Name);
+                Course nccw = MasterList.AllMinors.FirstOrDefault(minor => minor.Name == major.Name);
                 if (nccw != null)
-                    major.NCCWs[0] = nccw.ID;
+                    major.NCCWs.Add(nccw);
             }
-            foreach (Course minor in minors.Values)
+            foreach (Course minor in MasterList.AllMinors)
             {
-                Course nccw = majors.Values.FirstOrDefault(major => major.Name == minor.Name);
+                Course nccw = MasterList.AllMajors.FirstOrDefault(major => major.Name == minor.Name);
                 if (nccw != null)
-                    minor.NCCWs[0] = nccw.ID;
+                    minor.NCCWs.Add(nccw);
             }
 
             // Load specialisations
@@ -113,7 +126,7 @@ namespace Subject_Selection
                 if (description == "") return;
                 Course specialisation = new Course(description);
                 if (specialisation.ID == null) return;
-                specialisations[specialisation.ID] = specialisation;
+                MasterList.AddSpecialisation(specialisation);
             }
 
             descriptionBuilder = "";
@@ -129,26 +142,25 @@ namespace Subject_Selection
             }
             MakeSpecialisation(descriptionBuilder);
 
-            Console.WriteLine("loaded specialisations");
+            Debug.WriteLine("loaded specialisations");
 
             // Load courses
 
             foreach (string description in Properties.Resources._2020_ScheduleOfCoursesUG.Replace("\r\n","\n").Split(new string[] { "\nBachelor of" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 Course course = new Course("\nBachelor of" + description);
-                courses[course.ID] = course;
+                MasterList.AddCourse(course);
             }
 
-            Console.WriteLine("loaded courses");
+            Debug.WriteLine("loaded courses");
 
-            // Read the prerequisites and corequisites for subjects
-            foreach (Subject subject in subjects.Values)
-            {
-                subject.Prerequisites.LoadFromDescription();
-                subject.Corequisites.LoadFromDescription();
-            }
+            // Postload subjects
 
-            Console.WriteLine("loaded subject requisites");
+            foreach (SubjectRecord subject in subjectRecords)
+                subject.PostLoad();
+            
+
+            Debug.WriteLine("postloaded subjects");
 
             // Read recommendations
 
@@ -156,103 +168,11 @@ namespace Subject_Selection
             {
                 string reasonStr = line.Split()[0];
                 string recommendationStr = line.Split()[1];
-                if (TryGetContent(reasonStr, out Content reason) && TryGetSubject(recommendationStr, out Subject recommendation))
-                    Recommendations.Add((reason, recommendation));
+                if (MasterList.TryGetContent(reasonStr, out Content reason) && MasterList.TryGetSubject(recommendationStr, out Subject recommendation))
+                    MasterList.AddRecommendation(reason, recommendation);
             }
 
-            Console.WriteLine("loaded recommendations");
-        }
-
-        public static List<Subject> AllSubjects()
-        {
-            return subjects.Values.ToList();
-        }
-
-        public static List<Course> AllCourses()
-        {
-            return courses.Values.ToList();
-        }
-
-        public static List<Course> AllMinors()
-        {
-            return minors.Values.ToList();
-        }
-
-        public static List<Course> AllMajors()
-        {
-            return majors.Values.ToList();
-        }
-
-        public static List<Course> AllSpecialisations()
-        {
-            return specialisations.Values.ToList();
-        }
-
-        public static Subject GetSubject(string id)
-        {
-            if (id.Contains(' '))
-                return null;
-            id = id.Split('(')[0];
-            if (subjects.TryGetValue(id, out Subject subject))
-                return subject;
-            return null;
-        }
-
-        public static bool TryGetSubject(string id, out Subject subject)
-        {
-            subject = GetSubject(id);
-            return subject != null;
-        }
-
-        public static Course GetMinor(string id)
-        {
-            if (minors.TryGetValue(id, out Course minor))
-                return minor;
-            return null;
-        }
-
-        public static Course GetMajor(string id)
-        {
-            if (majors.TryGetValue(id, out Course major))
-                return major;
-            return null;
-        }
-
-        public static Course GetSpecialisation(string id)
-        {
-            if (specialisations.TryGetValue(id, out Course specialisation))
-                return specialisation;
-            return null;
-        }
-
-        public static Course GetCourse(string id)
-        {
-            if (courses.TryGetValue(id, out Course course))
-                return course;
-            id = id.Replace("(0-12)", "").Replace("(0-5)", "");
-            if (awards.TryGetValue(id, out course))
-                return course;
-            return null;
-        }
-
-        public static bool TryGetContent(string id, out Content content)
-        {
-            content = GetSubject(id);
-            if (content != null)
-                return true;
-            content = GetMinor(id);
-            if (content != null)
-                return true;
-            content = GetMajor(id);
-            if (content != null)
-                return true;
-            content = GetSpecialisation(id);
-            if (content != null)
-                return true;
-            content = GetCourse(id);
-            if (content != null)
-                return true;
-            return false;
+            Debug.WriteLine("loaded recommendations");
         }
 
         public static List<Option> GetSubjectsFromQuery(string query)
@@ -288,7 +208,7 @@ namespace Subject_Selection
 
             // If there are no useful words, then return every subject
             if (!words.Any())
-                return AllSubjects().Cast<Option>().ToList();
+                return MasterList.AllSubjects.Cast<Option>().ToList();
 
             // Prepare filter conditions
             int lower = 1000;
@@ -303,7 +223,7 @@ namespace Subject_Selection
                 // Any subject gets added straight to the list of outputs.
                 if (CouldBeSubjectCode(word))
                 {
-                    if (TryGetContent(word, out Content c))
+                    if (MasterList.TryGetContent(word, out Content c))
                         output.Add(c);
                     continue;
                 }
@@ -339,11 +259,11 @@ namespace Subject_Selection
                     if (right.Length == 8 && right.Substring(0, 4) != unit)
                         throw new FormatException("subjects don't match");
 
-                    output.AddRange(subjects.Values.ToList().FindAll(subject =>
+                    output.AddRange(MasterList.AllSubjects.Where(subject =>
                         subject.ID.StartsWith(unit) &&
                         localLower <= subject.GetNumber() &&
                         subject.GetNumber() <= localUpper)
-                        .Cast<Option>().ToList());
+                        .Cast<Option>());
 
                     continue;
                 }
@@ -392,7 +312,7 @@ namespace Subject_Selection
 
             // Add the subjects that match the filters
             if (filter)
-                output.AddRange(subjects.Values.ToList().FindAll(subject =>
+                output.AddRange(MasterList.AllSubjects.Where(subject =>
                         (textFilters == null || textFilters.Any(unit => subject.ID.StartsWith(unit))) &&
                         lower <= subject.GetNumber() &&
                         subject.GetNumber() <= upper)
@@ -433,7 +353,7 @@ namespace Subject_Selection
                     decisionBuilder = decisionBuilder.Replace("[arts minor]", Properties.Resources.arts_minor);
                     // Make sure that previousLastCell is a number. If it is not, work out what number is it by looking at the first word in decisionBuilder
                     if (!int.TryParse(previousLastCell, out _))
-                        previousLastCell = TryGetContent(decisionBuilder.Split(' ').First(), out Content firstOption) 
+                        previousLastCell = MasterList.TryGetContent(decisionBuilder.Split(' ').First(), out Content firstOption) 
                             ? firstOption.CreditPoints().ToString() 
                             : throw new FormatException("The first word should be an option");
                     // Create a decision from the decisionBuilder, and add it to the list of stuff to do
@@ -518,7 +438,7 @@ namespace Subject_Selection
                     case "Award:":
                         string award = cells.Last();
                         string awardCode = award.Split(" (").Last()[0..^1];
-                        awards[awardCode] = course as Course;
+                        MasterList.AddAward(course as Course, awardCode);
                         break;
                     // I might need these later
                     case "Owner:":
@@ -900,7 +820,7 @@ namespace Subject_Selection
             description = description.Replace("(P)", "").Replace(" at 1000 level or above", "").Replace(" only", "").Replace("Admission to ", "").Replace("admission to ", "");
 
             // Check if the option is a single subject
-            if (Parser.TryGetContent(description, out Content content))
+            if (MasterList.TryGetContent(description, out Content content))
             {
                 options.Add(content);
                 selectionType = Selection.AND;
@@ -919,7 +839,7 @@ namespace Subject_Selection
                 foreach (string token in tokens)
                 {
                     if (Parser.CouldBeSubjectCode(token))
-                        if (Parser.TryGetContent(token, out content))
+                        if (MasterList.TryGetContent(token, out content))
                             options.Add(content);
                         else
                             options.Add(new ImpossibleDecision(this));
@@ -1001,25 +921,13 @@ namespace Subject_Selection
                 !(description.Split('(')[0].Length < 8 && int.TryParse(description.Split('(')[0].Substring(description.Split('(')[0].Length - 3), out _)) &&
                 !(description.Split('(')[0].Length == 8 && int.TryParse(description.Split('(')[0].Substring(4), out _)))
             {
-                Console.WriteLine(GetReasons().First());
+                Debug.WriteLine(GetReasons().First());
                 throw new FormatException("idk how to parse this:\n" + description);
             }
         }
-
-        public override int GetHashCode()
-        {
-            var hashCode = 352033288;
-            hashCode = hashCode * -1521134295 + OnlyPickOne().GetHashCode();
-            hashCode = hashCode * -1521134295 + MustPickAll().GetHashCode();
-            if (!OnlyPickOne() && !MustPickAll())
-                hashCode = hashCode * -1521134295 + CreditPoints().GetHashCode();
-            foreach (Option option in Options)
-                hashCode = hashCode * -1521134295 + option.GetHashCode();
-            return hashCode;
-        }
     }
 
-    public class SubjectRecord
+    public class SubjectRecord : ICloneable
     {
         [Name("Name")]
         public string Name { get; set; }
@@ -1044,5 +952,42 @@ namespace Subject_Selection
 
         [Name("Credit\nPoints")]
         public string CP { get; set; }
+
+        internal Subject Actual { get; private set; }
+
+        internal void InitialSetup()
+        {
+            int.TryParse(CP, out int creditpoints);
+            Debug.Assert(creditpoints >= 0, "Credit Points cannot be negative");
+            var semesters = new List<OfferTime>();
+            int earliestYear = 0;
+            foreach (string time in Time.Split('\n'))
+                if (OfferTime.TryParse(time, out OfferTime result))
+                    semesters.Add(result);
+                else if (int.TryParse(time, out int result2))
+                    earliestYear = result2;
+                else
+                    Debug.Assert(time == "" || time == "TBD", $"Unknown semester: {time}");
+
+            this.Actual = new Subject(Code, Name, creditpoints, Pace == "PACE", semesters, earliestYear);
+        }
+
+        internal void PostLoad()
+        {
+            var prerequisitesActual = new Decision(Actual, description: Prerequisites);
+            var corequisitesActual = new Decision(Actual, description: Corequisites, reasonIsCorequisite: true);
+            var nccwsActual = new List<Content>();
+            foreach (var ID in NCCW.Split(new string[] { ", " }, StringSplitOptions.None))
+            {
+                Content content = MasterList.GetSubject(ID);
+                if (content == null) continue;
+                nccwsActual.Add(content);
+            }
+            Actual.PostLoad(prerequisitesActual, corequisitesActual, nccwsActual);
+        }
+
+        public override string ToString() => $"{Name} ({Code})";
+
+        public object Clone() => this.MemberwiseClone();
     }
 }

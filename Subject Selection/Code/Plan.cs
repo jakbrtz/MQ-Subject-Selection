@@ -278,7 +278,7 @@ namespace Subject_Selection
 
             // Prepare to analyze everything
             Queue<Subject> subjectQueue = new Queue<Subject>(); // TODO: uniqueQueue
-            foreach (Subject subject in Parser.AllSubjects())
+            foreach (Subject subject in MasterList.AllSubjects)
                 subjectQueue.Enqueue(subject);
             // TODO: prioritize subjects if they're a leaf
             // Iterate through the queue
@@ -315,7 +315,7 @@ namespace Subject_Selection
             }
 
             timer1.Stop();
-            Console.WriteLine("Getting times:       " + timer1.ElapsedMilliseconds + "ms");
+            Debug.WriteLine("Getting times:       " + timer1.ElapsedMilliseconds + "ms");
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ namespace Subject_Selection
                 throw new InvalidOperationException("Not all the subjects were added to the table");
 
             timerOrder.Stop();
-            Console.WriteLine("Ordering Plan:       " + timerOrder.ElapsedMilliseconds + "ms");
+            Debug.WriteLine("Ordering Plan:       " + timerOrder.ElapsedMilliseconds + "ms");
 
             // Helper functions to determine whether a subject can be picked
 
@@ -558,14 +558,12 @@ namespace Subject_Selection
             BannedContents.Clear();
             // Get all selected subjects and check them for NCCWs
             foreach (Subject subject in SelectedSubjects)
-                foreach (string id in subject.NCCWs)
-                    if (Parser.TryGetSubject(id, out Subject nccw))
-                        AddBannedSubject(nccw, subject);
+                foreach (Content nccw in subject.NCCWs)
+                    AddBannedSubject(nccw, subject);
             // Get all selected courses and check them for NCCWs
             foreach (Course course in SelectedCourses)
-                foreach (string id in course.NCCWs)
-                    if (Parser.TryGetContent(id, out Content nccw))
-                        AddBannedSubject(nccw, course);
+                foreach (Content nccw in course.NCCWs)
+                    AddBannedSubject(nccw, course);
             /* TODO: fix assumptions
              * This code assumes that when subject X is on subject Y's nccw list, then subject Y is on subject X's nccw list
              * I have found 45 exceptions to this assumption. Does that have a special meaning, or is it an incorrect data entry?
@@ -701,7 +699,7 @@ namespace Subject_Selection
                 }
 
                 timer1.Stop();
-                Console.WriteLine("Making decisions:    " + timer1.ElapsedMilliseconds + "ms");
+                Debug.WriteLine("Making decisions:    " + timer1.ElapsedMilliseconds + "ms");
 
             }
 
@@ -730,7 +728,7 @@ namespace Subject_Selection
             });
 
             timer2.Stop();
-            Console.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
+            Debug.WriteLine("Removing repetition: " + timer2.ElapsedMilliseconds + "ms");
         }
 
 
