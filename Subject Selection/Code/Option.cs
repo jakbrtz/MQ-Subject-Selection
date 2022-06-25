@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Subject_Selection
 {
@@ -197,31 +195,36 @@ namespace Subject_Selection
              */
 
             creditPointsRequired = 0;
-            // Shortcut: if the amount of credit Points available is huge, return true
+            // If the amount of credit Points available is huge then we can assume there are enough points
             if (creditPointsAvailable == int.MaxValue)
                 return true;
-            // If there are no more credit points available, return false
+            // If there are no credit points available then there are not enough points
             if (creditPointsAvailable < 0)
                 return false;
-            // If this subject is already part of the plan, then no more credit points are required
+            // If this subject is already part of the plan then no more credit points are required
             if (HasBeenCompleted(plan, Time.All))
                 return true;
-            // A flag is used to make sure that this subject isn't already being processed
+            // Keep track of how many points are required for the prerequisites and corequisites
+            int creditPointsRequiredPrerequisites;
+            int creditPointsRequiredCorequisites;
+            // This flag is used to avoid infinites loops in this recursive algorithm
             if (_flag_running_EnoughCreditPoints)
                 return false;
-            _flag_running_EnoughCreditPoints = true;
-            bool _flag_return_false = false;
-            // The credit points from this subject are required
-            creditPointsRequired = CreditPoints();
-            // The credit points from the prerequisites and corequisites are required
-            if (!Prerequisites.EnoughCreditPoints(plan, creditPointsAvailable - creditPointsRequired, out int creditPointsRequiredPrerequisites))
-                _flag_return_false = true;
-            if (!Corequisites.EnoughCreditPoints(plan, creditPointsAvailable - creditPointsRequired, out int creditPointsRequiredCorequisites))
-                _flag_return_false = true;
-            // Put the flag down
-            _flag_running_EnoughCreditPoints = false;
-            if (_flag_return_false)
-                return false;
+            try
+            {
+                _flag_running_EnoughCreditPoints = true;
+                // The credit points from this subject are required
+                creditPointsRequired = CreditPoints();
+                // The credit points from the prerequisites and corequisites are required
+                if (!Prerequisites.EnoughCreditPoints(plan, creditPointsAvailable - creditPointsRequired, out creditPointsRequiredPrerequisites))
+                    return false;
+                if (!Corequisites.EnoughCreditPoints(plan, creditPointsAvailable - creditPointsRequired, out creditPointsRequiredCorequisites))
+                    return false;
+            }
+            finally
+            {
+                _flag_running_EnoughCreditPoints = false;
+            }
             // It is possible that there is overlap between Prerequisites and Corequisites, so add the larger of creditPointsRequiredRequisites
             creditPointsRequired += creditPointsRequiredPrerequisites > creditPointsRequiredCorequisites ? creditPointsRequiredPrerequisites : creditPointsRequiredCorequisites;
             // If the number of available credit points is greater than or equal to the required amount, then there are enough credit points
