@@ -690,7 +690,8 @@ namespace Subject_Selection
                         if (BannedContents.Count != oldBannedContents.Count && !BannedContents.Keys.All(oldBannedContents.ContainsKey))
                         {
                             foreach (Decision redoDecision in Decisions)
-                                toAnalyze.Enqueue(redoDecision);
+                                if (!toAnalyze.Contains(redoDecision))
+                                    toAnalyze.Enqueue(redoDecision);
                             RefreshEarliestTimes();
                         }
                     }
