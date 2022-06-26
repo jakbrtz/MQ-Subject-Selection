@@ -632,16 +632,15 @@ namespace Subject_Selection
                     //Consider the next decision in the queue
                     Decision decision = toAnalyze.Dequeue();
 
-                    // Remember the original list of banned contents. It might be used later
-                    Dictionary<Content, List<Content>> oldBannedContents = new Dictionary<Content, List<Content>>(BannedContents);
+                    // Remember the original list of banned contents. We might want to check if it has changed
+                    List<Content> oldBannedContents = BannedContents.Keys.ToList();
 
-                    //Remove this decision from the list of decisions (this will probably be added at the end of the loop)
+                    // If this decision is already on the decision list, remove it (it will probably be re-added later)
                     RemoveDecision(decision);
 
-                    // GetRemainingDecision can be computationally expensive, so this part of the algorithm is repeated before and after GetRemainingDecision
+                    // If this decision is a combination of other decisions then add those sub-decisions and don't process this one
                     if (decision.SelectionType != Selection.CP && decision.MustPickAll() && decision.Options.All(option => option is Decision))
                     {
-                        //If everything must be selected, select everything. Add the new decisions to the list
                         foreach (Option option in decision.Options)
                             toAnalyze.Enqueue(option as Decision);
                         continue;
@@ -663,7 +662,7 @@ namespace Subject_Selection
                     {
                         // Add all contents from this decision
                         List<Content> contents = remainingDecision.Options
-                            .Where(option => option is Content && !SelectedSubjects.Contains(option) && !SelectedCourses.Contains(option))
+                            .Where(option => option is Content && !SelectedSubjects.Contains(option) && !SelectedCourses.Contains(option)) // todo: is all of this filter needed?
                             .Cast<Content>().ToList();
                         AddContents(contents);
                         // Add each content's prerequisites and corequisites to toAnalzye
@@ -686,13 +685,14 @@ namespace Subject_Selection
                     {
                         // The program cannot determine what to do, so the human decides
                         AddDecision(remainingDecision);
-                        // If the decision resulted in new stuff getting banned, redo the other decisions
-                        if (BannedContents.Count != oldBannedContents.Count && !BannedContents.Keys.All(oldBannedContents.ContainsKey))
+                        // If the decision resulted in new stuff getting banned, redo the existing decisions
+                        if (BannedContents.Count != oldBannedContents.Count && !BannedContents.Keys.All(oldBannedContents.Contains))
                         {
                             foreach (Decision redoDecision in Decisions)
                                 if (!toAnalyze.Contains(redoDecision))
                                     toAnalyze.Enqueue(redoDecision);
                             RefreshEarliestTimes();
+                            // Don't clear the Decisions list. It can affect BannedContents.
                         }
                     }
                 }
